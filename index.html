@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>투자 성과 & 자산배분 실시간 대시보드</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <!-- 상단 헤더 네비게이션 -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                    <i class="fa-solid fa-chart-pie text-xl animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-100">투자 성과 & 자산배분 실시간 대시보드</h1>
+                    <p class="text-xs text-slate-400">구글 시트 연동형 포트폴리오 리스크 관리 시스템</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="syncStatusBadge" class="text-xs bg-slate-800 px-3 py-1.5 rounded-full text-slate-400 border border-slate-700/50">
+                    <i id="syncStatusIcon" class="fa-solid fa-circle-notch animate-spin mr-1.5 text-slate-500"></i> <span id="syncStatusText">연동 대기 중</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- 왼쪽 패널: 구글 시트 연동 및 데이터 관리 (4 cols) -->
+        <section class="lg:col-span-4 flex flex-col gap-6">
+            
+            <!-- 실시간 동기화 설정 카드 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-sky-500"></div>
+                <h2 class="text-md font-bold text-slate-200 flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-link text-sky-400"></i> 구글 시트 실시간 자동 연동
+                </h2>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+                    시트 상단 브라우저 주소창의 <strong>전체 주소(URL)</strong>를 그대로 복사해서 아래 붙여넣어 주세요! 시스템이 자동으로 시트 ID를 우회 코드로 변환해 동기화합니다.
+                </p>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1.5">구글 시트 주소</label>
+                        <input type="text" id="googleSheetUrl" 
+                            class="w-full bg-slate-950 text-slate-300 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+                            placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=0">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="saveAndSyncUrl()" 
+                            class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-lg shadow-sky-500/10">
+                            <i class="fa-solid fa-floppy-disk"></i> 주소 저장 및 실시간 연동
+                        </button>
+                        <button onclick="fetchGoogleSheetData()" 
+                            class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-3.5 rounded-xl text-xs transition border border-slate-700"
+                            title="즉시 새로고침">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상태 표시 알림창 -->
+            <div id="statusNotification" class="hidden p-5 rounded-2xl text-xs transition-all duration-300 bg-slate-900 border border-slate-800">
+                <div class="flex items-start gap-3">
+                    <div id="statusIconContainer" class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                        <i id="statusIcon" class="fa-solid fa-circle-info text-base"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 id="statusTitle" class="font-bold text-sm text-slate-200 mb-1">상태 알림</h4>
+                        <div id="statusMessage" class="text-slate-400 leading-relaxed text-[11px] space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 신규: 종목별 7차 분할매수 계산기 카드 (자동 저장 기능 탑재) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative">
+                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-amber-400"></i> 종목별 7차 분할매수 계산기
+                    </h2>
+                    <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i>자동 저장됨
+                    </span>
+                </div>
+
+                <!-- 종목 선택 컨트롤러 -->
+                <div class="mb-4 space-y-2">
+                    <label class="block text-[11px] text-slate-400 font-semibold">관리 종목 선택</label>
+                    <div class="flex gap-2">
+                        <select id="selectedTickerSelect" onchange="onTickerChange()" 
+                            class="flex-1 bg-slate-950 text-amber-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                            <!-- JS를 통해 종목 목록이 채워집니다 -->
+                        </select>
+                        <button onclick="addNewTickerPrompt()" 
+                            class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-xl text-xs font-bold border border-slate-700 transition"
+                            title="새 종목 추가">
+                            <i class="fa-solid fa-plus"></i> 추가
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-[11px]">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-slate-800 pb-2">
+                                    <th class="pb-2 w-10">차수</th>
+                                    <th class="pb-2">할당 금액 ($)</th>
+                                    <th class="pb-2">1/2 예시 ($)</th>
+                                    <th class="pb-2">매수 금액 ($)</th>
+                                    <th class="pb-2 text-right">잔여 금액 ($)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="splitBuyTableBody" class="divide-y divide-slate-800/40">
+                                <!-- JS 동적 생성 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 백업 데이터 수동 입력 카드 -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl relative">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-file-import text-emerald-400"></i> 수동 데이터 붙여넣기 (비상용)
+                    </h2>
+                    <button onclick="loadSampleData()" class="text-[11px] text-slate-500 hover:text-emerald-400 transition">
+                        샘플 데이터 로드
+                    </button>
+                </div>
+                
+                <p class="text-[11px] text-slate-400 mb-3">
+                    인터넷 연결이 어렵거나 수동 검증 시 시트 전체(A~Q열)를 드래그 복사해 그대로 입력해 주세요.[cite: 1]
+                </p>
+
+                <textarea id="rawPasteArea" 
+                    class="w-full h-32 bg-slate-950 text-slate-400 font-mono text-[10px] p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition resize-none mb-3"
+                    placeholder="날짜	수익금	누적수익금	전체계좌	최고점하락률	일별수익률	특이사항	현금	divo..."></textarea>
+
+                <button onclick="processManualImport()" 
+                    class="w-full bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                    수동 텍스트 업데이트
+                </button>
+            </div>
+
+            <!-- 계산 규칙 설명서 -->
+            <div class="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-5 text-xs text-slate-400 leading-relaxed">
+                <h3 class="font-bold text-slate-300 mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-info-circle text-amber-500"></i> 데이터 연동 및 저장 기능 안내
+                </h3>
+                <ul class="space-y-1.5 list-disc list-inside text-[11px]">
+                    <li><strong class="text-slate-300">현금 자동 산출:</strong> <code>전체계좌 - 보유주식 총합 = 현금</code>으로 자동 계산됩니다[cite: 1].</li>
+                    <li><strong class="text-slate-300">종목별 분할매수 저장:</strong> 입력된 1~7차 매수 계획은 브라우저(컴퓨터/모바일) 내부 메모리에 자동 저장되어 기기를 재부팅해도 사라지지 않습니다.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 오른쪽 패널: 대시보드 리포트 (8 cols) -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+            
+            <!-- 지표 요약 카드 그리드 -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">누적 수익금 총합</span>
+                    <div class="mt-2 flex items-baseline gap-1">
+                        <span id="kpiTotalRevenue" class="text-lg lg:text-xl font-extrabold text-emerald-400">$0.00</span>
+                    </div>
+                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-coins mr-1"></i>순수익 합산</span>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">현재 계좌 평가액</span>
+                    <div class="mt-2 flex items-baseline gap-1">
+                        <span id="kpiCurrentAccount" class="text-lg lg:text-xl font-extrabold text-slate-100">$0.00</span>
+                    </div>
+                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-vault mr-1"></i>최종일 평가</span>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
+                    <div class="mt-2 flex items-baseline gap-1">
+                        <span id="kpiAvgRevenue" class="text-lg lg:text-xl font-extrabold text-sky-400">$0.00</span>
+                    </div>
+                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-scale-balanced mr-1"></i>0원 일수 포함</span>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">최대 낙폭 (MDD)</span>
+                    <div class="mt-2 flex items-baseline gap-1">
+                        <span id="kpiMaxMDD" class="text-lg lg:text-xl font-extrabold text-rose-500">0.00%</span>
+                    </div>
+                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-circle-radiation mr-1"></i>전고점비 최저</span>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">월 평균 수익금</span>
+                    <div class="mt-2 flex items-baseline gap-1">
+                        <span id="kpiMonthlyAvgRevenue" class="text-lg lg:text-xl font-extrabold text-emerald-400">$0.00</span>
+                    </div>
+                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-calendar-days mr-1"></i>월합산 평균</span>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">월 평균 수익률</span>
+                    <div class="mt-2 flex items-baseline gap-1">
+                        <span id="kpiMonthlyAvgReturn" class="text-lg lg:text-xl font-extrabold text-sky-400">0.00%</span>
+                    </div>
+                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-percent mr-1"></i>월별 증감 평균</span>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">연환산 수익률</span>
+                    <div class="mt-2 flex items-baseline gap-1">
+                        <span id="kpiAnnualReturn" class="text-lg lg:text-xl font-extrabold text-amber-400">0.00%</span>
+                    </div>
+                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-chart-line mr-1"></i>CAGR 연복리</span>
+                </div>
+            </div>
+
+            <!-- 차트 영역 1단 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-column text-emerald-400"></i> 월별 수익 합계 & 일평균 (0원 포함)
+                        </h3>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
+                            <button id="btnComboFilter3M" onclick="toggleComboChartFilter('3M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">3개월</button>
+                            <button id="btnComboFilter6M" onclick="toggleComboChartFilter('6M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">6개월</button>
+                            <button id="btnComboFilter1Y" onclick="toggleComboChartFilter('1Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">1년</button>
+                            <button id="btnComboFilterALL" onclick="toggleComboChartFilter('ALL')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">전체</button>
+                        </div>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="monthlyComboChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-slate-800/60 pb-2.5">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-cyan-400"></i> 자산 포트폴리오 배분 비중
+                        </h3>
+                        <div id="cashStockRatioBadge" class="hidden text-[11px] font-semibold text-slate-300 bg-slate-950 px-2.5 py-1 rounded-xl border border-slate-800/80 flex items-center gap-2 self-start sm:self-auto shadow-inner">
+                            <span class="text-cyan-400 flex items-center gap-1"><i class="fa-solid fa-wallet text-[10px]"></i> 현금 <span id="cashPercentRatio" class="font-mono font-bold">0.0%</span></span>
+                            <span class="text-slate-700">|</span>
+                            <span class="text-sky-400 flex items-center gap-1"><i class="fa-solid fa-chart-line text-[10px]"></i> 주식 <span id="stockPercentRatio" class="font-mono font-bold">0.0%</span></span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center gap-4 flex-1">
+                        <div class="relative w-40 h-40 flex-shrink-0">
+                            <canvas id="portfolioDonutChart"></canvas>
+                        </div>
+                        <div class="flex-1 w-full overflow-y-auto max-h-48 text-[11px] space-y-1.5" id="portfolioBreakdown"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 차트 영역 2단 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                            <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-sky-400"></i> 전체 계좌 평가액 추이
+                            </h3>
+                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
+                                <button id="btnAccFilter3M" onclick="toggleAccChartFilter('3M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">3개월</button>
+                                <button id="btnAccFilter6M" onclick="toggleAccChartFilter('6M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">6개월</button>
+                                <button id="btnAccFilter1Y" onclick="toggleAccChartFilter('1Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">1년</button>
+                                <button id="btnAccFilterALL" onclick="toggleAccChartFilter('ALL')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">전체</button>
+                            </div>
+                        </div>
+                        <div class="relative h-64 w-full">
+                            <canvas id="accountValueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                            <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-area text-rose-500"></i> 최고점 대비 하락률 (MDD) 추이
+                            </h3>
+                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
+                                <button id="btnMddFilter3M" onclick="toggleMddChartFilter('3M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">3개월</button>
+                                <button id="btnMddFilter6M" onclick="toggleMddChartFilter('6M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">6개월</button>
+                                <button id="btnMddFilter1Y" onclick="toggleMddChartFilter('1Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">1년</button>
+                                <button id="btnMddFilterALL" onclick="toggleMddChartFilter('ALL')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">전체</button>
+                            </div>
+                        </div>
+                        <div class="relative h-64 w-full">
+                            <canvas id="mddAreaChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 차트 영역 3단 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-check text-amber-500"></i> 연도별 수익금 합계
+                        </h3>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
+                            <button id="btnYearlyFilter3Y" onclick="toggleYearlyChartFilter('3Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">3년</button>
+                            <button id="btnYearlyFilter5Y" onclick="toggleYearlyChartFilter('5Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">5년</button>
+                            <button id="btnYearlyFilterALL" onclick="toggleYearlyChartFilter('ALL')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">전체</button>
+                        </div>
+                    </div>
+                    <div class="relative h-56 w-full">
+                        <canvas id="yearlyBarChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-emerald-400"></i> 월별 수익률 추이 (월평균 기반)
+                        </h3>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
+                            <button id="btnMonRetFilter3M" onclick="toggleMonthlyReturnChartFilter('3M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">3개월</button>
+                            <button id="btnMonRetFilter6M" onclick="toggleMonthlyReturnChartFilter('6M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">6개월</button>
+                            <button id="btnMonRetFilter1Y" onclick="toggleMonthlyReturnChartFilter('1Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">1년</button>
+                            <button id="btnMonRetFilterALL" onclick="toggleMonthlyReturnChartFilter('ALL')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">전체</button>
+                        </div>
+                    </div>
+                    <div class="relative h-56 w-full">
+                        <canvas id="monthlyReturnChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 데이터 상세 테이블 보기 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-list-ol text-slate-400"></i> 상세 데이터 테이블
+                        </h3>
+                        <span class="text-xs text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80" id="totalRowsCount">총 0개 기록</span>
+                    </div>
+                    
+                    <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto text-xs">
+                        <button id="btnTableRecent" onclick="toggleTableMode('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 15일</button>
+                        <button id="btnTableAll" onclick="toggleTableMode('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
+                                <th class="p-3">날짜</th>
+                                <th class="p-3 text-right">당일 수익금</th>
+                                <th class="p-3 text-right">누적 수익금</th>
+                                <th class="p-3 text-right">계좌 평가액</th>
+                                <th class="p-3 text-right">전고점 대비 하락률 (MDD)</th>
+                                <th class="p-3 text-right">일별 수익률</th>
+                                <th class="p-3 text-left">특이사항</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailTableBody" class="text-slate-300 divide-y divide-slate-800/50"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        let comboChartInstance = null;
+        let mddChartInstance = null;
+        let accountChartInstance = null;
+        let yearlyChartInstance = null;
+        let donutChartInstance = null;
+        let monthlyReturnChartInstance = null; 
+
+        let activeTableMode = 'recent'; 
+        let activeAccChartFilter = 'ALL';
+        let activeMddChartFilter = 'ALL';
+        let activeComboChartFilter = 'ALL';
+        let activeMonthlyReturnChartFilter = 'ALL';
+        let activeYearlyChartFilter = 'ALL';
+        
+        let cachedParsedData = [];
+        let parsedHeaders = [];
+
+        // 기본 지원 종목 리스트
+        let availableTickers = ["DIVO", "MTUM", "PTNQ", "SCHD", "SOXL", "SPMO", "TQQQ", "VYM", "XLP"];
+        let currentSelectedTicker = "DIVO";
+
+        const sampleRawData = `날짜	수익금	수익금 총합	전체계좌	최고점 대비 하락률	일별 수익률	특이사항	현금	divo	mtum	ptnq	schd	soxl	spmo	tqqq	vym	xlp
+2026-01-30	31.66	31.66	41,543.20	0.00%	0.00%	첫 거래 및 계좌 개설	31,653.36	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
+2026-01-31	37.31	68.97	41,543.20	0.00%	0.00%	평가금액 유지	31,653.36	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
+2026-02-01	28.76	97.73	41,646.90	0.00%	0.25%	미국 성장주 강세	31,653.36	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
+2026-02-02	23.2	120.93	41,538.68	-0.26%	-0.26%		31,500.00	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
+2026-02-03	17.84	138.77	41,513.33	-0.32%	-0.06%	소폭 리밸런싱 진행	31,450.00	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
+2026-02-04	0	138.77	41,336.75	-0.74%	-0.43%		31,250.00	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
+2026-02-05	6.08	144.85	41,336.75	-0.74%	0.00%		31,250.00	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
+2026-02-06	0	144.85	41,761.01	0.00%	1.03%	빅테크 실적 발표 호재	31,400.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
+2026-02-07	0	144.85	41,761.01	0.00%	0.00%		31,400.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
+2026-02-08	217.04	361.89	41,761.01	0.00%	0.00%	배당금 대거 수령	31,400.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
+2026-02-09	0	361.89	41,761.01	0.00%	0.00%		31,400.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
+2026-02-10	19.7	381.59	41,841.08	0.00%	0.19%		31,450.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
+2026-02-11	5.77	387.36	41,839.00	0.00%	0.00%		31,440.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
+2026-02-12	59.19	446.55	41,896.18	0.00%	0.14%	금리 동결 발표 안정	31,440.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
+2026-02-13	0	446.55	41,709.63	-0.45%	-0.45%	인플레이션 우려 하락	31,250.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050`;
+
+        window.google = {
+            visualization: {
+                Query: {
+                    setResponse: function(response) {
+                        const scriptTag = document.getElementById('gvizScriptTag');
+                        if (scriptTag) scriptTag.remove();
+
+                        const badge = document.getElementById('syncStatusBadge');
+                        const badgeIcon = document.getElementById('syncStatusIcon');
+                        const badgeText = document.getElementById('syncStatusText');
+
+                        if (!response || response.status === "error") {
+                            badge.className = "text-xs bg-rose-500/10 px-3 py-1.5 rounded-full text-rose-400 border border-rose-500/20";
+                            badgeIcon.className = "fa-solid fa-triangle-exclamation mr-1.5 text-rose-400";
+                            badgeText.innerText = "연동 실패";
+                            showNotification("구글 데이터 연동에 실패하였습니다.", "error", "동기화 실패");
+                            return;
+                        }
+
+                        try {
+                            const table = response.table;
+                            if (!table || !table.rows || table.rows.length === 0) {
+                                throw new Error("가용 데이터 행이 비어있습니다.");
+                            }
+
+                            parsedHeaders = table.cols.map(col => col.label || "").filter(label => label !== "");
+
+                            const parsedMatrix = table.rows.map(row => {
+                                if (!row || !row.c) return [];
+                                return row.c.map(cell => {
+                                    if (!cell) return "";
+                                    if (cell.f !== undefined && cell.f !== null) return String(cell.f);
+                                    if (cell.v !== undefined && cell.v !== null) return String(cell.v);
+                                    return "";
+                                });
+                            });
+
+                            if (parsedMatrix.length > 0 && parsedMatrix[0][0] !== table.cols[0].label) {
+                                parsedMatrix.unshift(table.cols.map(c => c.label || ""));
+                            }
+
+                            parseAndRenderData(parsedMatrix, "구글 API 연동");
+
+                            badge.className = "text-xs bg-emerald-500/10 px-3 py-1.5 rounded-full text-emerald-400 border border-emerald-500/20";
+                            badgeIcon.className = "fa-solid fa-circle text-emerald-400 mr-1.5 text-[8px]";
+                            badgeText.innerText = "구글 시트 연동 완료";
+                            showNotification("실시간 구글 스프레드시트 정보를 성공적으로 연동했습니다!", "success", "동기화 성공");
+
+                        } catch (err) {
+                            badge.className = "text-xs bg-rose-500/10 px-3 py-1.5 rounded-full text-rose-400 border border-rose-500/20";
+                            badgeIcon.className = "fa-solid fa-triangle-exclamation mr-1.5 text-rose-400";
+                            badgeText.innerText = "연동 실패";
+                            showNotification(`구조 파싱 에러: ${err.message}`, "error", "파싱 오류");
+                        }
+                    }
+                }
+            }
+        };
+
+        window.onload = function() {
+            initTickerDropdown();
+            renderSplitBuyTable(currentSelectedTicker);
+
+            const savedUrl = localStorage.getItem('googleSheetCsvUrl');
+            if (savedUrl) {
+                document.getElementById('googleSheetUrl').value = savedUrl;
+                fetchGoogleSheetData();
+            } else {
+                document.getElementById('rawPasteArea').value = sampleRawData;
+                processManualImport();
+            }
+        };
+
+        // --- 📊 종목별 7차 분할 매수 계산기 & 자동 저장 (localStorage) 기능 ---
+
+        function initTickerDropdown() {
+            const select = document.getElementById('selectedTickerSelect');
+            select.innerHTML = '';
+
+            // 로컬 스토리지에 추가된 맞춤 종목 불러오기
+            const customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
+            const mergedTickers = Array.from(new Set([...availableTickers, ...customTickers]));
+
+            mergedTickers.forEach(ticker => {
+                const opt = document.createElement('option');
+                opt.value = ticker;
+                opt.innerText = ticker;
+                select.appendChild(opt);
+            });
+
+            select.value = currentSelectedTicker;
+        }
+
+        function onTickerChange() {
+            const select = document.getElementById('selectedTickerSelect');
+            currentSelectedTicker = select.value;
+            renderSplitBuyTable(currentSelectedTicker);
+        }
+
+        function addNewTickerPrompt() {
+            const newTicker = prompt("새로 추가할 종목명을 입력하세요 (예: TSLA, AAPL):");
+            if (newTicker && newTicker.trim() !== "") {
+                const formatted = newTicker.trim().toUpperCase();
+                
+                const customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
+                if (!customTickers.includes(formatted)) {
+                    customTickers.push(formatted);
+                    localStorage.setItem('customTickersList', JSON.stringify(customTickers));
+                }
+
+                currentSelectedTicker = formatted;
+                initTickerDropdown();
+                renderSplitBuyTable(currentSelectedTicker);
+            }
+        }
+
+        function renderSplitBuyTable(ticker) {
+            const tbody = document.getElementById('splitBuyTableBody');
+            tbody.innerHTML = '';
+
+            // 로컬스토리지에서 해당 종목의 매수 계획 데이터 로드
+            const savedData = JSON.parse(localStorage.getItem(`splitBuyData_${ticker}`)) || {};
+
+            for (let i = 1; i <= 7; i++) {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition";
+                
+                const stepData = savedData[i] || { alloc: (i === 1 ? 4500 : ''), bought: (i === 1 ? 2500 : '') };
+
+                tr.innerHTML = `
+                    <td class="py-2 font-bold text-amber-400">${i}차</td>
+                    <td class="py-2">
+                        <input type="number" id="alloc_${i}" value="${stepData.alloc}" oninput="calcAndSaveSplitBuy('${ticker}', ${i})" placeholder="0"
+                            class="w-16 sm:w-20 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
+                    </td>
+                    <td class="py-2 font-mono text-slate-400 text-[10px]" id="half_${i}">$0.00</td>
+                    <td class="py-2">
+                        <input type="number" id="bought_${i}" value="${stepData.bought}" oninput="calcAndSaveSplitBuy('${ticker}', ${i})" placeholder="0"
+                            class="w-16 sm:w-20 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
+                    </td>
+                    <td class="py-2 text-right font-mono font-bold text-sky-400" id="rem_${i}">$0.00</td>
+                `;
+                tbody.appendChild(tr);
+                updateSplitRowUI(i);
+            }
+        }
+
+        function calcAndSaveSplitBuy(ticker, step) {
+            updateSplitRowUI(step);
+
+            // 해당 종목의 1~7차 데이터를 localStorage에 실시간 자동 저장
+            const splitData = {};
+            for (let i = 1; i <= 7; i++) {
+                const allocVal = document.getElementById(`alloc_${i}`).value;
+                const boughtVal = document.getElementById(`bought_${i}`).value;
+                splitData[i] = { alloc: allocVal, bought: boughtVal };
+            }
+
+            localStorage.setItem(`splitBuyData_${ticker}`, JSON.stringify(splitData));
+        }
+
+        function updateSplitRowUI(step) {
+            const allocInput = parseFloat(document.getElementById(`alloc_${step}`).value) || 0;
+            const boughtInput = parseFloat(document.getElementById(`bought_${step}`).value) || 0;
+
+            const halfVal = allocInput / 2;
+            const remVal = allocInput - boughtInput;
+
+            document.getElementById(`half_${step}`).innerText = `$${halfVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            
+            const remEl = document.getElementById(`rem_${step}`);
+            remEl.innerText = `$${remVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            
+            if (remVal < 0) {
+                remEl.className = "py-2 text-right font-mono font-bold text-rose-400";
+            } else {
+                remEl.className = "py-2 text-right font-mono font-bold text-sky-400";
+            }
+        }
+
+        // --- 📈 대시보드 공통 연동 시스템 ---
+
+        function showNotification(message, type = 'success', title = "상태 알림") {
+            const container = document.getElementById('statusNotification');
+            const icon = document.getElementById('statusIcon');
+            const iconContainer = document.getElementById('statusIconContainer');
+            const text = document.getElementById('statusMessage');
+            const titleElement = document.getElementById('statusTitle');
+
+            container.classList.remove('hidden');
+            titleElement.innerText = title;
+            text.innerHTML = message;
+            
+            if (type === 'success') {
+                container.className = "p-5 rounded-2xl text-xs transition-all duration-300 bg-emerald-950/20 border border-emerald-500/25";
+                iconContainer.className = "p-2 rounded-lg bg-emerald-500/10 text-emerald-400";
+                icon.className = "fa-solid fa-circle-check text-base";
+            } else if (type === 'error') {
+                container.className = "p-5 rounded-2xl text-xs transition-all duration-300 bg-rose-950/20 border border-rose-500/25";
+                iconContainer.className = "p-2 rounded-lg bg-rose-500/10 text-rose-400";
+                icon.className = "fa-solid fa-triangle-exclamation text-base";
+            } else {
+                container.className = "p-5 rounded-2xl text-xs transition-all duration-300 bg-sky-950/20 border border-sky-500/25";
+                iconContainer.className = "p-2 rounded-lg bg-sky-500/10 text-sky-400";
+                icon.className = "fa-solid fa-circle-info text-base";
+            }
+        }
+
+        function loadSampleData() {
+            document.getElementById('rawPasteArea').value = sampleRawData;
+            processManualImport();
+            showNotification("기본 포트폴리오 샘플 데이터가 가공되었습니다.", "success", "데이터 리셋 완료");
+        }
+
+        function processManualImport() {
+            const rawText = document.getElementById('rawPasteArea').value.trim();
+            if (!rawText) return;
+
+            const rows = rawText.split('\n');
+            const dataToParse = [];
+
+            rows.forEach(row => {
+                const cols = row.split('\t');
+                if (cols.length < 2) return;
+                dataToParse.push(cols);
+            });
+
+            parseAndRenderData(dataToParse, "수동 붙여넣기");
+        }
+
+        function saveAndSyncUrl() {
+            const urlInput = document.getElementById('googleSheetUrl').value.trim();
+            if (!urlInput) return;
+            localStorage.setItem('googleSheetCsvUrl', urlInput);
+            fetchGoogleSheetData();
+        }
+
+        function getGvizUrl(inputUrl) {
+            const match = inputUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+            if (match && match[1]) {
+                const sheetId = match[1];
+                const gidMatch = inputUrl.match(/[&?]gid=([0-9]+)/);
+                const gid = gidMatch ? gidMatch[1] : '0';
+                return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?gid=${gid}`;
+            }
+            return null;
+        }
+
+        async function fetchGoogleSheetData() {
+            const url = document.getElementById('googleSheetUrl').value.trim();
+            if (!url) return;
+
+            const gvizUrl = getGvizUrl(url);
+            if (gvizUrl) {
+                const oldScript = document.getElementById('gvizScriptTag');
+                if (oldScript) oldScript.remove();
+
+                const script = document.createElement('script');
+                script.id = 'gvizScriptTag';
+                script.src = gvizUrl;
+                document.body.appendChild(script);
+            }
+        }
+
+        function parseAndRenderData(rawMatrix, sourceName) {
+            if (rawMatrix.length < 2) return;
+
+            const headers = rawMatrix[0].map(h => h.trim());
+            const parsedData = [];
+            let currentMaxAccountVal = -Infinity;
+            let prevAccountVal = null;
+
+            const memoIndex = 6;
+            const stockStartIndex = 8;
+
+            let latestPortfolio = null;
+
+            // 시트 헤더로부터 등록된 주식 티커들을 감지하여 드롭다운 자동 확장
+            const detectedTickers = [];
+            for (let sIdx = stockStartIndex; sIdx < headers.length; sIdx++) {
+                if (headers[sIdx] && headers[sIdx].trim() !== "") {
+                    detectedTickers.push(headers[sIdx].trim().toUpperCase());
+                }
+            }
+
+            if (detectedTickers.length > 0) {
+                availableTickers = Array.from(new Set([...availableTickers, ...detectedTickers]));
+                initTickerDropdown();
+            }
+
+            for (let i = 1; i < rawMatrix.length; i++) {
+                const cols = rawMatrix[i];
+                if (!cols || cols.length < 2) continue;
+
+                const dateStr = cols[0]?.trim();
+                if (!dateStr || dateStr === "날짜" || !dateStr.includes("-")) continue;
+
+                const rawRevenueVal = cols[1]?.trim();
+                const revenue = (rawRevenueVal === "" || rawRevenueVal === undefined) ? 0 : (parseFloat(rawRevenueVal.replace(/[^0-9.-]/g, '')) || 0);
+                
+                const rawAccountVal = cols[3]?.trim();
+                const totalAccVal = parseFloat(rawAccountVal?.replace(/[^0-9.-]/g, '')) || 0;
+                const memoVal = cols[memoIndex]?.trim() || "";
+
+                if (dateStr && !isNaN(revenue) && !isNaN(totalAccVal)) {
+                    if (totalAccVal > currentMaxAccountVal) currentMaxAccountVal = totalAccVal;
+
+                    const mdd = currentMaxAccountVal > 0 ? ((totalAccVal - currentMaxAccountVal) / currentMaxAccountVal) : 0;
+                    let dailyReturn = (prevAccountVal !== null && prevAccountVal > 0) ? (totalAccVal - prevAccountVal) / prevAccountVal : 0;
+                    prevAccountVal = totalAccVal;
+
+                    const portfolioItems = {};
+                    let totalStockSum = 0;
+
+                    for (let sIdx = stockStartIndex; sIdx < cols.length; sIdx++) {
+                        const ticker = headers[sIdx];
+                        if (ticker && ticker !== "") {
+                            const rawStockVal = cols[sIdx]?.trim();
+                            const stockVal = parseFloat(rawStockVal?.replace(/[^0-9.-]/g, '')) || 0;
+                            portfolioItems[ticker.toUpperCase()] = stockVal;
+                            totalStockSum += stockVal;
+                        }
+                    }
+
+                    // 현금 자동 계산: 전체 계좌 - 주식 합계
+                    const autoCalculatedCash = Math.max(0, totalAccVal - totalStockSum);
+                    portfolioItems["현금"] = autoCalculatedCash;
+                    const totalPortfolioSum = totalStockSum + autoCalculatedCash;
+
+                    const record = {
+                        date: dateStr,
+                        revenue: revenue,
+                        accountVal: totalAccVal,
+                        mdd: mdd,
+                        dailyReturn: dailyReturn,
+                        memo: memoVal,
+                        portfolio: portfolioItems,
+                        portfolioSum: totalPortfolioSum
+                    };
+
+                    parsedData.push(record);
+
+                    if (totalPortfolioSum > 0) {
+                        latestPortfolio = {
+                            totalAccount: totalAccVal,
+                            items: portfolioItems,
+                            sum: totalPortfolioSum
+                        };
+                    }
+                }
+            }
+
+            parsedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            let rollingSum = 0;
+            parsedData.forEach(item => {
+                rollingSum += item.revenue;
+                item.cumRevenue = rollingSum;
+            });
+
+            cachedParsedData = parsedData;
+            
+            updateKpiCards(parsedData);
+            const monthlyStats = groupDataByMonth(parsedData);
+            const yearlyStats = groupDataByYear(parsedData);
+            const mStats = calculateMonthlyStats(parsedData); 
+            
+            renderCharts(parsedData, monthlyStats, yearlyStats, latestPortfolio, mStats.monthlyDetails);
+            renderDetailTable(parsedData);
+        }
+
+        function calculateMonthlyStats(data) {
+            if (data.length === 0) return { avgMonthlyRevenue: 0, avgMonthlyReturn: 0, monthlyDetails: [] };
+
+            const monthlyMap = {};
+            data.forEach(item => {
+                const monthKey = item.date.substring(0, 7);
+                if (!monthlyMap[monthKey]) monthlyMap[monthKey] = { revenueSum: 0, records: [] };
+                monthlyMap[monthKey].revenueSum += item.revenue;
+                monthlyMap[monthKey].records.push(item);
+            });
+
+            const monthKeys = Object.keys(monthlyMap).sort();
+            let sumOfMonthlyRevenues = 0;
+            let sumOfMonthlyReturns = 0;
+            const monthlyDetails = []; 
+
+            monthKeys.forEach((mKey, idx) => {
+                const mData = monthlyMap[mKey];
+                sumOfMonthlyRevenues += mData.revenueSum;
+
+                mData.records.sort((a, b) => new Date(a.date) - new Date(b.date));
+                const endRecord = mData.records[mData.records.length - 1];
+
+                let startVal = 0;
+                if (idx === 0) {
+                    const startRecord = mData.records[0];
+                    startVal = startRecord.accountVal - startRecord.revenue;
+                    if (startVal <= 0) startVal = startRecord.accountVal;
+                } else {
+                    const prevMonthKey = monthKeys[idx - 1];
+                    const prevRecords = monthlyMap[prevMonthKey].records;
+                    startVal = prevRecords[prevRecords.length - 1].accountVal;
+                }
+
+                const endVal = endRecord.accountVal;
+                const mReturn = startVal > 0 ? (endVal - startVal) / startVal : 0;
+                sumOfMonthlyReturns += mReturn;
+
+                monthlyDetails.push({ month: mKey, rate: mReturn * 100 });
+            });
+
+            return {
+                avgMonthlyRevenue: monthKeys.length > 0 ? (sumOfMonthlyRevenues / monthKeys.length) : 0,
+                avgMonthlyReturn: monthKeys.length > 0 ? (sumOfMonthlyReturns / monthKeys.length) : 0,
+                monthlyDetails: monthlyDetails
+            };
+        }
+
+        function updateKpiCards(data) {
+            const totalRevenue = data.reduce((sum, item) => sum + item.revenue, 0);
+            const currentAccount = data[data.length - 1].accountVal;
+            const avgRevenue = data.length > 0 ? (totalRevenue / data.length) : 0;
+            const minMDD = Math.min(...data.map(item => item.mdd));
+
+            document.getElementById('kpiTotalRevenue').innerText = `$${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('kpiCurrentAccount').innerText = `$${currentAccount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('kpiAvgRevenue').innerText = `$${avgRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('kpiMaxMDD').innerText = `${(minMDD * 100).toFixed(2)}%`;
+
+            const mStats = calculateMonthlyStats(data);
+            document.getElementById('kpiMonthlyAvgRevenue').innerText = `$${mStats.avgMonthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('kpiMonthlyAvgReturn').innerText = `${(mStats.avgMonthlyReturn * 100).toFixed(2)}%`;
+
+            const startVal = data[0].accountVal - data[0].revenue;
+            const initialVal = startVal > 0 ? startVal : data[0].accountVal;
+            const totalReturn = initialVal > 0 ? (currentAccount - initialVal) / initialVal : 0;
+
+            const startDate = new Date(data[0].date);
+            const endDate = new Date(data[data.length - 1].date);
+            const diffDays = Math.ceil(Math.abs(endDate - startDate) / (1000 * 60 * 60 * 24)) || 1;
+
+            let annualizedReturn = 0;
+            if (totalReturn > -1) {
+                annualizedReturn = diffDays >= 15 ? Math.pow(1 + totalReturn, 365 / diffDays) - 1 : totalReturn * (365 / diffDays);
+            }
+            document.getElementById('kpiAnnualReturn').innerText = `${(annualizedReturn * 100).toFixed(2)}%`;
+        }
+
+        function groupDataByMonth(data) {
+            const groups = {};
+            data.forEach(item => {
+                const monthKey = item.date.substring(0, 7);
+                if (!groups[monthKey]) groups[monthKey] = { sumRevenue: 0, totalDays: 0 };
+                groups[monthKey].sumRevenue += item.revenue;
+                groups[monthKey].totalDays += 1;
+            });
+
+            return Object.keys(groups).map(key => ({
+                month: key,
+                totalRevenue: groups[key].sumRevenue,
+                avgRevenue: groups[key].totalDays > 0 ? (groups[key].sumRevenue / groups[key].totalDays) : 0
+            })).sort((a, b) => a.month.localeCompare(b.month));
+        }
+
+        function groupDataByYear(data) {
+            const groups = {};
+            data.forEach(item => {
+                const yearKey = item.date.substring(0, 4);
+                if (!groups[yearKey]) groups[yearKey] = 0;
+                groups[yearKey] += item.revenue;
+            });
+
+            return Object.keys(groups).map(key => ({
+                year: key,
+                totalRevenue: groups[key]
+            })).sort((a, b) => a.year.localeCompare(b.year));
+        }
+
+        function sliceDailyData(dailyData, filterMode) {
+            if (dailyData.length === 0) return [];
+            let filtered = [...dailyData];
+            const latestDate = new Date(dailyData[dailyData.length - 1].date);
+            let thresholdDate = null;
+
+            if (filterMode === '3M') { thresholdDate = new Date(latestDate); thresholdDate.setMonth(thresholdDate.getMonth() - 3); }
+            else if (filterMode === '6M') { thresholdDate = new Date(latestDate); thresholdDate.setMonth(thresholdDate.getMonth() - 6); }
+            else if (filterMode === '1Y') { thresholdDate = new Date(latestDate); thresholdDate.setFullYear(thresholdDate.getFullYear() - 1); }
+
+            if (thresholdDate) {
+                filtered = dailyData.filter(d => new Date(d.date) >= thresholdDate);
+                if (filtered.length === 0) filtered = dailyData.slice(-15);
+            }
+            return filtered;
+        }
+
+        function sliceMonthlyData(monthlyData, filterMode) {
+            let count = filterMode === '3M' ? 3 : filterMode === '6M' ? 6 : filterMode === '1Y' ? 12 : 0;
+            return count > 0 ? monthlyData.slice(-count) : monthlyData;
+        }
+
+        function sliceYearlyData(yearlyData, filterMode) {
+            let count = filterMode === '3Y' ? 3 : filterMode === '5Y' ? 5 : 0;
+            return count > 0 ? yearlyData.slice(-count) : yearlyData;
+        }
+
+        function toggleAccChartFilter(mode) { activeAccChartFilter = mode; updateFilterButtonStyles('Acc', mode); renderAccountChart(cachedParsedData); }
+        function toggleMddChartFilter(mode) { activeMddChartFilter = mode; updateFilterButtonStyles('Mdd', mode); renderMddChart(cachedParsedData); }
+        function toggleComboChartFilter(mode) { activeComboChartFilter = mode; updateFilterButtonStyles('Combo', mode); renderMonthlyComboChart(groupDataByMonth(cachedParsedData)); }
+        function toggleMonthlyReturnChartFilter(mode) { activeMonthlyReturnChartFilter = mode; updateFilterButtonStyles('MonRet', mode); renderMonthlyReturnChart(calculateMonthlyStats(cachedParsedData).monthlyDetails); }
+        function toggleYearlyChartFilter(mode) { activeYearlyChartFilter = mode; updateFilterButtonStyles('Yearly', mode); renderYearlyBarChart(groupDataByYear(cachedParsedData)); }
+
+        function updateFilterButtonStyles(type, filterMode) {
+            const btn3 = document.getElementById(`btn${type}Filter3M`) || document.getElementById(`btn${type}Filter3Y`);
+            const btn6 = document.getElementById(`btn${type}Filter6M`) || document.getElementById(`btn${type}Filter5Y`);
+            const btn1 = document.getElementById(`btn${type}Filter1Y`);
+            const btnALL = document.getElementById(`btn${type}FilterALL`);
+
+            [btn3, btn6, btn1, btnALL].filter(btn => btn !== null).forEach(btn => {
+                btn.className = "px-2.5 py-1 rounded-lg font-semibold transition-all duration-200 text-slate-400 hover:text-slate-200";
+            });
+
+            const activeBtn = document.getElementById(`btn${type}Filter${filterMode}`);
+            if (activeBtn) activeBtn.className = "px-2.5 py-1 rounded-lg font-semibold transition-all duration-200 bg-sky-600 text-white shadow-sm";
+        }
+
+        function renderCharts(dailyData, monthlyData, yearlyData, latestPortfolio, monthlyStatsDetails) {
+            renderMonthlyComboChart(monthlyData);
+            renderPortfolioDonutChart(latestPortfolio);
+            renderAccountChart(dailyData);
+            renderMddChart(dailyData);
+            renderYearlyBarChart(yearlyData);
+            renderMonthlyReturnChart(monthlyStatsDetails);
+        }
+
+        function renderMonthlyComboChart(monthlyData) {
+            const comboCtx = document.getElementById('monthlyComboChart').getContext('2d');
+            if (comboChartInstance) comboChartInstance.destroy();
+            const filtered = sliceMonthlyData(monthlyData, activeComboChartFilter);
+
+            comboChartInstance = new Chart(comboCtx, {
+                type: 'bar',
+                data: {
+                    labels: filtered.map(d => d.month),
+                    datasets: [
+                        { label: '월별 수익금 ($)', data: filtered.map(d => d.totalRevenue), backgroundColor: 'rgba(16, 185, 129, 0.65)', borderColor: '#10b981', borderWidth: 2, borderRadius: 6, yAxisID: 'y' },
+                        { label: '일평균 ($)', data: filtered.map(d => d.avgRevenue), type: 'line', borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 3, tension: 0.3, yAxisID: 'y2' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                        y: { position: 'left', grid: { color: '#1e293b' }, ticks: { color: '#10b981' } },
+                        y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#f59e0b' } }
+                    }
+                }
+            });
+        }
+
+        function renderPortfolioDonutChart(latestPortfolio) {
+            const donutCtx = document.getElementById('portfolioDonutChart').getContext('2d');
+            const breakdownContainer = document.getElementById('portfolioBreakdown');
+            const ratioBadge = document.getElementById('cashStockRatioBadge');
+
+            breakdownContainer.innerHTML = '';
+            if (donutChartInstance) donutChartInstance.destroy();
+
+            if (latestPortfolio) {
+                const labels = Object.keys(latestPortfolio.items);
+                const values = Object.values(latestPortfolio.items);
+
+                const cashVal = latestPortfolio.items["현금"] || 0;
+                const totalVal = latestPortfolio.totalAccount || latestPortfolio.sum || 1;
+                const stockVal = Math.max(0, totalVal - cashVal);
+
+                document.getElementById('cashPercentRatio').innerText = `${((cashVal / totalVal) * 100).toFixed(1)}%`;
+                document.getElementById('stockPercentRatio').innerText = `${((stockVal / totalVal) * 100).toFixed(1)}%`;
+                ratioBadge.classList.remove('hidden');
+
+                const colors = ['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#a855f7', '#f43f5e', '#eab308', '#10b981', '#f97316', '#64748b'];
+
+                donutChartInstance = new Chart(donutCtx, {
+                    type: 'doughnut',
+                    data: { labels, datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderWidth: 1.5, borderColor: '#0f172a' }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
+                });
+
+                labels.forEach((label, idx) => {
+                    const value = values[idx];
+                    const percentage = totalVal > 0 ? (value / totalVal) * 100 : 0;
+                    breakdownContainer.insertAdjacentHTML('beforeend', `
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between text-slate-300 font-semibold text-[10px]">
+                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color:${colors[idx % colors.length]}"></span>${label}</span>
+                                <span>$${value.toLocaleString(undefined, {minimumFractionDigits: 2})} (${percentage.toFixed(1)}%)</span>
+                            </div>
+                            <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="h-full rounded-full" style="width:${percentage}%; background-color:${colors[idx % colors.length]}"></div></div>
+                        </div>
+                    `);
+                });
+            }
+        }
+
+        function renderAccountChart(dailyData) {
+            const accCtx = document.getElementById('accountValueChart').getContext('2d');
+            if (accountChartInstance) accountChartInstance.destroy();
+            const filtered = sliceDailyData(dailyData, activeAccChartFilter);
+
+            accountChartInstance = new Chart(accCtx, {
+                type: 'line',
+                data: { labels: filtered.map(d => d.date), datasets: [{ label: '계좌 평가액', data: filtered.map(d => d.accountVal), borderColor: '#38bdf8', borderWidth: 2.5, pointRadius: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#1e293b' } } } }
+            });
+        }
+
+        function renderMddChart(dailyData) {
+            const mddCtx = document.getElementById('mddAreaChart').getContext('2d');
+            if (mddChartInstance) mddChartInstance.destroy();
+            const filtered = sliceDailyData(dailyData, activeMddChartFilter);
+
+            mddChartInstance = new Chart(mddCtx, {
+                type: 'line',
+                data: { labels: filtered.map(d => d.date), datasets: [{ label: 'MDD (%)', data: filtered.map(d => d.mdd * 100), fill: true, backgroundColor: 'rgba(244, 63, 94, 0.25)', borderColor: '#f43f5e', borderWidth: 2, pointRadius: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#1e293b' }, max: 0 } } }
+            });
+        }
+
+        function renderYearlyBarChart(yearlyData) {
+            const yearlyCtx = document.getElementById('yearlyBarChart').getContext('2d');
+            if (yearlyChartInstance) yearlyChartInstance.destroy();
+            const filtered = sliceYearlyData(yearlyData, activeYearlyChartFilter);
+
+            yearlyChartInstance = new Chart(yearlyCtx, {
+                type: 'bar',
+                data: { labels: filtered.map(d => d.year), datasets: [{ label: '연 수익금', data: filtered.map(d => d.totalRevenue), backgroundColor: 'rgba(251, 191, 36, 0.7)', borderColor: '#f59e0b', borderWidth: 2, borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#1e293b' } } } }
+            });
+        }
+
+        function renderMonthlyReturnChart(monthlyStatsDetails) {
+            const returnCtx = document.getElementById('monthlyReturnChart').getContext('2d');
+            if (monthlyReturnChartInstance) monthlyReturnChartInstance.destroy();
+            const filtered = sliceMonthlyData(monthlyStatsDetails, activeMonthlyReturnChartFilter);
+
+            monthlyReturnChartInstance = new Chart(returnCtx, {
+                type: 'line',
+                data: { labels: filtered.map(d => d.month), datasets: [{ label: '월 수익률 (%)', data: filtered.map(d => d.rate), borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, borderWidth: 2.5 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#1e293b' } } } }
+            });
+        }
+
+        function toggleTableMode(mode) {
+            activeTableMode = mode;
+            document.getElementById('btnTableRecent').className = mode === 'recent' ? "px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
+            document.getElementById('btnTableAll').className = mode === 'all' ? "px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
+            renderDetailTable(cachedParsedData);
+        }
+
+        function renderDetailTable(data) {
+            const displayData = activeTableMode === 'recent' ? [...data].reverse().slice(0, 15) : [...data].reverse();
+            document.getElementById('totalRowsCount').innerText = activeTableMode === 'recent' ? `총 ${data.length}개 중 최근 15영업일` : `전체 ${data.length}개 기록`;
+            
+            const tbody = document.getElementById('detailTableBody');
+            tbody.innerHTML = '';
+
+            displayData.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition text-slate-300 border-b border-slate-800/30";
+                tr.innerHTML = `
+                    <td class="p-3 text-slate-400">${item.date}</td>
+                    <td class="p-3 text-right font-semibold text-emerald-400">$${item.revenue.toFixed(2)}</td>
+                    <td class="p-3 text-right text-slate-400">$${item.cumRevenue.toFixed(2)}</td>
+                    <td class="p-3 text-right font-mono">$${item.accountVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-3 text-right font-mono text-rose-400">${(item.mdd * 100).toFixed(2)}%</td>
+                    <td class="p-3 text-right font-mono">${(item.dailyReturn * 100).toFixed(2)}%</td>
+                    <td class="p-3 text-left max-w-[150px] truncate text-slate-400">${item.memo || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
