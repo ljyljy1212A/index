@@ -62,7 +62,77 @@
         
         <!-- 왼쪽 패널: 구글 시트 연동 및 데이터 관리 (4 cols) -->
         <section class="lg:col-span-4 flex flex-col gap-6">
-            
+
+            <!-- 일일 기록 입력 카드 (대시보드 -> 구글시트 자동 반영) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
+                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-emerald-400"></i> 일일 기록 입력
+                    </h2>
+                    <span id="dailyEntrySyncStatus" class="text-[10px] text-slate-500">
+                        <i class="fa-solid fa-circle-notch mr-1"></i>미설정
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                        <label class="block text-[10px] text-slate-500 font-semibold mb-1">날짜</label>
+                        <input type="date" id="dailyEntryDate"
+                            class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 font-semibold mb-1">당일 수익금 ($)</label>
+                        <input type="number" id="dailyEntryRevenue" step="0.01" placeholder="0"
+                            class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] text-slate-500 font-semibold mb-1">계좌 평가액 ($)</label>
+                    <input type="number" id="dailyEntryAccountVal" step="0.01" placeholder="0" oninput="updateDailyEntrySummary()"
+                        class="w-full bg-slate-950 text-slate-200 text-sm font-bold p-2.5 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="mb-2">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-[10px] text-slate-500 font-semibold">종목별 매입금액 ($)</label>
+                        <button onclick="addTickerFromDailyEntry()"
+                            class="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> 종목 추가
+                        </button>
+                    </div>
+                    <div id="dailyEntryTickerRows" class="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto pr-1"></div>
+                    <p class="text-[10px] text-slate-600 mt-1.5">매입금액 합계(참고): <span id="dailyEntryPurchaseSumHint">$0.00</span></p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] text-slate-500 font-semibold mb-1">종목 합산 평가금액 ($)</label>
+                    <input type="number" id="dailyEntryStockSumInput" step="0.01" placeholder="0" oninput="updateDailyEntrySummary()"
+                        class="w-full bg-slate-950 text-slate-200 text-sm font-bold p-2.5 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="flex items-center justify-end text-[11px] bg-slate-950 rounded-xl border border-slate-800 p-3 mb-3">
+                    <div class="text-right">
+                        <span class="text-slate-500">현금 (자동계산 = 계좌평가액 - 종목합산평가금액)</span>
+                        <div id="dailyEntryCash" class="font-mono font-bold text-cyan-400">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] text-slate-500 font-semibold mb-1">특이사항 (선택)</label>
+                    <input type="text" id="dailyEntryMemo" placeholder="예: 미국 금리 동결 발표"
+                        class="w-full bg-slate-950 text-slate-300 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <button onclick="saveDailyRecordToSheet()"
+                    class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/10">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> 저장하고 구글시트에 반영
+                </button>
+                <p class="text-[10px] text-slate-500 leading-relaxed mt-2">
+                    건너뛴 날짜가 있으면 저장 시 직전 입력값으로 자동 채워집니다. 동기화 주소는 아래 "종목별 7차 분할매수" 카드에서 설정한 주소를 함께 사용합니다.
+                </p>
+            </div>
+
             <!-- 종목별 7차 분할매수 계산기 카드 (+추가/-삭제 기능 탑재) -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
                 <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
@@ -110,6 +180,29 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- 분할매수 데이터 - 구글시트(Apps Script) 실시간 동기화 -->
+                <div class="mt-4 pt-4 border-t border-slate-800/70 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-[11px] text-slate-400 font-semibold">분할매수 동기화 주소 (Apps Script 웹앱 URL)</label>
+                        <span id="splitBuySyncStatus" class="text-[10px] text-slate-500">
+                            <i class="fa-solid fa-circle-notch mr-1"></i>미설정
+                        </span>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <input type="text" id="splitBuyApiUrlInput"
+                            class="flex-1 bg-slate-950 text-slate-300 text-[11px] p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500"
+                            placeholder="https://script.google.com/macros/s/.../exec">
+                        <button onclick="saveSplitBuyApiUrl()"
+                            class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-xl text-xs font-bold border border-slate-700 transition"
+                            title="저장 및 동기화">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-relaxed">
+                        입력하면 이 기기뿐 아니라 PC/폰 어디서든 같은 분할매수 데이터를 볼 수 있어요.
+                    </p>
                 </div>
             </div>
 
@@ -352,7 +445,7 @@
 
             <!-- 데이터 상세 테이블 보기 -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
                     <div class="flex items-center gap-3">
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-list-ol text-slate-400"></i> 상세 데이터 테이블
@@ -365,17 +458,39 @@
                         <button id="btnTableAll" onclick="toggleTableMode('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
                     </div>
                 </div>
+
+                <!-- 특이사항 검색 (예: '전쟁' 입력 시 해당 날짜로 이동, 여러 건이면 다음/이전으로 순회) -->
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="relative flex-1 max-w-xs">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                        <input type="text" id="memoSearchInput" placeholder="특이사항 검색 (예: 전쟁)"
+                            oninput="searchMemo()"
+                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); searchNext(); }"
+                            class="w-full bg-slate-950 text-slate-200 text-xs pl-8 pr-2 py-2 rounded-lg border border-slate-800 focus:outline-none focus:border-sky-500">
+                    </div>
+                    <span id="memoSearchCounter" class="text-[11px] text-slate-500 min-w-[70px]"></span>
+                    <button onclick="searchPrev()" title="이전 결과" class="text-slate-400 hover:text-sky-400 text-xs px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950">
+                        <i class="fa-solid fa-chevron-up"></i>
+                    </button>
+                    <button onclick="searchNext()" title="다음 결과" class="text-slate-400 hover:text-sky-400 text-xs px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <button onclick="resetTableSort()" title="날짜순으로 정렬 초기화" class="text-slate-400 hover:text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-950 whitespace-nowrap">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> 정렬 초기화
+                    </button>
+                </div>
                 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
                                 <th class="p-3">날짜</th>
-                                <th class="p-3 text-right">당일 수익금</th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('revenue')">당일 수익금 <span id="sortIcon_revenue" class="text-[10px]"></span></th>
                                 <th class="p-3 text-right">누적 수익금</th>
-                                <th class="p-3 text-right">계좌 평가액</th>
-                                <th class="p-3 text-right">MDD</th>
-                                <th class="p-3 text-right">일별 수익률</th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('accountVal')">계좌 평가액 <span id="sortIcon_accountVal" class="text-[10px]"></span></th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('cash')">현금 <span id="sortIcon_cash" class="text-[10px]"></span></th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('mdd')">MDD <span id="sortIcon_mdd" class="text-[10px]"></span></th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('dailyReturn')">일별 수익률 <span id="sortIcon_dailyReturn" class="text-[10px]"></span></th>
                                 <th class="p-3 text-left">특이사항</th>
                             </tr>
                         </thead>
@@ -409,6 +524,11 @@
         // 기본 지원 종목 리스트
         let availableTickers = ["DIVO", "MTUM", "PTNQ", "SCHD", "SOXL", "SPMO", "TQQQ", "VYM", "XLP"];
         let currentSelectedTicker = "DIVO";
+
+        // --- 분할매수 데이터 구글시트(Apps Script) 동기화 상태 ---
+        let splitBuyApiUrl = localStorage.getItem('splitBuyApiUrl') || '';
+        let splitBuyRemoteData = { tickers: [], data: {} }; // Apps Script에서 받아온 최신 데이터 캐시
+        let splitBuySaveTimer = null; // 입력 디바운스 타이머
 
         const sampleRawData = `날짜	수익금	수익금 총합	전체계좌	최고점 대비 하락률	일별 수익률	특이사항	현금	divo	mtum	ptnq	schd	soxl	spmo	tqqq	vym	xlp
 2026-01-30	31.66	31.66	41,543.20	0.00%	0.00%	첫 거래 및 계좌 개설	31,653.36	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
@@ -490,6 +610,11 @@
             initTickerDropdown();
             renderSplitBuyTable(currentSelectedTicker);
 
+            document.getElementById('splitBuyApiUrlInput').value = splitBuyApiUrl;
+            if (splitBuyApiUrl) {
+                initSplitBuySync();
+            }
+
             const savedUrl = localStorage.getItem('googleSheetCsvUrl');
             if (savedUrl) {
                 document.getElementById('googleSheetUrl').value = savedUrl;
@@ -500,23 +625,130 @@
             }
         };
 
+        // ===================================================================
+        // 📡 분할매수 데이터 - 구글시트(Apps Script) 실시간 동기화
+        // ===================================================================
+
+        function setSplitBuySyncStatus(state, text) {
+            const el = document.getElementById('splitBuySyncStatus');
+            if (!el) return;
+            const styles = {
+                idle:    { icon: 'fa-circle-notch', color: 'text-slate-500' },
+                loading: { icon: 'fa-circle-notch animate-spin', color: 'text-sky-400' },
+                ok:      { icon: 'fa-circle-check', color: 'text-emerald-400' },
+                error:   { icon: 'fa-triangle-exclamation', color: 'text-rose-400' }
+            };
+            const s = styles[state] || styles.idle;
+            el.className = `text-[10px] ${s.color}`;
+            el.innerHTML = `<i class="fa-solid ${s.icon} mr-1"></i>${text}`;
+        }
+
+        function saveSplitBuyApiUrl() {
+            const urlInput = document.getElementById('splitBuyApiUrlInput').value.trim();
+            if (!urlInput) return;
+            splitBuyApiUrl = urlInput;
+            localStorage.setItem('splitBuyApiUrl', urlInput);
+            initSplitBuySync();
+        }
+
+        // 페이지 로드 시 / URL 저장 시: Apps Script에서 전체 데이터를 받아와 화면에 반영
+        async function initSplitBuySync() {
+            if (!splitBuyApiUrl) return;
+            setSplitBuySyncStatus('loading', '동기화 중...');
+
+            try {
+                const res = await fetch(`${splitBuyApiUrl}?action=getAll`);
+                const json = await res.json();
+
+                if (!json.success) throw new Error(json.error || '알 수 없는 오류');
+
+                splitBuyRemoteData = { tickers: json.tickers || [], data: json.data || {} };
+
+                // 시트에 저장된 종목 목록을 드롭다운에 병합
+                if (splitBuyRemoteData.tickers.length > 0) {
+                    availableTickers = Array.from(new Set([...availableTickers, ...splitBuyRemoteData.tickers]));
+                    initTickerDropdown();
+                }
+
+                renderSplitBuyTable(currentSelectedTicker);
+                setSplitBuySyncStatus('ok', '구글시트 동기화 완료');
+            } catch (err) {
+                setSplitBuySyncStatus('error', '동기화 실패 (URL 확인)');
+                console.error('분할매수 동기화 실패:', err);
+            }
+        }
+
+        // 입력값 변경 300ms 후 서버로 저장 (너무 잦은 호출 방지)
+        function scheduleSplitBuyRemoteSave(ticker, step, alloc, bought) {
+            if (!splitBuyApiUrl) return;
+            clearTimeout(splitBuySaveTimer);
+            setSplitBuySyncStatus('loading', '저장 중...');
+            splitBuySaveTimer = setTimeout(() => {
+                saveSplitBuyStepRemote(ticker, step, alloc, bought);
+            }, 500);
+        }
+
+        async function saveSplitBuyStepRemote(ticker, step, alloc, bought) {
+            try {
+                const res = await fetch(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Apps Script 프리플라이트(CORS) 회피용
+                    body: JSON.stringify({ action: 'saveStep', ticker, step, alloc, bought })
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || '저장 실패');
+                if (!splitBuyRemoteData.data[ticker]) splitBuyRemoteData.data[ticker] = {};
+                splitBuyRemoteData.data[ticker][step] = { alloc, bought };
+                setSplitBuySyncStatus('ok', '구글시트 저장 완료');
+            } catch (err) {
+                setSplitBuySyncStatus('error', '저장 실패 (연결 확인)');
+                console.error('분할매수 저장 실패:', err);
+            }
+        }
+
+        async function addTickerRemote(ticker) {
+            if (!splitBuyApiUrl) return;
+            try {
+                await fetch(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'addTicker', ticker })
+                });
+            } catch (err) {
+                console.error('종목 추가 동기화 실패:', err);
+            }
+        }
+
+        async function deleteTickerRemote(ticker) {
+            if (!splitBuyApiUrl) return;
+            try {
+                await fetch(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'deleteTicker', ticker })
+                });
+                delete splitBuyRemoteData.data[ticker];
+            } catch (err) {
+                console.error('종목 삭제 동기화 실패:', err);
+            }
+        }
+
         // --- 📊 종목별 7차 분할 매수 계산기 (+추가 / -삭제) ---
+
+        function getMergedTickerList_() {
+            const customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
+            const deletedTickers = JSON.parse(localStorage.getItem('deletedTickersList')) || [];
+            let merged = Array.from(new Set([...availableTickers, ...customTickers]));
+            merged = merged.filter(t => !deletedTickers.includes(t));
+            if (merged.length === 0) merged = ["DEFAULT"];
+            return merged;
+        }
 
         function initTickerDropdown() {
             const select = document.getElementById('selectedTickerSelect');
             select.innerHTML = '';
 
-            // 로컬스토리지에 저장된 종목 목록 불러오기
-            const customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
-            const deletedTickers = JSON.parse(localStorage.getItem('deletedTickersList')) || [];
-            
-            // 기본 종목 + 추가된 종목 병합 후 삭제된 종목 필터링
-            let mergedTickers = Array.from(new Set([...availableTickers, ...customTickers]));
-            mergedTickers = mergedTickers.filter(t => !deletedTickers.includes(t));
-
-            if (mergedTickers.length === 0) {
-                mergedTickers = ["DEFAULT"];
-            }
+            const mergedTickers = getMergedTickerList_();
 
             mergedTickers.forEach(ticker => {
                 const opt = document.createElement('option');
@@ -536,6 +768,167 @@
             const select = document.getElementById('selectedTickerSelect');
             currentSelectedTicker = select.value;
             renderSplitBuyTable(currentSelectedTicker);
+        }
+
+        // ===================================================================
+        // 📝 일일 기록 입력 (대시보드 -> 구글시트 자동 반영)
+        // ===================================================================
+
+        function getLatestRecord_() {
+            if (!cachedParsedData || cachedParsedData.length === 0) return null;
+            return cachedParsedData[cachedParsedData.length - 1]; // 날짜순 정렬되어 있음 (parseAndRenderData에서 sort)
+        }
+
+        function addDaysToDateStr_(dateStr, n) {
+            const d = new Date(dateStr + 'T00:00:00');
+            d.setDate(d.getDate() + n);
+            return d.toISOString().slice(0, 10);
+        }
+
+        function todayStr_() {
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        // 종목 리스트 + 최근 기록값을 기반으로 입력 폼을 다시 그림
+        function renderDailyEntryForm() {
+            const dateInput = document.getElementById('dailyEntryDate');
+            const accInput = document.getElementById('dailyEntryAccountVal');
+            const stockSumInput = document.getElementById('dailyEntryStockSumInput');
+            const rowsContainer = document.getElementById('dailyEntryTickerRows');
+            if (!dateInput || !rowsContainer) return;
+
+            const latest = getLatestRecord_();
+
+            // 날짜 기본값: 마지막 기록 다음날 (미래면 오늘로)
+            if (!dateInput.value) {
+                let defaultDate = latest ? addDaysToDateStr_(latest.date, 1) : todayStr_();
+                if (defaultDate > todayStr_()) defaultDate = todayStr_();
+                dateInput.value = defaultDate;
+            }
+
+            // 계좌 평가액 / 종목 합산 평가금액 기본값: 직전 기록값 (사용자가 실제 값으로 덮어씀)
+            if (accInput.value === '' && latest) {
+                accInput.value = latest.accountVal;
+            }
+            if (stockSumInput.value === '' && latest) {
+                stockSumInput.value = latest.stockSumAgg || '';
+            }
+
+            rowsContainer.innerHTML = '';
+            getMergedTickerList_().forEach(ticker => {
+                const prevVal = (latest && latest.portfolio && latest.portfolio[ticker] !== undefined) ? latest.portfolio[ticker] : '';
+                rowsContainer.insertAdjacentHTML('beforeend', `
+                    <div class="flex items-center gap-1">
+                        <label class="w-12 text-[10px] text-slate-500 font-semibold truncate">${ticker}</label>
+                        <input type="number" step="0.01" id="dailyTicker_${ticker}" value="${prevVal}" placeholder="0"
+                            oninput="updateDailyEntrySummary()"
+                            class="flex-1 min-w-0 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
+                        <button onclick="deleteTickerFromDailyEntry('${ticker}')" title="'${ticker}' 종목 삭제"
+                            class="text-slate-600 hover:text-rose-400 text-[10px] px-1">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `);
+            });
+
+            updateDailyEntrySummary();
+            setDailyEntrySyncStatus(splitBuyApiUrl ? 'idle' : 'idle', splitBuyApiUrl ? '연동 준비됨' : '동기화 주소 미설정');
+        }
+
+        // 종목별 매입금액 합계(참고용 힌트) + 계좌평가액 - 종목합산평가금액(수동입력) = 현금 실시간 계산
+        function updateDailyEntrySummary() {
+            let purchaseSum = 0;
+            getMergedTickerList_().forEach(ticker => {
+                const el = document.getElementById(`dailyTicker_${ticker}`);
+                if (el) purchaseSum += parseFloat(el.value) || 0;
+            });
+
+            const accountVal = parseFloat(document.getElementById('dailyEntryAccountVal').value) || 0;
+            const stockSumAgg = parseFloat(document.getElementById('dailyEntryStockSumInput').value) || 0;
+            const cash = accountVal - stockSumAgg;
+
+            document.getElementById('dailyEntryPurchaseSumHint').innerText = `$${purchaseSum.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            const cashEl = document.getElementById('dailyEntryCash');
+            cashEl.innerText = `$${cash.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            cashEl.className = cash < 0 ? "font-mono font-bold text-rose-400" : "font-mono font-bold text-cyan-400";
+        }
+
+        function setDailyEntrySyncStatus(state, text) {
+            const el = document.getElementById('dailyEntrySyncStatus');
+            if (!el) return;
+            const styles = {
+                idle:    { icon: 'fa-circle-notch', color: 'text-slate-500' },
+                loading: { icon: 'fa-circle-notch animate-spin', color: 'text-sky-400' },
+                ok:      { icon: 'fa-circle-check', color: 'text-emerald-400' },
+                error:   { icon: 'fa-triangle-exclamation', color: 'text-rose-400' }
+            };
+            const s = styles[state] || styles.idle;
+            el.className = `text-[10px] ${s.color}`;
+            el.innerHTML = `<i class="fa-solid ${s.icon} mr-1"></i>${text}`;
+        }
+
+        // 일일 기록 카드 안에서 종목 추가/삭제 (분할매수 계산기와 동일한 종목 목록을 공유)
+        function addTickerFromDailyEntry() {
+            addNewTickerPrompt();
+        }
+
+        function deleteTickerFromDailyEntry(ticker) {
+            deleteTickerByName_(ticker);
+        }
+
+        async function saveDailyRecordToSheet() {
+            if (!splitBuyApiUrl) {
+                showNotification('먼저 "종목별 7차 분할매수" 카드에서 Apps Script 웹앱 URL을 저장해주세요.', 'error', '동기화 주소 미설정');
+                return;
+            }
+
+            const date = document.getElementById('dailyEntryDate').value;
+            if (!date) {
+                showNotification('날짜를 입력해주세요.', 'error', '입력 오류');
+                return;
+            }
+
+            const revenue = parseFloat(document.getElementById('dailyEntryRevenue').value) || 0;
+            const accountVal = parseFloat(document.getElementById('dailyEntryAccountVal').value) || 0;
+            const stockSumVal = parseFloat(document.getElementById('dailyEntryStockSumInput').value) || 0;
+            const memo = document.getElementById('dailyEntryMemo').value.trim();
+
+            const tickerValues = {};
+            getMergedTickerList_().forEach(ticker => {
+                const el = document.getElementById(`dailyTicker_${ticker}`);
+                tickerValues[ticker] = el ? (parseFloat(el.value) || 0) : 0;
+            });
+
+            setDailyEntrySyncStatus('loading', '저장 중...');
+
+            try {
+                const res = await fetch(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Apps Script 프리플라이트(CORS) 회피용
+                    body: JSON.stringify({ action: 'saveDailyRecord', date, revenue, accountVal, stockSumVal, memo, tickerValues })
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || '저장 실패');
+
+                setDailyEntrySyncStatus('ok', '구글시트 반영 완료');
+                showNotification(`${date} 기록이 구글시트에 저장되었습니다. (현금 자동계산: $${(json.cash ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2})})`, 'success', '저장 완료');
+
+                // 다음 입력을 위해 날짜/수익금/특이사항만 초기화 (계좌평가액·종목합산·종목값은 다음 기본값 재계산 시 갱신)
+                document.getElementById('dailyEntryDate').value = '';
+                document.getElementById('dailyEntryRevenue').value = '';
+                document.getElementById('dailyEntryMemo').value = '';
+                document.getElementById('dailyEntryAccountVal').value = '';
+                document.getElementById('dailyEntryStockSumInput').value = '';
+
+                // 대시보드 새로고침 (구글시트 gviz 재조회)
+                if (document.getElementById('googleSheetUrl').value.trim()) {
+                    setTimeout(() => fetchGoogleSheetData(), 800);
+                }
+            } catch (err) {
+                setDailyEntrySyncStatus('error', '저장 실패');
+                showNotification(`저장 중 오류가 발생했습니다: ${err.message}`, 'error', '저장 실패');
+                console.error('일일 기록 저장 실패:', err);
+            }
         }
 
         function addNewTickerPrompt() {
@@ -558,17 +951,22 @@
                 currentSelectedTicker = formatted;
                 initTickerDropdown();
                 renderSplitBuyTable(currentSelectedTicker);
+                renderDailyEntryForm();
+                addTickerRemote(formatted);
             }
         }
 
         // --- 🗑️ 종목 삭제 기능 추가 ---
         function deleteCurrentTicker() {
             const select = document.getElementById('selectedTickerSelect');
-            const targetTicker = select.value;
+            deleteTickerByName_(select.value);
+        }
 
+        // 분할매수 카드의 드롭다운 삭제와 일일 기록 카드의 인라인(x) 삭제가 공유하는 로직
+        function deleteTickerByName_(targetTicker) {
             if (!targetTicker) return;
 
-            if (confirm(`'${targetTicker}' 종목을 목록에서 삭제하시겠습니까?\n(입력된 7차 분할매수 데이터도 함께 삭제됩니다)`)) {
+            if (confirm(`'${targetTicker}' 종목을 목록에서 삭제하시겠습니까?\n(입력된 매입금액/7차 분할매수 데이터도 함께 삭제됩니다)`)) {
                 
                 // 1. 삭제된 종목 블랙리스트에 추가
                 const deletedTickers = JSON.parse(localStorage.getItem('deletedTickersList')) || [];
@@ -584,10 +982,12 @@
 
                 // 3. 해당 종목의 분할매수 계산기 데이터 삭제
                 localStorage.removeItem(`splitBuyData_${targetTicker}`);
+                deleteTickerRemote(targetTicker);
 
                 // 4. 드롭다운 및 테이블 갱신
                 initTickerDropdown();
                 renderSplitBuyTable(currentSelectedTicker);
+                renderDailyEntryForm();
 
                 showNotification(`'${targetTicker}' 종목이 삭제되었습니다.`, "info", "종목 삭제 완료");
             }
@@ -597,7 +997,9 @@
             const tbody = document.getElementById('splitBuyTableBody');
             tbody.innerHTML = '';
 
-            const savedData = JSON.parse(localStorage.getItem(`splitBuyData_${ticker}`)) || {};
+            // 구글시트(Apps Script) 동기화 데이터가 있으면 우선 사용, 없으면 이 기기의 localStorage 백업 사용
+            const remoteData = (splitBuyApiUrl && splitBuyRemoteData.data[ticker]) ? splitBuyRemoteData.data[ticker] : null;
+            const savedData = remoteData || JSON.parse(localStorage.getItem(`splitBuyData_${ticker}`)) || {};
 
             for (let i = 1; i <= 7; i++) {
                 const tr = document.createElement('tr');
@@ -633,7 +1035,13 @@
                 splitData[i] = { alloc: allocVal, bought: boughtVal };
             }
 
+            // 이 기기용 즉시 백업 (오프라인 대비)
             localStorage.setItem(`splitBuyData_${ticker}`, JSON.stringify(splitData));
+
+            // 구글시트로 실시간 전송 (변경된 차수만)
+            const allocVal = document.getElementById(`alloc_${step}`).value;
+            const boughtVal = document.getElementById(`bought_${step}`).value;
+            scheduleSplitBuyRemoteSave(ticker, step, allocVal, boughtVal);
         }
 
         function updateSplitRowUI(step) {
@@ -748,14 +1156,16 @@
             let prevAccountVal = null;
 
             const memoIndex = 6;
-            const stockStartIndex = 8;
+            const stockSumAggIndex = 7; // H열: 종목 합산 평가금액 (사용자가 별도로 입력한 값 → 현금 계산에 사용)
+            const stockStartIndex = 8;  // I열부터: 종목별 매입금액 (포트폴리오 비중 계산에 사용)
 
             let latestPortfolio = null;
 
             const detectedTickers = [];
             for (let sIdx = stockStartIndex; sIdx < headers.length; sIdx++) {
-                if (headers[sIdx] && headers[sIdx].trim() !== "") {
-                    detectedTickers.push(headers[sIdx].trim().toUpperCase());
+                const h = headers[sIdx] && headers[sIdx].trim();
+                if (h && h !== "" && h.toUpperCase() !== "현금") {
+                    detectedTickers.push(h.toUpperCase());
                 }
             }
 
@@ -778,6 +1188,9 @@
                 const totalAccVal = parseFloat(rawAccountVal?.replace(/[^0-9.-]/g, '')) || 0;
                 const memoVal = cols[memoIndex]?.trim() || "";
 
+                const rawStockSumAgg = cols[stockSumAggIndex]?.trim();
+                const stockSumAgg = parseFloat(rawStockSumAgg?.replace(/[^0-9.-]/g, '')) || 0;
+
                 if (dateStr && !isNaN(revenue) && !isNaN(totalAccVal)) {
                     if (totalAccVal > currentMaxAccountVal) currentMaxAccountVal = totalAccVal;
 
@@ -785,22 +1198,24 @@
                     let dailyReturn = (prevAccountVal !== null && prevAccountVal > 0) ? (totalAccVal - prevAccountVal) / prevAccountVal : 0;
                     prevAccountVal = totalAccVal;
 
+                    // 종목별 매입금액 (자산 포트폴리오 비중 계산용)
                     const portfolioItems = {};
-                    let totalStockSum = 0;
+                    let totalPurchaseSum = 0;
 
                     for (let sIdx = stockStartIndex; sIdx < cols.length; sIdx++) {
                         const ticker = headers[sIdx];
-                        if (ticker && ticker !== "") {
+                        if (ticker && ticker !== "" && ticker.toUpperCase() !== "현금") {
                             const rawStockVal = cols[sIdx]?.trim();
                             const stockVal = parseFloat(rawStockVal?.replace(/[^0-9.-]/g, '')) || 0;
                             portfolioItems[ticker.toUpperCase()] = stockVal;
-                            totalStockSum += stockVal;
+                            totalPurchaseSum += stockVal;
                         }
                     }
 
-                    const autoCalculatedCash = Math.max(0, totalAccVal - totalStockSum);
+                    // 현금 = 계좌 평가액 - 종목 합산 평가금액 (수동 입력값 기준)
+                    const autoCalculatedCash = Math.max(0, totalAccVal - stockSumAgg);
                     portfolioItems["현금"] = autoCalculatedCash;
-                    const totalPortfolioSum = totalStockSum + autoCalculatedCash;
+                    const totalPortfolioSum = totalPurchaseSum + autoCalculatedCash;
 
                     const record = {
                         date: dateStr,
@@ -809,6 +1224,7 @@
                         mdd: mdd,
                         dailyReturn: dailyReturn,
                         memo: memoVal,
+                        stockSumAgg: stockSumAgg,
                         portfolio: portfolioItems,
                         portfolioSum: totalPortfolioSum
                     };
@@ -842,6 +1258,7 @@
             
             renderCharts(parsedData, monthlyStats, yearlyStats, latestPortfolio, mStats.monthlyDetails);
             renderDetailTable(parsedData);
+            renderDailyEntryForm();
         }
 
         function calculateMonthlyStats(data) {
@@ -895,8 +1312,14 @@
         function updateKpiCards(data) {
             const totalRevenue = data.reduce((sum, item) => sum + item.revenue, 0);
             const currentAccount = data[data.length - 1].accountVal;
-            const avgRevenue = data.length > 0 ? (totalRevenue / data.length) : 0;
             const minMDD = Math.min(...data.map(item => item.mdd));
+
+            // 일평균 수익금: 데이터가 없는(수익이 발생하지 않은) 날짜도 포함해서 "달력상 전체 일수"로 나눔.
+            // (단순히 시트에 기록된 행 개수로 나누면, 만약 특정 날짜가 통째로 누락되어 있을 때 평균이 부풀려질 수 있음)
+            const startDate = new Date(data[0].date);
+            const endDate = new Date(data[data.length - 1].date);
+            const totalDaySpan = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1; // 시작일·종료일 포함
+            const avgRevenue = totalDaySpan > 0 ? (totalRevenue / totalDaySpan) : 0;
 
             document.getElementById('kpiTotalRevenue').innerText = `$${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
             document.getElementById('kpiCurrentAccount').innerText = `$${currentAccount.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
@@ -911,9 +1334,7 @@
             const initialVal = startVal > 0 ? startVal : data[0].accountVal;
             const totalReturn = initialVal > 0 ? (currentAccount - initialVal) / initialVal : 0;
 
-            const startDate = new Date(data[0].date);
-            const endDate = new Date(data[data.length - 1].date);
-            const diffDays = Math.ceil(Math.abs(endDate - startDate) / (1000 * 60 * 60 * 24)) || 1;
+            const diffDays = Math.max(totalDaySpan - 1, 1); // 첫날과 마지막날 사이의 경과일수 (연환산 계산용)
 
             let annualizedReturn = 0;
             if (totalReturn > -1) {
@@ -1125,6 +1546,66 @@
             });
         }
 
+        // ===================================================================
+        // 📊 상세 데이터 테이블: 정렬 + 특이사항 검색
+        // ===================================================================
+
+        let tableSortField = null;   // null이면 날짜 최신순(기본), 그 외 'revenue'|'accountVal'|'cash'|'mdd'|'dailyReturn'
+        let tableSortDir = 'desc';
+        let searchMatches = [];      // 특이사항 검색에 매치된 날짜 목록 (오름차순)
+        let searchMatchIndex = -1;
+
+        const HIGHLIGHT_CLASSES = ['bg-amber-500/20', 'ring-1', 'ring-inset', 'ring-amber-400'];
+
+        function getSortValue_(item, field) {
+            if (field === 'cash') return (item.portfolio && item.portfolio['현금']) || 0;
+            return item[field];
+        }
+
+        function sortTableData_(data) {
+            const sorted = [...data];
+            if (tableSortField) {
+                sorted.sort((a, b) => {
+                    const av = getSortValue_(a, tableSortField);
+                    const bv = getSortValue_(b, tableSortField);
+                    return tableSortDir === 'asc' ? av - bv : bv - av;
+                });
+            } else {
+                sorted.sort((a, b) => new Date(b.date) - new Date(a.date)); // 기본: 최신 날짜순
+            }
+            return sorted;
+        }
+
+        function toggleTableSort(field) {
+            if (tableSortField === field) {
+                tableSortDir = tableSortDir === 'desc' ? 'asc' : 'desc';
+            } else {
+                tableSortField = field;
+                tableSortDir = 'desc'; // 처음 클릭하면 "가장 높은 값"부터 보여줌
+            }
+            renderDetailTable(cachedParsedData);
+        }
+
+        function resetTableSort() {
+            tableSortField = null;
+            tableSortDir = 'desc';
+            renderDetailTable(cachedParsedData);
+        }
+
+        function updateSortIcons_() {
+            ['revenue', 'accountVal', 'cash', 'mdd', 'dailyReturn'].forEach(field => {
+                const el = document.getElementById(`sortIcon_${field}`);
+                if (!el) return;
+                if (tableSortField !== field) {
+                    el.innerHTML = '<i class="fa-solid fa-sort text-slate-700"></i>';
+                } else {
+                    el.innerHTML = tableSortDir === 'desc'
+                        ? '<i class="fa-solid fa-sort-down text-sky-400"></i>'
+                        : '<i class="fa-solid fa-sort-up text-sky-400"></i>';
+                }
+            });
+        }
+
         function toggleTableMode(mode) {
             activeTableMode = mode;
             document.getElementById('btnTableRecent').className = mode === 'recent' ? "px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
@@ -1133,26 +1614,114 @@
         }
 
         function renderDetailTable(data) {
-            const displayData = activeTableMode === 'recent' ? [...data].reverse().slice(0, 15) : [...data].reverse();
-            document.getElementById('totalRowsCount').innerText = activeTableMode === 'recent' ? `총 ${data.length}개 중 최근 15영업일` : `전체 ${data.length}개 기록`;
-            
+            const sortedData = sortTableData_(data);
+            // 정렬 기준이 없을 때(기본 날짜순)만 "최근 15일" 슬라이싱 의미가 있음. 정렬 중엔 상위 15개(최댓값/최솟값 top15)를 보여줌.
+            const displayData = activeTableMode === 'recent' ? sortedData.slice(0, 15) : sortedData;
+
+            document.getElementById('totalRowsCount').innerText = activeTableMode === 'recent'
+                ? `총 ${data.length}개 중 ${tableSortField ? '상위 15개' : '최근 15영업일'}`
+                : `전체 ${data.length}개 기록`;
+
             const tbody = document.getElementById('detailTableBody');
             tbody.innerHTML = '';
 
             displayData.forEach((item) => {
+                const cashVal = (item.portfolio && item.portfolio['현금']) || 0;
                 const tr = document.createElement('tr');
+                tr.setAttribute('data-date', item.date);
                 tr.className = "hover:bg-slate-800/30 transition text-slate-300 border-b border-slate-800/30";
                 tr.innerHTML = `
                     <td class="p-3 text-slate-400">${item.date}</td>
                     <td class="p-3 text-right font-semibold text-emerald-400">$${item.revenue.toFixed(2)}</td>
                     <td class="p-3 text-right text-slate-400">$${item.cumRevenue.toFixed(2)}</td>
                     <td class="p-3 text-right font-mono">$${item.accountVal.toLocaleString(undefined, {minimumFractionDigits: 1})}</td>
+                    <td class="p-3 text-right font-mono text-cyan-400">$${cashVal.toLocaleString(undefined, {minimumFractionDigits: 1})}</td>
                     <td class="p-3 text-right font-mono text-rose-400">${(item.mdd * 100).toFixed(2)}%</td>
                     <td class="p-3 text-right font-mono">${(item.dailyReturn * 100).toFixed(2)}%</td>
                     <td class="p-3 text-left max-w-[150px] truncate text-slate-400">${item.memo || '-'}</td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            updateSortIcons_();
+            reapplySearchHighlight_();
+        }
+
+        // --- 특이사항 검색: 입력하면 매치되는 날짜로 자동 이동, 여러 건이면 다음/이전으로 순회 ---
+        function searchMemo() {
+            const term = document.getElementById('memoSearchInput').value.trim().toLowerCase();
+
+            if (!term) {
+                searchMatches = [];
+                searchMatchIndex = -1;
+                clearSearchHighlight_();
+                updateSearchCounter_();
+                return;
+            }
+
+            searchMatches = cachedParsedData
+                .filter(item => item.memo && item.memo.toLowerCase().includes(term))
+                .map(item => item.date); // cachedParsedData는 날짜 오름차순 정렬되어 있음
+
+            searchMatchIndex = searchMatches.length > 0 ? 0 : -1;
+            updateSearchCounter_();
+
+            if (searchMatches.length > 0) {
+                // 검색 결과를 실제로 보려면 정렬을 날짜순으로, 표시 모드를 전체 보기로 전환해야 함
+                tableSortField = null;
+                tableSortDir = 'desc';
+                if (activeTableMode !== 'all') {
+                    toggleTableMode('all'); // 내부적으로 renderDetailTable 호출됨
+                } else {
+                    renderDetailTable(cachedParsedData);
+                }
+                jumpToSearchMatch_();
+            } else {
+                clearSearchHighlight_();
+            }
+        }
+
+        function jumpToSearchMatch_() {
+            if (searchMatchIndex < 0 || searchMatches.length === 0) return;
+            const targetDate = searchMatches[searchMatchIndex];
+            const row = document.querySelector(`#detailTableBody tr[data-date="${targetDate}"]`);
+            clearSearchHighlight_();
+            if (row) {
+                row.classList.add(...HIGHLIGHT_CLASSES);
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            updateSearchCounter_();
+        }
+
+        function reapplySearchHighlight_() {
+            if (searchMatchIndex < 0 || searchMatches.length === 0) return;
+            const targetDate = searchMatches[searchMatchIndex];
+            const row = document.querySelector(`#detailTableBody tr[data-date="${targetDate}"]`);
+            if (row) row.classList.add(...HIGHLIGHT_CLASSES);
+        }
+
+        function clearSearchHighlight_() {
+            document.querySelectorAll('#detailTableBody tr').forEach(el => el.classList.remove(...HIGHLIGHT_CLASSES));
+        }
+
+        function searchNext() {
+            if (searchMatches.length === 0) return;
+            searchMatchIndex = (searchMatchIndex + 1) % searchMatches.length;
+            jumpToSearchMatch_();
+        }
+
+        function searchPrev() {
+            if (searchMatches.length === 0) return;
+            searchMatchIndex = (searchMatchIndex - 1 + searchMatches.length) % searchMatches.length;
+            jumpToSearchMatch_();
+        }
+
+        function updateSearchCounter_() {
+            const el = document.getElementById('memoSearchCounter');
+            if (!el) return;
+            const term = document.getElementById('memoSearchInput').value.trim();
+            if (!term) { el.innerText = ''; return; }
+            el.innerText = searchMatches.length > 0 ? `${searchMatchIndex + 1} / ${searchMatches.length}건` : '검색 결과 없음';
         }
     </script>
 </body>
