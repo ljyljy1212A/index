@@ -77,8 +77,14 @@
                 <div class="grid grid-cols-2 gap-2 mb-3">
                     <div>
                         <label class="block text-[10px] text-slate-500 font-semibold mb-1">날짜</label>
-                        <input type="date" id="dailyEntryDate"
-                            class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                        <div class="relative">
+                            <button type="button" id="dailyEntryDateBtn" onclick="toggleDailyEntryCalendar()"
+                                class="w-full flex items-center justify-between bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none hover:border-emerald-500 transition">
+                                <span id="dailyEntryDateLabel">날짜 선택</span>
+                                <i class="fa-solid fa-calendar-days text-slate-500"></i>
+                            </button>
+                            <div id="dailyEntryCalendarPopup" class="hidden absolute z-30 mt-1 left-0 right-0 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-[10px] text-slate-500 font-semibold mb-1">당일 수익금 ($)</label>
@@ -101,7 +107,7 @@
                             <i class="fa-solid fa-plus"></i> 종목 추가
                         </button>
                     </div>
-                    <div id="dailyEntryTickerRows" class="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto pr-1"></div>
+                    <div id="dailyEntryTickerRows" class="grid grid-cols-2 gap-1.5 overflow-y-auto pr-1"></div>
                     <p class="text-[10px] text-slate-600 mt-1.5">매입금액 합계(참고): <span id="dailyEntryPurchaseSumHint">$0.00</span></p>
                 </div>
 
@@ -292,10 +298,16 @@
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
+                        <button onclick="setAvgRevenueStartDate()" title="일평균 계산 기준일 설정" class="text-slate-600 hover:text-sky-400 text-[10px]">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                    </div>
                     <div class="mt-1 flex items-baseline gap-1">
                         <span id="kpiAvgRevenue" class="text-base lg:text-lg font-extrabold text-sky-400">$0.00</span>
                     </div>
+                    <span id="kpiAvgRevenueRange" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
@@ -303,6 +315,7 @@
                     <div class="mt-1 flex items-baseline gap-1">
                         <span id="kpiMaxMDD" class="text-base lg:text-lg font-extrabold text-rose-500">0.00%</span>
                     </div>
+                    <span id="kpiMaxMDDAmount" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
@@ -733,6 +746,24 @@
             }
         }
 
+        // 메인 시트(일일 기록)에서 해당 종목의 매입금액을 0으로 처리 (그래야 다음 저장부터 계속 이월되지 않음)
+        async function zeroTickerInMainSheet_(ticker) {
+            if (!splitBuyApiUrl) return;
+            try {
+                const res = await fetch(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'zeroTickerColumn', ticker })
+                });
+                await res.json();
+                if (document.getElementById('googleSheetUrl').value.trim()) {
+                    setTimeout(() => fetchGoogleSheetData(), 800);
+                }
+            } catch (err) {
+                console.error('종목 매입금액 0 처리 실패:', err);
+            }
+        }
+
         // --- 📊 종목별 7차 분할 매수 계산기 (+추가 / -삭제) ---
 
         function getMergedTickerList_() {
@@ -789,22 +820,174 @@
             return new Date().toISOString().slice(0, 10);
         }
 
+        // --- 날짜 상태 관리 (더 이상 <input type=date>가 아니라 커스텀 캘린더로 관리) ---
+        let dailyEntryDateValue = '';       // 'YYYY-MM-DD'
+        let dailyEntryDateTouched = false;  // 사용자가 직접 날짜를 고른 적이 있으면(과거 데이터 백필 등) 자동 갱신으로 덮어쓰지 않음
+        let calendarViewYear = null;
+        let calendarViewMonth = null;       // 0-indexed
+
+        function computeDefaultDailyEntryDate_() {
+            const latest = getLatestRecord_();
+            let defaultDate = latest ? addDaysToDateStr_(latest.date, 1) : todayStr_();
+            if (defaultDate > todayStr_()) defaultDate = todayStr_();
+            return defaultDate;
+        }
+
+        function setDailyEntryDateLabel_(dateStr) {
+            const label = document.getElementById('dailyEntryDateLabel');
+            if (label) label.innerText = dateStr || '날짜 선택';
+        }
+
+        // 탭을 밤새 켜둔 채로 다음날이 되어도 날짜가 최신으로 갱신되도록 (여러 트리거로 이중 안전장치)
+        function refreshDailyEntryDate_() {
+            if (dailyEntryDateTouched) return;
+            const defaultDate = computeDefaultDailyEntryDate_();
+            if (dailyEntryDateValue !== defaultDate) {
+                dailyEntryDateValue = defaultDate;
+                setDailyEntryDateLabel_(defaultDate);
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') refreshDailyEntryDate_();
+        });
+        window.addEventListener('focus', refreshDailyEntryDate_);
+        window.addEventListener('pageshow', refreshDailyEntryDate_); // 모바일 브라우저의 bfcache 복귀 대응
+        setInterval(refreshDailyEntryDate_, 60000); // 위 이벤트들이 안 잡히는 환경 대비, 1분마다 보조 점검
+
+        // --- 커스텀 캘린더 팝업 ---
+        function toggleDailyEntryCalendar() {
+            const popup = document.getElementById('dailyEntryCalendarPopup');
+            if (!popup) return;
+            popup.classList.contains('hidden') ? openDailyEntryCalendar() : popup.classList.add('hidden');
+        }
+
+        function openDailyEntryCalendar() {
+            const base = dailyEntryDateValue || todayStr_();
+            const d = new Date(base + 'T00:00:00');
+            calendarViewYear = d.getFullYear();
+            calendarViewMonth = d.getMonth();
+            renderDailyEntryCalendar_();
+            document.getElementById('dailyEntryCalendarPopup').classList.remove('hidden');
+        }
+
+        function changeCalendarMonth_(delta) {
+            calendarViewMonth += delta;
+            if (calendarViewMonth < 0) { calendarViewMonth = 11; calendarViewYear--; }
+            if (calendarViewMonth > 11) { calendarViewMonth = 0; calendarViewYear++; }
+            renderDailyEntryCalendar_();
+        }
+
+        // 이미 구글시트에 기록이 있는 날짜는 점(dot)으로 표시
+        function renderDailyEntryCalendar_() {
+            const popup = document.getElementById('dailyEntryCalendarPopup');
+            if (!popup) return;
+
+            const recordDates = new Set(cachedParsedData.map(item => item.date));
+            const today = todayStr_();
+            const firstOfMonth = new Date(calendarViewYear, calendarViewMonth, 1);
+            const startWeekday = firstOfMonth.getDay();
+            const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(calendarViewYear, calendarViewMonth, 0).getDate();
+            const dowLabels = ['일', '월', '화', '수', '목', '금', '토'];
+
+            let cellsHtml = '';
+            for (let i = 0; i < startWeekday; i++) {
+                cellsHtml += `<div class="text-center text-[11px] text-slate-700 py-1.5">${daysInPrevMonth - startWeekday + i + 1}</div>`;
+            }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isToday = dateStr === today;
+                const isSelected = dateStr === dailyEntryDateValue;
+                const hasRecord = recordDates.has(dateStr);
+
+                let cls = "relative text-center text-[11px] py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition ";
+                if (isSelected) cls += "bg-emerald-600 text-white font-bold ";
+                else if (isToday) cls += "border border-emerald-500 text-emerald-400 font-bold ";
+                else cls += "text-slate-300 ";
+
+                cellsHtml += `
+                    <div class="${cls}" onclick="selectDailyEntryDate_('${dateStr}')">
+                        ${day}
+                        ${hasRecord ? `<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-sky-400'}"></span>` : ''}
+                    </div>`;
+            }
+            const remaining = (7 - ((startWeekday + daysInMonth) % 7)) % 7;
+            for (let i = 1; i <= remaining; i++) {
+                cellsHtml += `<div class="text-center text-[11px] text-slate-700 py-1.5">${i}</div>`;
+            }
+
+            popup.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <button onclick="changeCalendarMonth_(-1)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-up"></i></button>
+                    <span class="text-xs font-bold text-slate-200">${calendarViewYear}년 ${calendarViewMonth + 1}월</span>
+                    <button onclick="changeCalendarMonth_(1)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-down"></i></button>
+                </div>
+                <div class="grid grid-cols-7 gap-0.5 mb-0.5">
+                    ${dowLabels.map(l => `<div class="text-center text-[10px] text-slate-500 font-semibold pb-1">${l}</div>`).join('')}
+                </div>
+                <div class="grid grid-cols-7 gap-0.5">${cellsHtml}</div>
+                <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-800">
+                    <span class="text-[9px] text-slate-600"><span class="inline-block w-1 h-1 rounded-full bg-sky-400 mr-1"></span>기록 있음</span>
+                    <div class="flex gap-3">
+                        <button onclick="selectDailyEntryDate_('${today}')" class="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold">오늘로</button>
+                        <button onclick="document.getElementById('dailyEntryCalendarPopup').classList.add('hidden')" class="text-[10px] text-slate-500 hover:text-slate-300">닫기</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 날짜를 고르면: 그 날짜에 이미 기록이 있으면 수정할 수 있도록 값을 불러오고, 없으면 직전 값 기준으로 새 입력을 준비
+        function selectDailyEntryDate_(dateStr) {
+            dailyEntryDateValue = dateStr;
+            dailyEntryDateTouched = true;
+            setDailyEntryDateLabel_(dateStr);
+            document.getElementById('dailyEntryCalendarPopup').classList.add('hidden');
+            loadDateIntoForm_(dateStr);
+        }
+
+        function loadDateIntoForm_(dateStr) {
+            const existing = cachedParsedData.find(item => item.date === dateStr);
+            const latest = getLatestRecord_();
+            const source = existing || latest;
+
+            document.getElementById('dailyEntryRevenue').value = existing ? existing.revenue : '';
+            document.getElementById('dailyEntryAccountVal').value = source ? source.accountVal : '';
+            document.getElementById('dailyEntryStockSumInput').value = source ? (source.stockSumAgg || '') : '';
+            document.getElementById('dailyEntryMemo').value = existing ? (existing.memo || '') : '';
+
+            getMergedTickerList_().forEach(ticker => {
+                const el = document.getElementById(`dailyTicker_${ticker}`);
+                if (el) el.value = (source && source.portfolio && source.portfolio[ticker] !== undefined) ? source.portfolio[ticker] : '';
+            });
+
+            updateDailyEntrySummary();
+
+            if (existing) {
+                showNotification(`${dateStr}에 이미 저장된 기록을 불러왔습니다. 수정 후 저장하면 그 값을 덮어씁니다.`, 'info', '기존 기록 불러옴');
+            }
+        }
+
+        // 팝업 바깥을 클릭하면 닫기
+        document.addEventListener('click', (e) => {
+            const popup = document.getElementById('dailyEntryCalendarPopup');
+            const btn = document.getElementById('dailyEntryDateBtn');
+            if (popup && !popup.classList.contains('hidden') && !popup.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+                popup.classList.add('hidden');
+            }
+        });
+
         // 종목 리스트 + 최근 기록값을 기반으로 입력 폼을 다시 그림
         function renderDailyEntryForm() {
-            const dateInput = document.getElementById('dailyEntryDate');
             const accInput = document.getElementById('dailyEntryAccountVal');
             const stockSumInput = document.getElementById('dailyEntryStockSumInput');
             const rowsContainer = document.getElementById('dailyEntryTickerRows');
-            if (!dateInput || !rowsContainer) return;
+            if (!rowsContainer) return;
 
             const latest = getLatestRecord_();
 
-            // 날짜 기본값: 마지막 기록 다음날 (미래면 오늘로)
-            if (!dateInput.value) {
-                let defaultDate = latest ? addDaysToDateStr_(latest.date, 1) : todayStr_();
-                if (defaultDate > todayStr_()) defaultDate = todayStr_();
-                dateInput.value = defaultDate;
-            }
+            // 날짜 기본값: 마지막 기록 다음날 (미래면 오늘로). 사용자가 직접 손댄 적 없다면 항상 최신값으로 갱신.
+            refreshDailyEntryDate_();
 
             // 계좌 평가액 / 종목 합산 평가금액 기본값: 직전 기록값 (사용자가 실제 값으로 덮어씀)
             if (accInput.value === '' && latest) {
@@ -815,7 +998,8 @@
             }
 
             rowsContainer.innerHTML = '';
-            getMergedTickerList_().forEach(ticker => {
+            const mergedList = getMergedTickerList_();
+            mergedList.forEach(ticker => {
                 const prevVal = (latest && latest.portfolio && latest.portfolio[ticker] !== undefined) ? latest.portfolio[ticker] : '';
                 rowsContainer.insertAdjacentHTML('beforeend', `
                     <div class="flex items-center gap-1">
@@ -830,6 +1014,12 @@
                     </div>
                 `);
             });
+
+            // 종목이 적으면 스크롤 없이 다 보이도록, 많아지면(8개=4행 초과) 그때부터만 스크롤되도록 높이를 자동 조절
+            const rowCount = Math.ceil(mergedList.length / 2);
+            const rowHeightPx = 34;
+            const maxVisibleRows = 4;
+            rowsContainer.style.maxHeight = `${Math.min(rowCount, maxVisibleRows) * rowHeightPx + (rowCount > maxVisibleRows ? 4 : 0)}px`;
 
             updateDailyEntrySummary();
             setDailyEntrySyncStatus(splitBuyApiUrl ? 'idle' : 'idle', splitBuyApiUrl ? '연동 준비됨' : '동기화 주소 미설정');
@@ -882,7 +1072,7 @@
                 return;
             }
 
-            const date = document.getElementById('dailyEntryDate').value;
+            const date = dailyEntryDateValue;
             if (!date) {
                 showNotification('날짜를 입력해주세요.', 'error', '입력 오류');
                 return;
@@ -899,6 +1089,31 @@
                 tickerValues[ticker] = el ? (parseFloat(el.value) || 0) : 0;
             });
 
+            // 간단한 범위 체크: 직전 기록값 대비 ±50% 이상 차이나는 항목이 있으면 오타 등을 의심할 수 있도록 한 번 더 확인
+            const latest = getLatestRecord_();
+            if (latest) {
+                const warnings = [];
+                const pctChange = (prev, cur) => (prev && prev !== 0) ? Math.abs((cur - prev) / prev) : 0;
+
+                if (pctChange(latest.accountVal, accountVal) > 0.5) {
+                    warnings.push(`계좌 평가액: $${latest.accountVal.toLocaleString()} → $${accountVal.toLocaleString()}`);
+                }
+                if (pctChange(latest.stockSumAgg, stockSumVal) > 0.5) {
+                    warnings.push(`종목 합산 평가금액: $${(latest.stockSumAgg || 0).toLocaleString()} → $${stockSumVal.toLocaleString()}`);
+                }
+                Object.keys(tickerValues).forEach(ticker => {
+                    const prev = (latest.portfolio && latest.portfolio[ticker]) || 0;
+                    if (pctChange(prev, tickerValues[ticker]) > 0.5) {
+                        warnings.push(`${ticker} 매입금액: $${prev.toLocaleString()} → $${tickerValues[ticker].toLocaleString()}`);
+                    }
+                });
+
+                if (warnings.length > 0) {
+                    const proceed = confirm(`직전 기록보다 50% 이상 차이나는 값이 있습니다. 입력값이 맞는지 확인해주세요.\n\n${warnings.join('\n')}\n\n이대로 저장하시겠습니까?`);
+                    if (!proceed) return;
+                }
+            }
+
             setDailyEntrySyncStatus('loading', '저장 중...');
 
             try {
@@ -914,15 +1129,18 @@
                 showNotification(`${date} 기록이 구글시트에 저장되었습니다. (현금 자동계산: $${(json.cash ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2})})`, 'success', '저장 완료');
 
                 // 다음 입력을 위해 날짜/수익금/특이사항만 초기화 (계좌평가액·종목합산·종목값은 다음 기본값 재계산 시 갱신)
-                document.getElementById('dailyEntryDate').value = '';
+                dailyEntryDateTouched = false;
+                dailyEntryDateValue = '';
+                refreshDailyEntryDate_(); // 바로 다음날 기본값으로 갱신 (gviz 재조회를 기다리지 않고 즉시 반영)
                 document.getElementById('dailyEntryRevenue').value = '';
                 document.getElementById('dailyEntryMemo').value = '';
                 document.getElementById('dailyEntryAccountVal').value = '';
                 document.getElementById('dailyEntryStockSumInput').value = '';
 
-                // 대시보드 새로고침 (구글시트 gviz 재조회)
+                // 대시보드 새로고침 (구글시트 gviz 재조회) - 캐시 반영 지연에 대비해 한 번 더 재시도
                 if (document.getElementById('googleSheetUrl').value.trim()) {
                     setTimeout(() => fetchGoogleSheetData(), 800);
+                    setTimeout(() => fetchGoogleSheetData(), 2500);
                 }
             } catch (err) {
                 setDailyEntrySyncStatus('error', '저장 실패');
@@ -983,6 +1201,7 @@
                 // 3. 해당 종목의 분할매수 계산기 데이터 삭제
                 localStorage.removeItem(`splitBuyData_${targetTicker}`);
                 deleteTickerRemote(targetTicker);
+                zeroTickerInMainSheet_(targetTicker); // 메인 시트에서도 매입금액을 0으로 처리 (계속 이월되지 않도록)
 
                 // 4. 드롭다운 및 테이블 갱신
                 initTickerDropdown();
@@ -1195,6 +1414,8 @@
                     if (totalAccVal > currentMaxAccountVal) currentMaxAccountVal = totalAccVal;
 
                     const mdd = currentMaxAccountVal > 0 ? ((totalAccVal - currentMaxAccountVal) / currentMaxAccountVal) : 0;
+                    const mddPeak = currentMaxAccountVal;              // 그 당시(직전까지의) 최고 계좌 평가액
+                    const mddAmount = currentMaxAccountVal - totalAccVal; // 최고 계좌평가액 - 최저(현재) 계좌평가액 (달러 하락폭, 0 이상)
                     let dailyReturn = (prevAccountVal !== null && prevAccountVal > 0) ? (totalAccVal - prevAccountVal) / prevAccountVal : 0;
                     prevAccountVal = totalAccVal;
 
@@ -1213,7 +1434,8 @@
                     }
 
                     // 현금 = 계좌 평가액 - 종목 합산 평가금액 (수동 입력값 기준)
-                    const autoCalculatedCash = Math.max(0, totalAccVal - stockSumAgg);
+                    const rawCash = totalAccVal - stockSumAgg; // 실제 계산값 (음수여도 그대로 유지 → 입력 실수를 발견할 수 있도록)
+                    const autoCalculatedCash = Math.max(0, rawCash); // 도넛차트는 음수 슬라이스를 그릴 수 없어 차트용으로만 0 이상 처리
                     portfolioItems["현금"] = autoCalculatedCash;
                     const totalPortfolioSum = totalPurchaseSum + autoCalculatedCash;
 
@@ -1222,9 +1444,12 @@
                         revenue: revenue,
                         accountVal: totalAccVal,
                         mdd: mdd,
+                        mddPeak: mddPeak,
+                        mddAmount: mddAmount,
                         dailyReturn: dailyReturn,
                         memo: memoVal,
                         stockSumAgg: stockSumAgg,
+                        cash: rawCash,
                         portfolio: portfolioItems,
                         portfolioSum: totalPortfolioSum
                     };
@@ -1312,19 +1537,39 @@
         function updateKpiCards(data) {
             const totalRevenue = data.reduce((sum, item) => sum + item.revenue, 0);
             const currentAccount = data[data.length - 1].accountVal;
-            const minMDD = Math.min(...data.map(item => item.mdd));
+
+            // 최대 낙폭(MDD)이 가장 컸던 날을 찾아 %와 달러 하락폭을 함께 표시
+            let worstItem = data[0];
+            data.forEach(item => { if (item.mdd < worstItem.mdd) worstItem = item; });
+            const minMDD = worstItem.mdd;
 
             // 일평균 수익금: 데이터가 없는(수익이 발생하지 않은) 날짜도 포함해서 "달력상 전체 일수"로 나눔.
             // (단순히 시트에 기록된 행 개수로 나누면, 만약 특정 날짜가 통째로 누락되어 있을 때 평균이 부풀려질 수 있음)
-            const startDate = new Date(data[0].date);
+            const fullStartDate = new Date(data[0].date);
             const endDate = new Date(data[data.length - 1].date);
-            const totalDaySpan = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1; // 시작일·종료일 포함
-            const avgRevenue = totalDaySpan > 0 ? (totalRevenue / totalDaySpan) : 0;
+            const totalDaySpan = Math.round((endDate - fullStartDate) / (1000 * 60 * 60 * 24)) + 1; // 시작일·종료일 포함
+
+            // 사용자가 "일평균 수익금" 계산 기준일을 별도로 지정했다면 그 날짜부터만 계산
+            const customStart = localStorage.getItem('avgRevenueStartDate');
+            let avgRangeData = data;
+            let avgRangeLabel = '';
+            if (customStart && customStart >= data[0].date && customStart <= data[data.length - 1].date) {
+                avgRangeData = data.filter(item => item.date >= customStart);
+                avgRangeLabel = `기준일: ${customStart} 이후`;
+            }
+            const avgRevenueTotal = avgRangeData.reduce((sum, item) => sum + item.revenue, 0);
+            const avgStartDate = new Date(avgRangeData[0].date);
+            const avgDaySpan = Math.round((endDate - avgStartDate) / (1000 * 60 * 60 * 24)) + 1;
+            const avgRevenue = avgDaySpan > 0 ? (avgRevenueTotal / avgDaySpan) : 0;
 
             document.getElementById('kpiTotalRevenue').innerText = `$${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
             document.getElementById('kpiCurrentAccount').innerText = `$${currentAccount.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
             document.getElementById('kpiAvgRevenue').innerText = `$${avgRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
+            document.getElementById('kpiAvgRevenueRange').innerText = avgRangeLabel;
             document.getElementById('kpiMaxMDD').innerText = `${(minMDD * 100).toFixed(2)}%`;
+            document.getElementById('kpiMaxMDDAmount').innerText = worstItem.mddAmount > 0
+                ? `-$${worstItem.mddAmount.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})} (${worstItem.date})`
+                : '';
 
             const mStats = calculateMonthlyStats(data);
             document.getElementById('kpiMonthlyAvgRevenue').innerText = `$${mStats.avgMonthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
@@ -1341,6 +1586,24 @@
                 annualizedReturn = diffDays >= 15 ? Math.pow(1 + totalReturn, 365 / diffDays) - 1 : totalReturn * (365 / diffDays);
             }
             document.getElementById('kpiAnnualReturn').innerText = `${(annualizedReturn * 100).toFixed(2)}%`;
+        }
+
+        // 일평균 수익금 계산 기준일을 사용자가 직접 지정 (예: 초기 테스트성 기록 제외하고 계산하고 싶을 때)
+        function setAvgRevenueStartDate() {
+            const current = localStorage.getItem('avgRevenueStartDate') || '';
+            const input = prompt("일평균 수익금 계산을 시작할 날짜를 입력하세요 (YYYY-MM-DD).\n비워두고 확인을 누르면 기준일이 초기화됩니다.", current);
+            if (input === null) return; // 취소
+
+            const trimmed = input.trim();
+            if (!trimmed) {
+                localStorage.removeItem('avgRevenueStartDate');
+            } else if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+                localStorage.setItem('avgRevenueStartDate', trimmed);
+            } else {
+                alert("날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.");
+                return;
+            }
+            if (cachedParsedData.length > 0) updateKpiCards(cachedParsedData);
         }
 
         function groupDataByMonth(data) {
@@ -1518,7 +1781,21 @@
             mddChartInstance = new Chart(mddCtx, {
                 type: 'line',
                 data: { labels: filtered.map(d => d.date), datasets: [{ label: 'MDD (%)', data: filtered.map(d => d.mdd * 100), fill: true, backgroundColor: 'rgba(244, 63, 94, 0.25)', borderColor: '#f43f5e', borderWidth: 2, pointRadius: 1 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#1e293b' }, max: 0 } } }
+                options: {
+                    responsive: true, maintainAspectRatio: false, plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: (ctx) => {
+                                    const item = filtered[ctx.dataIndex];
+                                    if (!item || !item.mddAmount) return '';
+                                    return `최고 $${item.mddPeak.toLocaleString(undefined, {minimumFractionDigits: 1})} → 현재 $${item.accountVal.toLocaleString(undefined, {minimumFractionDigits: 1})} (-$${item.mddAmount.toLocaleString(undefined, {minimumFractionDigits: 1})})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: { x: { grid: { display: false } }, y: { grid: { color: '#1e293b' }, max: 0 } }
+                }
             });
         }
 
@@ -1558,7 +1835,7 @@
         const HIGHLIGHT_CLASSES = ['bg-amber-500/20', 'ring-1', 'ring-inset', 'ring-amber-400'];
 
         function getSortValue_(item, field) {
-            if (field === 'cash') return (item.portfolio && item.portfolio['현금']) || 0;
+            if (field === 'cash') return item.cash || 0;
             return item[field];
         }
 
@@ -1619,14 +1896,14 @@
             const displayData = activeTableMode === 'recent' ? sortedData.slice(0, 15) : sortedData;
 
             document.getElementById('totalRowsCount').innerText = activeTableMode === 'recent'
-                ? `총 ${data.length}개 중 ${tableSortField ? '상위 15개' : '최근 15영업일'}`
+                ? `총 ${data.length}개 중 ${tableSortField ? '상위 15개' : '최근 15일'}`
                 : `전체 ${data.length}개 기록`;
 
             const tbody = document.getElementById('detailTableBody');
             tbody.innerHTML = '';
 
             displayData.forEach((item) => {
-                const cashVal = (item.portfolio && item.portfolio['현금']) || 0;
+                const cashVal = item.cash || 0;
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-date', item.date);
                 tr.className = "hover:bg-slate-800/30 transition text-slate-300 border-b border-slate-800/30";
@@ -1635,8 +1912,11 @@
                     <td class="p-3 text-right font-semibold text-emerald-400">$${item.revenue.toFixed(2)}</td>
                     <td class="p-3 text-right text-slate-400">$${item.cumRevenue.toFixed(2)}</td>
                     <td class="p-3 text-right font-mono">$${item.accountVal.toLocaleString(undefined, {minimumFractionDigits: 1})}</td>
-                    <td class="p-3 text-right font-mono text-cyan-400">$${cashVal.toLocaleString(undefined, {minimumFractionDigits: 1})}</td>
-                    <td class="p-3 text-right font-mono text-rose-400">${(item.mdd * 100).toFixed(2)}%</td>
+                    <td class="p-3 text-right font-mono ${cashVal < 0 ? 'text-rose-400' : 'text-cyan-400'}">$${cashVal.toLocaleString(undefined, {minimumFractionDigits: 1})}</td>
+                    <td class="p-3 text-right font-mono text-rose-400">
+                        ${(item.mdd * 100).toFixed(2)}%
+                        ${item.mddAmount > 0 ? `<div class="text-[9px] text-slate-600">-$${item.mddAmount.toLocaleString(undefined, {maximumFractionDigits: 0})}</div>` : ''}
+                    </td>
                     <td class="p-3 text-right font-mono">${(item.dailyReturn * 100).toFixed(2)}%</td>
                     <td class="p-3 text-left max-w-[150px] truncate text-slate-400">${item.memo || '-'}</td>
                 `;
