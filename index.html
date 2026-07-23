@@ -46,8 +46,8 @@
                     <i class="fa-solid fa-chart-pie text-xl animate-pulse"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-slate-100">투자 성과 & 자산배분 실시간 대시보드</h1>
-                    <p class="text-xs text-slate-400">구글 시트 연동형 포트폴리오 리스크 관리 시스템</p>
+                    <h1 class="text-lg font-bold text-slate-100">투자 성과 & 자산배분 대시보드</h1>
+                    <p class="text-xs text-slate-400">구글 시트 연동형 자산 관리 시스템</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -63,6 +63,56 @@
         <!-- 왼쪽 패널: 구글 시트 연동 및 데이터 관리 (4 cols) -->
         <section class="lg:col-span-4 flex flex-col gap-6">
             
+            <!-- 종목별 7차 분할매수 계산기 카드 (+추가/-삭제 기능 탑재) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
+                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-amber-400"></i> 종목별 7차 분할매수
+                    </h2>
+                    <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i>자동 저장
+                    </span>
+                </div>
+
+                <!-- 종목 선택 및 추가/삭제 컨트롤러 -->
+                <div class="mb-4 space-y-1.5">
+                    <label class="block text-[11px] text-slate-400 font-semibold">관리 종목 선택</label>
+                    <div class="flex gap-1.5">
+                        <select id="selectedTickerSelect" onchange="onTickerChange()" 
+                            class="flex-1 bg-slate-950 text-amber-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
+                        </select>
+                        <button onclick="addNewTickerPrompt()" 
+                            class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 rounded-xl text-xs font-bold border border-slate-700 transition"
+                            title="새 종목 추가">
+                            <i class="fa-solid fa-plus text-emerald-400"></i> 추가
+                        </button>
+                        <button onclick="deleteCurrentTicker()" 
+                            class="bg-slate-800 hover:bg-rose-950/40 text-rose-400 border border-rose-900/50 px-2.5 rounded-xl text-xs font-bold transition"
+                            title="현재 종목 삭제">
+                            <i class="fa-solid fa-minus text-rose-400"></i> 삭제
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-[11px]">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-slate-800 pb-2">
+                                    <th class="pb-2 w-10">차수</th>
+                                    <th class="pb-2">할당 ($)</th>
+                                    <th class="pb-2">1/2 예시</th>
+                                    <th class="pb-2">매수 ($)</th>
+                                    <th class="pb-2 text-right">잔여 ($)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="splitBuyTableBody" class="divide-y divide-slate-800/40">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- 실시간 동기화 설정 카드 -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-1 h-full bg-sky-500"></div>
@@ -70,7 +120,7 @@
                     <i class="fa-solid fa-link text-sky-400"></i> 구글 시트 실시간 자동 연동
                 </h2>
                 <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-                    시트 상단 브라우저 주소창의 <strong>전체 주소(URL)</strong>를 그대로 복사해서 아래 붙여넣어 주세요! 시스템이 자동으로 시트 ID를 우회 코드로 변환해 동기화합니다.
+                    시트 상단 브라우저 주소창의 <strong>전체 주소(URL)</strong>를 그대로 복사해서 아래 붙여넣어 주세요!
                 </p>
 
                 <div class="space-y-3">
@@ -83,7 +133,7 @@
                     <div class="flex gap-2">
                         <button onclick="saveAndSyncUrl()" 
                             class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-lg shadow-sky-500/10">
-                            <i class="fa-solid fa-floppy-disk"></i> 주소 저장 및 실시간 연동
+                            <i class="fa-solid fa-floppy-disk"></i> 저장 및 동기화
                         </button>
                         <button onclick="fetchGoogleSheetData()" 
                             class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-3.5 rounded-xl text-xs transition border border-slate-700"
@@ -107,87 +157,25 @@
                 </div>
             </div>
 
-            <!-- 신규: 종목별 7차 분할매수 계산기 카드 (자동 저장 기능 탑재) -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative">
-                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
-                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-calculator text-amber-400"></i> 종목별 7차 분할매수 계산기
-                    </h2>
-                    <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                        <i class="fa-solid fa-floppy-disk mr-1"></i>자동 저장됨
-                    </span>
-                </div>
-
-                <!-- 종목 선택 컨트롤러 -->
-                <div class="mb-4 space-y-2">
-                    <label class="block text-[11px] text-slate-400 font-semibold">관리 종목 선택</label>
-                    <div class="flex gap-2">
-                        <select id="selectedTickerSelect" onchange="onTickerChange()" 
-                            class="flex-1 bg-slate-950 text-amber-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
-                            <!-- JS를 통해 종목 목록이 채워집니다 -->
-                        </select>
-                        <button onclick="addNewTickerPrompt()" 
-                            class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-xl text-xs font-bold border border-slate-700 transition"
-                            title="새 종목 추가">
-                            <i class="fa-solid fa-plus"></i> 추가
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="space-y-3">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-[11px]">
-                            <thead>
-                                <tr class="text-slate-400 border-b border-slate-800 pb-2">
-                                    <th class="pb-2 w-10">차수</th>
-                                    <th class="pb-2">할당 금액 ($)</th>
-                                    <th class="pb-2">1/2 예시 ($)</th>
-                                    <th class="pb-2">매수 금액 ($)</th>
-                                    <th class="pb-2 text-right">잔여 금액 ($)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="splitBuyTableBody" class="divide-y divide-slate-800/40">
-                                <!-- JS 동적 생성 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
             <!-- 백업 데이터 수동 입력 카드 -->
             <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl relative">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                        <i class="fa-solid fa-file-import text-emerald-400"></i> 수동 데이터 붙여넣기 (비상용)
+                        <i class="fa-solid fa-file-import text-emerald-400"></i> 수동 데이터 붙여넣기
                     </h2>
                     <button onclick="loadSampleData()" class="text-[11px] text-slate-500 hover:text-emerald-400 transition">
-                        샘플 데이터 로드
+                        샘플 로드
                     </button>
                 </div>
-                
-                <p class="text-[11px] text-slate-400 mb-3">
-                    인터넷 연결이 어렵거나 수동 검증 시 시트 전체(A~Q열)를 드래그 복사해 그대로 입력해 주세요.[cite: 1]
-                </p>
 
                 <textarea id="rawPasteArea" 
-                    class="w-full h-32 bg-slate-950 text-slate-400 font-mono text-[10px] p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition resize-none mb-3"
-                    placeholder="날짜	수익금	누적수익금	전체계좌	최고점하락률	일별수익률	특이사항	현금	divo..."></textarea>
+                    class="w-full h-24 bg-slate-950 text-slate-400 font-mono text-[10px] p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition resize-none mb-3"
+                    placeholder="시트 A~Q열을 드래그하여 여기에 붙여넣으세요..."></textarea>
 
                 <button onclick="processManualImport()" 
                     class="w-full bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
                     수동 텍스트 업데이트
                 </button>
-            </div>
-
-            <!-- 계산 규칙 설명서 -->
-            <div class="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-5 text-xs text-slate-400 leading-relaxed">
-                <h3 class="font-bold text-slate-300 mb-2 flex items-center gap-1.5">
-                    <i class="fa-solid fa-info-circle text-amber-500"></i> 데이터 연동 및 저장 기능 안내
-                </h3>
-                <ul class="space-y-1.5 list-disc list-inside text-[11px]">
-                    <li><strong class="text-slate-300">현금 자동 산출:</strong> <code>전체계좌 - 보유주식 총합 = 현금</code>으로 자동 계산됩니다[cite: 1].</li>
-                    <li><strong class="text-slate-300">종목별 분할매수 저장:</strong> 입력된 1~7차 매수 계획은 브라우저(컴퓨터/모바일) 내부 메모리에 자동 저장되어 기기를 재부팅해도 사라지지 않습니다.</li>
-                </ul>
             </div>
         </section>
 
@@ -195,61 +183,54 @@
         <section class="lg:col-span-8 flex flex-col gap-6">
             
             <!-- 지표 요약 카드 그리드 -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
-                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">누적 수익금 총합</span>
-                    <div class="mt-2 flex items-baseline gap-1">
-                        <span id="kpiTotalRevenue" class="text-lg lg:text-xl font-extrabold text-emerald-400">$0.00</span>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">누적 수익금</span>
+                    <div class="mt-1 flex items-baseline gap-1">
+                        <span id="kpiTotalRevenue" class="text-base lg:text-lg font-extrabold text-emerald-400">$0.00</span>
                     </div>
-                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-coins mr-1"></i>순수익 합산</span>
                 </div>
 
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
-                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">현재 계좌 평가액</span>
-                    <div class="mt-2 flex items-baseline gap-1">
-                        <span id="kpiCurrentAccount" class="text-lg lg:text-xl font-extrabold text-slate-100">$0.00</span>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">현재 계좌 평가액</span>
+                    <div class="mt-1 flex items-baseline gap-1">
+                        <span id="kpiCurrentAccount" class="text-base lg:text-lg font-extrabold text-slate-100">$0.00</span>
                     </div>
-                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-vault mr-1"></i>최종일 평가</span>
                 </div>
 
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
-                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
-                    <div class="mt-2 flex items-baseline gap-1">
-                        <span id="kpiAvgRevenue" class="text-lg lg:text-xl font-extrabold text-sky-400">$0.00</span>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
+                    <div class="mt-1 flex items-baseline gap-1">
+                        <span id="kpiAvgRevenue" class="text-base lg:text-lg font-extrabold text-sky-400">$0.00</span>
                     </div>
-                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-scale-balanced mr-1"></i>0원 일수 포함</span>
                 </div>
 
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
-                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">최대 낙폭 (MDD)</span>
-                    <div class="mt-2 flex items-baseline gap-1">
-                        <span id="kpiMaxMDD" class="text-lg lg:text-xl font-extrabold text-rose-500">0.00%</span>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">최대 낙폭 (MDD)</span>
+                    <div class="mt-1 flex items-baseline gap-1">
+                        <span id="kpiMaxMDD" class="text-base lg:text-lg font-extrabold text-rose-500">0.00%</span>
                     </div>
-                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-circle-radiation mr-1"></i>전고점비 최저</span>
                 </div>
 
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
-                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">월 평균 수익금</span>
-                    <div class="mt-2 flex items-baseline gap-1">
-                        <span id="kpiMonthlyAvgRevenue" class="text-lg lg:text-xl font-extrabold text-emerald-400">$0.00</span>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">월 평균 수익금</span>
+                    <div class="mt-1 flex items-baseline gap-1">
+                        <span id="kpiMonthlyAvgRevenue" class="text-base lg:text-lg font-extrabold text-emerald-400">$0.00</span>
                     </div>
-                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-calendar-days mr-1"></i>월합산 평균</span>
                 </div>
 
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
-                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">월 평균 수익률</span>
-                    <div class="mt-2 flex items-baseline gap-1">
-                        <span id="kpiMonthlyAvgReturn" class="text-lg lg:text-xl font-extrabold text-sky-400">0.00%</span>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">월 평균 수익률</span>
+                    <div class="mt-1 flex items-baseline gap-1">
+                        <span id="kpiMonthlyAvgReturn" class="text-base lg:text-lg font-extrabold text-sky-400">0.00%</span>
                     </div>
-                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-percent mr-1"></i>월별 증감 평균</span>
                 </div>
 
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
-                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">연환산 수익률</span>
-                    <div class="mt-2 flex items-baseline gap-1">
-                        <span id="kpiAnnualReturn" class="text-lg lg:text-xl font-extrabold text-amber-400">0.00%</span>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">연환산 수익률</span>
+                    <div class="mt-1 flex items-baseline gap-1">
+                        <span id="kpiAnnualReturn" class="text-base lg:text-lg font-extrabold text-amber-400">0.00%</span>
                     </div>
-                    <span class="text-[9px] text-slate-500 mt-1"><i class="fa-solid fa-chart-line mr-1"></i>CAGR 연복리</span>
                 </div>
             </div>
 
@@ -258,13 +239,13 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-column text-emerald-400"></i> 월별 수익 합계 & 일평균 (0원 포함)
+                            <i class="fa-solid fa-chart-column text-emerald-400"></i> 월별 수익 합계 & 일평균
                         </h3>
                         <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
-                            <button id="btnComboFilter3M" onclick="toggleComboChartFilter('3M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">3개월</button>
-                            <button id="btnComboFilter6M" onclick="toggleComboChartFilter('6M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">6개월</button>
-                            <button id="btnComboFilter1Y" onclick="toggleComboChartFilter('1Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">1년</button>
-                            <button id="btnComboFilterALL" onclick="toggleComboChartFilter('ALL')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">전체</button>
+                            <button id="btnComboFilter3M" onclick="toggleComboChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                            <button id="btnComboFilter6M" onclick="toggleComboChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                            <button id="btnComboFilter1Y" onclick="toggleComboChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                            <button id="btnComboFilterALL" onclick="toggleComboChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
                         </div>
                     </div>
                     <div class="relative h-64 w-full">
@@ -275,16 +256,16 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-slate-800/60 pb-2.5">
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-pie text-cyan-400"></i> 자산 포트폴리오 배분 비중
+                            <i class="fa-solid fa-chart-pie text-cyan-400"></i> 자산 포트폴리오 비중
                         </h3>
-                        <div id="cashStockRatioBadge" class="hidden text-[11px] font-semibold text-slate-300 bg-slate-950 px-2.5 py-1 rounded-xl border border-slate-800/80 flex items-center gap-2 self-start sm:self-auto shadow-inner">
-                            <span class="text-cyan-400 flex items-center gap-1"><i class="fa-solid fa-wallet text-[10px]"></i> 현금 <span id="cashPercentRatio" class="font-mono font-bold">0.0%</span></span>
+                        <div id="cashStockRatioBadge" class="hidden text-[10px] font-semibold text-slate-300 bg-slate-950 px-2 py-1 rounded-xl border border-slate-800/80 flex items-center gap-2">
+                            <span class="text-cyan-400">현금 <span id="cashPercentRatio" class="font-mono font-bold">0.0%</span></span>
                             <span class="text-slate-700">|</span>
-                            <span class="text-sky-400 flex items-center gap-1"><i class="fa-solid fa-chart-line text-[10px]"></i> 주식 <span id="stockPercentRatio" class="font-mono font-bold">0.0%</span></span>
+                            <span class="text-sky-400">주식 <span id="stockPercentRatio" class="font-mono font-bold">0.0%</span></span>
                         </div>
                     </div>
                     <div class="flex flex-col sm:flex-row items-center gap-4 flex-1">
-                        <div class="relative w-40 h-40 flex-shrink-0">
+                        <div class="relative w-36 h-36 flex-shrink-0">
                             <canvas id="portfolioDonutChart"></canvas>
                         </div>
                         <div class="flex-1 w-full overflow-y-auto max-h-48 text-[11px] space-y-1.5" id="portfolioBreakdown"></div>
@@ -298,13 +279,13 @@
                     <div>
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
                             <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-line text-sky-400"></i> 전체 계좌 평가액 추이
+                                <i class="fa-solid fa-chart-line text-sky-400"></i> 계좌 평가액 추이
                             </h3>
                             <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
-                                <button id="btnAccFilter3M" onclick="toggleAccChartFilter('3M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">3개월</button>
-                                <button id="btnAccFilter6M" onclick="toggleAccChartFilter('6M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">6개월</button>
-                                <button id="btnAccFilter1Y" onclick="toggleAccChartFilter('1Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">1년</button>
-                                <button id="btnAccFilterALL" onclick="toggleAccChartFilter('ALL')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">전체</button>
+                                <button id="btnAccFilter3M" onclick="toggleAccChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                <button id="btnAccFilter6M" onclick="toggleAccChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                <button id="btnAccFilter1Y" onclick="toggleAccChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                <button id="btnAccFilterALL" onclick="toggleAccChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
                             </div>
                         </div>
                         <div class="relative h-64 w-full">
@@ -317,13 +298,13 @@
                     <div>
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
                             <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-area text-rose-500"></i> 최고점 대비 하락률 (MDD) 추이
+                                <i class="fa-solid fa-chart-area text-rose-500"></i> 최고점 대비 하락률 (MDD)
                             </h3>
                             <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
-                                <button id="btnMddFilter3M" onclick="toggleMddChartFilter('3M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">3개월</button>
-                                <button id="btnMddFilter6M" onclick="toggleMddChartFilter('6M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">6개월</button>
-                                <button id="btnMddFilter1Y" onclick="toggleMddChartFilter('1Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">1년</button>
-                                <button id="btnMddFilterALL" onclick="toggleMddChartFilter('ALL')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">전체</button>
+                                <button id="btnMddFilter3M" onclick="toggleMddChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                <button id="btnMddFilter6M" onclick="toggleMddChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                <button id="btnMddFilter1Y" onclick="toggleMddChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                <button id="btnMddFilterALL" onclick="toggleMddChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
                             </div>
                         </div>
                         <div class="relative h-64 w-full">
@@ -341,9 +322,9 @@
                             <i class="fa-solid fa-calendar-check text-amber-500"></i> 연도별 수익금 합계
                         </h3>
                         <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
-                            <button id="btnYearlyFilter3Y" onclick="toggleYearlyChartFilter('3Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">3년</button>
-                            <button id="btnYearlyFilter5Y" onclick="toggleYearlyChartFilter('5Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">5년</button>
-                            <button id="btnYearlyFilterALL" onclick="toggleYearlyChartFilter('ALL')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">전체</button>
+                            <button id="btnYearlyFilter3Y" onclick="toggleYearlyChartFilter('3Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3Y</button>
+                            <button id="btnYearlyFilter5Y" onclick="toggleYearlyChartFilter('5Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">5Y</button>
+                            <button id="btnYearlyFilterALL" onclick="toggleYearlyChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
                         </div>
                     </div>
                     <div class="relative h-56 w-full">
@@ -354,13 +335,13 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-line text-emerald-400"></i> 월별 수익률 추이 (월평균 기반)
+                            <i class="fa-solid fa-chart-line text-emerald-400"></i> 월별 수익률 추이
                         </h3>
                         <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
-                            <button id="btnMonRetFilter3M" onclick="toggleMonthlyReturnChartFilter('3M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">3개월</button>
-                            <button id="btnMonRetFilter6M" onclick="toggleMonthlyReturnChartFilter('6M')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">6개월</button>
-                            <button id="btnMonRetFilter1Y" onclick="toggleMonthlyReturnChartFilter('1Y')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">1년</button>
-                            <button id="btnMonRetFilterALL" onclick="toggleMonthlyReturnChartFilter('ALL')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">전체</button>
+                            <button id="btnMonRetFilter3M" onclick="toggleMonthlyReturnChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                            <button id="btnMonRetFilter6M" onclick="toggleMonthlyReturnChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                            <button id="btnMonRetFilter1Y" onclick="toggleMonthlyReturnChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                            <button id="btnMonRetFilterALL" onclick="toggleMonthlyReturnChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
                         </div>
                     </div>
                     <div class="relative h-56 w-full">
@@ -393,7 +374,7 @@
                                 <th class="p-3 text-right">당일 수익금</th>
                                 <th class="p-3 text-right">누적 수익금</th>
                                 <th class="p-3 text-right">계좌 평가액</th>
-                                <th class="p-3 text-right">전고점 대비 하락률 (MDD)</th>
+                                <th class="p-3 text-right">MDD</th>
                                 <th class="p-3 text-right">일별 수익률</th>
                                 <th class="p-3 text-left">특이사항</th>
                             </tr>
@@ -492,7 +473,7 @@
                             badge.className = "text-xs bg-emerald-500/10 px-3 py-1.5 rounded-full text-emerald-400 border border-emerald-500/20";
                             badgeIcon.className = "fa-solid fa-circle text-emerald-400 mr-1.5 text-[8px]";
                             badgeText.innerText = "구글 시트 연동 완료";
-                            showNotification("실시간 구글 스프레드시트 정보를 성공적으로 연동했습니다!", "success", "동기화 성공");
+                            showNotification("실시간 구글 스프레드시트 정보를 연동했습니다!", "success", "동기화 성공");
 
                         } catch (err) {
                             badge.className = "text-xs bg-rose-500/10 px-3 py-1.5 rounded-full text-rose-400 border border-rose-500/20";
@@ -519,15 +500,23 @@
             }
         };
 
-        // --- 📊 종목별 7차 분할 매수 계산기 & 자동 저장 (localStorage) 기능 ---
+        // --- 📊 종목별 7차 분할 매수 계산기 (+추가 / -삭제) ---
 
         function initTickerDropdown() {
             const select = document.getElementById('selectedTickerSelect');
             select.innerHTML = '';
 
-            // 로컬 스토리지에 추가된 맞춤 종목 불러오기
+            // 로컬스토리지에 저장된 종목 목록 불러오기
             const customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
-            const mergedTickers = Array.from(new Set([...availableTickers, ...customTickers]));
+            const deletedTickers = JSON.parse(localStorage.getItem('deletedTickersList')) || [];
+            
+            // 기본 종목 + 추가된 종목 병합 후 삭제된 종목 필터링
+            let mergedTickers = Array.from(new Set([...availableTickers, ...customTickers]));
+            mergedTickers = mergedTickers.filter(t => !deletedTickers.includes(t));
+
+            if (mergedTickers.length === 0) {
+                mergedTickers = ["DEFAULT"];
+            }
 
             mergedTickers.forEach(ticker => {
                 const opt = document.createElement('option');
@@ -535,6 +524,10 @@
                 opt.innerText = ticker;
                 select.appendChild(opt);
             });
+
+            if (!mergedTickers.includes(currentSelectedTicker)) {
+                currentSelectedTicker = mergedTickers[0];
+            }
 
             select.value = currentSelectedTicker;
         }
@@ -550,6 +543,12 @@
             if (newTicker && newTicker.trim() !== "") {
                 const formatted = newTicker.trim().toUpperCase();
                 
+                // 삭제 기록이 있다면 삭제 목록에서 제거
+                let deletedTickers = JSON.parse(localStorage.getItem('deletedTickersList')) || [];
+                deletedTickers = deletedTickers.filter(t => t !== formatted);
+                localStorage.setItem('deletedTickersList', JSON.stringify(deletedTickers));
+
+                // 커스텀 목록에 추가
                 const customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
                 if (!customTickers.includes(formatted)) {
                     customTickers.push(formatted);
@@ -562,11 +561,42 @@
             }
         }
 
+        // --- 🗑️ 종목 삭제 기능 추가 ---
+        function deleteCurrentTicker() {
+            const select = document.getElementById('selectedTickerSelect');
+            const targetTicker = select.value;
+
+            if (!targetTicker) return;
+
+            if (confirm(`'${targetTicker}' 종목을 목록에서 삭제하시겠습니까?\n(입력된 7차 분할매수 데이터도 함께 삭제됩니다)`)) {
+                
+                // 1. 삭제된 종목 블랙리스트에 추가
+                const deletedTickers = JSON.parse(localStorage.getItem('deletedTickersList')) || [];
+                if (!deletedTickers.includes(targetTicker)) {
+                    deletedTickers.push(targetTicker);
+                    localStorage.setItem('deletedTickersList', JSON.stringify(deletedTickers));
+                }
+
+                // 2. 커스텀 종목 리스트에서 제거
+                let customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
+                customTickers = customTickers.filter(t => t !== targetTicker);
+                localStorage.setItem('customTickersList', JSON.stringify(customTickers));
+
+                // 3. 해당 종목의 분할매수 계산기 데이터 삭제
+                localStorage.removeItem(`splitBuyData_${targetTicker}`);
+
+                // 4. 드롭다운 및 테이블 갱신
+                initTickerDropdown();
+                renderSplitBuyTable(currentSelectedTicker);
+
+                showNotification(`'${targetTicker}' 종목이 삭제되었습니다.`, "info", "종목 삭제 완료");
+            }
+        }
+
         function renderSplitBuyTable(ticker) {
             const tbody = document.getElementById('splitBuyTableBody');
             tbody.innerHTML = '';
 
-            // 로컬스토리지에서 해당 종목의 매수 계획 데이터 로드
             const savedData = JSON.parse(localStorage.getItem(`splitBuyData_${ticker}`)) || {};
 
             for (let i = 1; i <= 7; i++) {
@@ -579,12 +609,12 @@
                     <td class="py-2 font-bold text-amber-400">${i}차</td>
                     <td class="py-2">
                         <input type="number" id="alloc_${i}" value="${stepData.alloc}" oninput="calcAndSaveSplitBuy('${ticker}', ${i})" placeholder="0"
-                            class="w-16 sm:w-20 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
+                            class="w-14 sm:w-20 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
                     </td>
                     <td class="py-2 font-mono text-slate-400 text-[10px]" id="half_${i}">$0.00</td>
                     <td class="py-2">
                         <input type="number" id="bought_${i}" value="${stepData.bought}" oninput="calcAndSaveSplitBuy('${ticker}', ${i})" placeholder="0"
-                            class="w-16 sm:w-20 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
+                            class="w-14 sm:w-20 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
                     </td>
                     <td class="py-2 text-right font-mono font-bold text-sky-400" id="rem_${i}">$0.00</td>
                 `;
@@ -596,7 +626,6 @@
         function calcAndSaveSplitBuy(ticker, step) {
             updateSplitRowUI(step);
 
-            // 해당 종목의 1~7차 데이터를 localStorage에 실시간 자동 저장
             const splitData = {};
             for (let i = 1; i <= 7; i++) {
                 const allocVal = document.getElementById(`alloc_${i}`).value;
@@ -614,10 +643,10 @@
             const halfVal = allocInput / 2;
             const remVal = allocInput - boughtInput;
 
-            document.getElementById(`half_${step}`).innerText = `$${halfVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById(`half_${step}`).innerText = `$${halfVal.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
             
             const remEl = document.getElementById(`rem_${step}`);
-            remEl.innerText = `$${remVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            remEl.innerText = `$${remVal.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
             
             if (remVal < 0) {
                 remEl.className = "py-2 text-right font-mono font-bold text-rose-400";
@@ -657,7 +686,7 @@
         function loadSampleData() {
             document.getElementById('rawPasteArea').value = sampleRawData;
             processManualImport();
-            showNotification("기본 포트폴리오 샘플 데이터가 가공되었습니다.", "success", "데이터 리셋 완료");
+            showNotification("샘플 데이터가 가공되었습니다.", "success", "데이터 리셋 완료");
         }
 
         function processManualImport() {
@@ -723,7 +752,6 @@
 
             let latestPortfolio = null;
 
-            // 시트 헤더로부터 등록된 주식 티커들을 감지하여 드롭다운 자동 확장
             const detectedTickers = [];
             for (let sIdx = stockStartIndex; sIdx < headers.length; sIdx++) {
                 if (headers[sIdx] && headers[sIdx].trim() !== "") {
@@ -770,7 +798,6 @@
                         }
                     }
 
-                    // 현금 자동 계산: 전체 계좌 - 주식 합계
                     const autoCalculatedCash = Math.max(0, totalAccVal - totalStockSum);
                     portfolioItems["현금"] = autoCalculatedCash;
                     const totalPortfolioSum = totalStockSum + autoCalculatedCash;
@@ -871,13 +898,13 @@
             const avgRevenue = data.length > 0 ? (totalRevenue / data.length) : 0;
             const minMDD = Math.min(...data.map(item => item.mdd));
 
-            document.getElementById('kpiTotalRevenue').innerText = `$${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('kpiCurrentAccount').innerText = `$${currentAccount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('kpiAvgRevenue').innerText = `$${avgRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('kpiTotalRevenue').innerText = `$${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
+            document.getElementById('kpiCurrentAccount').innerText = `$${currentAccount.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
+            document.getElementById('kpiAvgRevenue').innerText = `$${avgRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
             document.getElementById('kpiMaxMDD').innerText = `${(minMDD * 100).toFixed(2)}%`;
 
             const mStats = calculateMonthlyStats(data);
-            document.getElementById('kpiMonthlyAvgRevenue').innerText = `$${mStats.avgMonthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('kpiMonthlyAvgRevenue').innerText = `$${mStats.avgMonthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
             document.getElementById('kpiMonthlyAvgReturn').innerText = `${(mStats.avgMonthlyReturn * 100).toFixed(2)}%`;
 
             const startVal = data[0].accountVal - data[0].revenue;
@@ -965,11 +992,11 @@
             const btnALL = document.getElementById(`btn${type}FilterALL`);
 
             [btn3, btn6, btn1, btnALL].filter(btn => btn !== null).forEach(btn => {
-                btn.className = "px-2.5 py-1 rounded-lg font-semibold transition-all duration-200 text-slate-400 hover:text-slate-200";
+                btn.className = "px-2 py-1 rounded-lg font-semibold transition-all duration-200 text-slate-400 hover:text-slate-200";
             });
 
             const activeBtn = document.getElementById(`btn${type}Filter${filterMode}`);
-            if (activeBtn) activeBtn.className = "px-2.5 py-1 rounded-lg font-semibold transition-all duration-200 bg-sky-600 text-white shadow-sm";
+            if (activeBtn) activeBtn.className = "px-2 py-1 rounded-lg font-semibold transition-all duration-200 bg-sky-600 text-white shadow-sm";
         }
 
         function renderCharts(dailyData, monthlyData, yearlyData, latestPortfolio, monthlyStatsDetails) {
@@ -1041,7 +1068,7 @@
                         <div class="space-y-1">
                             <div class="flex items-center justify-between text-slate-300 font-semibold text-[10px]">
                                 <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color:${colors[idx % colors.length]}"></span>${label}</span>
-                                <span>$${value.toLocaleString(undefined, {minimumFractionDigits: 2})} (${percentage.toFixed(1)}%)</span>
+                                <span>$${value.toLocaleString(undefined, {minimumFractionDigits: 1})} (${percentage.toFixed(1)}%)</span>
                             </div>
                             <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="h-full rounded-full" style="width:${percentage}%; background-color:${colors[idx % colors.length]}"></div></div>
                         </div>
@@ -1119,7 +1146,7 @@
                     <td class="p-3 text-slate-400">${item.date}</td>
                     <td class="p-3 text-right font-semibold text-emerald-400">$${item.revenue.toFixed(2)}</td>
                     <td class="p-3 text-right text-slate-400">$${item.cumRevenue.toFixed(2)}</td>
-                    <td class="p-3 text-right font-mono">$${item.accountVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-3 text-right font-mono">$${item.accountVal.toLocaleString(undefined, {minimumFractionDigits: 1})}</td>
                     <td class="p-3 text-right font-mono text-rose-400">${(item.mdd * 100).toFixed(2)}%</td>
                     <td class="p-3 text-right font-mono">${(item.dailyReturn * 100).toFixed(2)}%</td>
                     <td class="p-3 text-left max-w-[150px] truncate text-slate-400">${item.memo || '-'}</td>
