@@ -256,25 +256,22 @@
                 </div>
             </div>
 
-            <!-- 백업 데이터 수동 입력 카드 -->
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl relative">
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                        <i class="fa-solid fa-file-import text-emerald-400"></i> 수동 데이터 붙여넣기
+            <!-- 퍼센트 계산기 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
+                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-percent text-fuchsia-400"></i> 퍼센트 계산기
                     </h2>
-                    <button onclick="loadSampleData()" class="text-[11px] text-slate-500 hover:text-emerald-400 transition">
-                        샘플 로드
+                    <button onclick="resetPercentCalc()" class="text-[10px] text-slate-500 hover:text-rose-400 transition">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> 초기화
                     </button>
                 </div>
 
-                <textarea id="rawPasteArea" 
-                    class="w-full h-24 bg-slate-950 text-slate-400 font-mono text-[10px] p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition resize-none mb-3"
-                    placeholder="시트 A~Q열을 드래그하여 여기에 붙여넣으세요..."></textarea>
+                <label class="block text-[10px] text-slate-500 font-semibold mb-1">기준 금액 ($)</label>
+                <input type="number" id="percentCalcInput" step="0.01" placeholder="예: 1000" oninput="updatePercentCalc()"
+                    class="w-full bg-slate-950 text-slate-200 text-sm font-bold p-2.5 rounded-lg border border-slate-800 focus:outline-none focus:border-fuchsia-500 mb-3">
 
-                <button onclick="processManualImport()" 
-                    class="w-full bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
-                    수동 텍스트 업데이트
-                </button>
+                <div id="percentCalcResults" class="grid grid-cols-3 gap-1.5"></div>
             </div>
         </section>
 
@@ -347,11 +344,20 @@
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-chart-column text-emerald-400"></i> 월별 수익 합계 & 일평균
                         </h3>
-                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
-                            <button id="btnComboFilter3M" onclick="toggleComboChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
-                            <button id="btnComboFilter6M" onclick="toggleComboChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
-                            <button id="btnComboFilter1Y" onclick="toggleComboChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
-                            <button id="btnComboFilterALL" onclick="toggleComboChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <div class="relative">
+                                <button type="button" id="calBtn_combo" onclick="toggleCalendarG_('combo')" title="시작일 필터"
+                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_combo">전체</span>
+                                </button>
+                                <div id="calPopup_combo" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                            </div>
+                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                                <button id="btnComboFilter3M" onclick="toggleComboChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                <button id="btnComboFilter6M" onclick="toggleComboChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                <button id="btnComboFilter1Y" onclick="toggleComboChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                <button id="btnComboFilterALL" onclick="toggleComboChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                            </div>
                         </div>
                     </div>
                     <div class="relative h-64 w-full">
@@ -387,11 +393,20 @@
                             <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                                 <i class="fa-solid fa-chart-line text-sky-400"></i> 계좌 평가액 추이
                             </h3>
-                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
-                                <button id="btnAccFilter3M" onclick="toggleAccChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
-                                <button id="btnAccFilter6M" onclick="toggleAccChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
-                                <button id="btnAccFilter1Y" onclick="toggleAccChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
-                                <button id="btnAccFilterALL" onclick="toggleAccChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                            <div class="flex items-center gap-2 self-start sm:self-auto">
+                                <div class="relative">
+                                    <button type="button" id="calBtn_acc" onclick="toggleCalendarG_('acc')" title="시작일 필터"
+                                        class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                        <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_acc">전체</span>
+                                    </button>
+                                    <div id="calPopup_acc" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                                </div>
+                                <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                                    <button id="btnAccFilter3M" onclick="toggleAccChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                    <button id="btnAccFilter6M" onclick="toggleAccChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                    <button id="btnAccFilter1Y" onclick="toggleAccChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                    <button id="btnAccFilterALL" onclick="toggleAccChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                                </div>
                             </div>
                         </div>
                         <div class="relative h-64 w-full">
@@ -406,11 +421,20 @@
                             <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                                 <i class="fa-solid fa-chart-area text-rose-500"></i> 최고점 대비 하락률 (MDD)
                             </h3>
-                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
-                                <button id="btnMddFilter3M" onclick="toggleMddChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
-                                <button id="btnMddFilter6M" onclick="toggleMddChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
-                                <button id="btnMddFilter1Y" onclick="toggleMddChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
-                                <button id="btnMddFilterALL" onclick="toggleMddChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                            <div class="flex items-center gap-2 self-start sm:self-auto">
+                                <div class="relative">
+                                    <button type="button" id="calBtn_mdd" onclick="toggleCalendarG_('mdd')" title="시작일 필터"
+                                        class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                        <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_mdd">전체</span>
+                                    </button>
+                                    <div id="calPopup_mdd" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                                </div>
+                                <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                                    <button id="btnMddFilter3M" onclick="toggleMddChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                    <button id="btnMddFilter6M" onclick="toggleMddChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                    <button id="btnMddFilter1Y" onclick="toggleMddChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                    <button id="btnMddFilterALL" onclick="toggleMddChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                                </div>
                             </div>
                         </div>
                         <div class="relative h-64 w-full">
@@ -427,10 +451,19 @@
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-calendar-check text-amber-500"></i> 연도별 수익금 합계
                         </h3>
-                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
-                            <button id="btnYearlyFilter3Y" onclick="toggleYearlyChartFilter('3Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3Y</button>
-                            <button id="btnYearlyFilter5Y" onclick="toggleYearlyChartFilter('5Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">5Y</button>
-                            <button id="btnYearlyFilterALL" onclick="toggleYearlyChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <div class="relative">
+                                <button type="button" id="calBtn_yearly" onclick="toggleCalendarG_('yearly')" title="시작일 필터"
+                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_yearly">전체</span>
+                                </button>
+                                <div id="calPopup_yearly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                            </div>
+                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                                <button id="btnYearlyFilter3Y" onclick="toggleYearlyChartFilter('3Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3Y</button>
+                                <button id="btnYearlyFilter5Y" onclick="toggleYearlyChartFilter('5Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">5Y</button>
+                                <button id="btnYearlyFilterALL" onclick="toggleYearlyChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                            </div>
                         </div>
                     </div>
                     <div class="relative h-56 w-full">
@@ -443,11 +476,20 @@
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-chart-line text-emerald-400"></i> 월별 수익률 추이
                         </h3>
-                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] self-start sm:self-auto shadow-inner">
-                            <button id="btnMonRetFilter3M" onclick="toggleMonthlyReturnChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
-                            <button id="btnMonRetFilter6M" onclick="toggleMonthlyReturnChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
-                            <button id="btnMonRetFilter1Y" onclick="toggleMonthlyReturnChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
-                            <button id="btnMonRetFilterALL" onclick="toggleMonthlyReturnChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <div class="relative">
+                                <button type="button" id="calBtn_monthlyReturn" onclick="toggleCalendarG_('monthlyReturn')" title="시작일 필터"
+                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_monthlyReturn">전체</span>
+                                </button>
+                                <div id="calPopup_monthlyReturn" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                            </div>
+                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                                <button id="btnMonRetFilter3M" onclick="toggleMonthlyReturnChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                <button id="btnMonRetFilter6M" onclick="toggleMonthlyReturnChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                <button id="btnMonRetFilter1Y" onclick="toggleMonthlyReturnChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                <button id="btnMonRetFilterALL" onclick="toggleMonthlyReturnChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                            </div>
                         </div>
                     </div>
                     <div class="relative h-56 w-full">
@@ -466,9 +508,18 @@
                         <span class="text-xs text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80" id="totalRowsCount">총 0개 기록</span>
                     </div>
                     
-                    <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto text-xs">
-                        <button id="btnTableRecent" onclick="toggleTableMode('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 15일</button>
-                        <button id="btnTableAll" onclick="toggleTableMode('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                    <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <div class="relative">
+                            <button type="button" id="calBtn_table" onclick="toggleCalendarG_('table')" title="시작일 필터"
+                                class="flex items-center gap-1 text-[10px] px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_table">전체</span>
+                            </button>
+                            <div id="calPopup_table" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                        </div>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                            <button id="btnTableRecent" onclick="toggleTableMode('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 15일</button>
+                            <button id="btnTableAll" onclick="toggleTableMode('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                        </div>
                     </div>
                 </div>
 
@@ -532,6 +583,8 @@
         let activeYearlyChartFilter = 'ALL';
         
         let cachedParsedData = [];
+        let cachedChartData = [];       // "차트 시작일" 필터가 적용된 데이터 (차트/상세 테이블용)
+        let cachedLatestPortfolio = null; // 포트폴리오 비중 도넛은 필터 대상이 아니므로 전체 데이터 기준으로 캐시해둠
         let parsedHeaders = [];
 
         // 기본 지원 종목 리스트
@@ -623,6 +676,8 @@
             initTickerDropdown();
             renderSplitBuyTable(currentSelectedTicker);
 
+            restoreCalendarFiltersFromStorage_();
+
             document.getElementById('splitBuyApiUrlInput').value = splitBuyApiUrl;
             if (splitBuyApiUrl) {
                 initSplitBuySync();
@@ -633,8 +688,7 @@
                 document.getElementById('googleSheetUrl').value = savedUrl;
                 fetchGoogleSheetData();
             } else {
-                document.getElementById('rawPasteArea').value = sampleRawData;
-                processManualImport();
+                loadDemoData_();
             }
         };
 
@@ -871,7 +925,8 @@
             document.getElementById('dailyEntryCalendarPopup').classList.remove('hidden');
         }
 
-        function changeCalendarMonth_(delta) {
+        function changeCalendarMonth_(delta, evt) {
+            if (evt) evt.stopPropagation();
             calendarViewMonth += delta;
             if (calendarViewMonth < 0) { calendarViewMonth = 11; calendarViewYear--; }
             if (calendarViewMonth > 11) { calendarViewMonth = 0; calendarViewYear++; }
@@ -919,9 +974,9 @@
 
             popup.innerHTML = `
                 <div class="flex items-center justify-between mb-2">
-                    <button onclick="changeCalendarMonth_(-1)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-up"></i></button>
+                    <button onclick="changeCalendarMonth_(-1, event)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-up"></i></button>
                     <span class="text-xs font-bold text-slate-200">${calendarViewYear}년 ${calendarViewMonth + 1}월</span>
-                    <button onclick="changeCalendarMonth_(1)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-down"></i></button>
+                    <button onclick="changeCalendarMonth_(1, event)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-down"></i></button>
                 </div>
                 <div class="grid grid-cols-7 gap-0.5 mb-0.5">
                     ${dowLabels.map(l => `<div class="text-center text-[10px] text-slate-500 font-semibold pb-1">${l}</div>`).join('')}
@@ -1310,26 +1365,39 @@
             }
         }
 
-        function loadSampleData() {
-            document.getElementById('rawPasteArea').value = sampleRawData;
-            processManualImport();
-            showNotification("샘플 데이터가 가공되었습니다.", "success", "데이터 리셋 완료");
+        // 구글시트 연동 전 첫 실행 시 보여줄 샘플 데이터 (수동 붙여넣기 UI는 제거되었고, 내부적으로만 사용됨)
+        function loadDemoData_() {
+            const rows = sampleRawData.trim().split('\n');
+            const dataToParse = rows.map(row => row.split('\t')).filter(cols => cols.length >= 2);
+            parseAndRenderData(dataToParse, "샘플 데이터");
         }
 
-        function processManualImport() {
-            const rawText = document.getElementById('rawPasteArea').value.trim();
-            if (!rawText) return;
+        // ===================================================================
+        // 🧮 퍼센트 계산기
+        // ===================================================================
 
-            const rows = rawText.split('\n');
-            const dataToParse = [];
+        function updatePercentCalc() {
+            const container = document.getElementById('percentCalcResults');
+            const raw = document.getElementById('percentCalcInput').value;
+            const base = parseFloat(raw);
 
-            rows.forEach(row => {
-                const cols = row.split('\t');
-                if (cols.length < 2) return;
-                dataToParse.push(cols);
-            });
+            if (raw === '' || isNaN(base)) {
+                container.innerHTML = '';
+                return;
+            }
 
-            parseAndRenderData(dataToParse, "수동 붙여넣기");
+            const percents = [90, 80, 70, 60, 50, 40, 30, 20, 10];
+            container.innerHTML = percents.map(p => `
+                <div class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-center">
+                    <div class="text-[9px] text-slate-500">${p}%</div>
+                    <div class="text-[11px] font-mono font-bold text-fuchsia-400">${(base * p / 100).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+                </div>
+            `).join('');
+        }
+
+        function resetPercentCalc() {
+            document.getElementById('percentCalcInput').value = '';
+            document.getElementById('percentCalcResults').innerHTML = '';
         }
 
         function saveAndSyncUrl() {
@@ -1475,15 +1543,194 @@
             });
 
             cachedParsedData = parsedData;
-            
-            updateKpiCards(parsedData);
-            const monthlyStats = groupDataByMonth(parsedData);
-            const yearlyStats = groupDataByYear(parsedData);
-            const mStats = calculateMonthlyStats(parsedData); 
-            
-            renderCharts(parsedData, monthlyStats, yearlyStats, latestPortfolio, mStats.monthlyDetails);
-            renderDetailTable(parsedData);
+            cachedLatestPortfolio = latestPortfolio;
+
+            updateKpiCards(parsedData); // KPI 카드는 항상 전체 기간 기준 (일평균 수익금만 별도 기준일 옵션 있음)
+            rebuildChartsAndTable_();
             renderDailyEntryForm();
+        }
+
+        // 각 차트/테이블을 처음 그릴 때 + 개별 시작일 필터가 바뀔 때 모두 이 함수들로 다시 그림
+        function rebuildChartsAndTable_() {
+            if (!cachedParsedData || cachedParsedData.length === 0) return;
+            renderPortfolioDonutChart(cachedLatestPortfolio); // 포트폴리오 비중은 필터 대상이 아니라 항상 최신 데이터 기준
+            rerenderCombo_();
+            rerenderAcc_();
+            rerenderMdd_();
+            rerenderYearly_();
+            rerenderMonthlyReturn_();
+            rerenderTable_();
+        }
+
+        // "차트 시작일" 필터가 적용된 데이터를 반환 (해당 필터 이후 데이터가 하나도 없으면 전체 기간으로 대체)
+        function getFilteredDailyData_(key) {
+            const startDate = localStorage.getItem(`chartStartDate_${key}`);
+            if (!startDate) return cachedParsedData;
+            const filtered = cachedParsedData.filter(item => item.date >= startDate);
+            return filtered.length > 0 ? filtered : cachedParsedData;
+        }
+
+        function rerenderCombo_() { renderMonthlyComboChart(groupDataByMonth(getFilteredDailyData_('combo'))); }
+        function rerenderAcc_() { renderAccountChart(getFilteredDailyData_('acc')); }
+        function rerenderMdd_() { renderMddChart(getFilteredDailyData_('mdd')); }
+        function rerenderYearly_() { renderYearlyBarChart(groupDataByYear(getFilteredDailyData_('yearly'))); }
+        function rerenderMonthlyReturn_() { renderMonthlyReturnChart(calculateMonthlyStats(getFilteredDailyData_('monthlyReturn')).monthlyDetails); }
+        function rerenderTable_() { cachedChartData = getFilteredDailyData_('table'); renderDetailTable(cachedChartData); }
+
+        // 캘린더 필터를 선택했을 때 어느 항목을 다시 그릴지 매핑
+        const CALENDAR_APPLY_CALLBACKS = {
+            combo: () => rerenderCombo_(),
+            acc: () => rerenderAcc_(),
+            mdd: () => rerenderMdd_(),
+            yearly: () => rerenderYearly_(),
+            monthlyReturn: () => rerenderMonthlyReturn_(),
+            table: () => rerenderTable_()
+        };
+
+        // ===================================================================
+        // 📅 범용 캘린더 필터 팝업 (6개 항목이 각자 독립적인 시작일을 가짐)
+        // ===================================================================
+        const calendarInstances = {}; // { key: { year, month, value } }
+
+        function initCalendarInstance_(key) {
+            if (!calendarInstances[key]) calendarInstances[key] = { year: null, month: null, value: '' };
+            return calendarInstances[key];
+        }
+
+        function toggleCalendarG_(key) {
+            const popup = document.getElementById(`calPopup_${key}`);
+            if (!popup) return;
+            popup.classList.contains('hidden') ? openCalendarG_(key) : popup.classList.add('hidden');
+        }
+
+        function openCalendarG_(key) {
+            const inst = initCalendarInstance_(key);
+            const base = inst.value || todayStr_();
+            const d = new Date(base + 'T00:00:00');
+            inst.year = d.getFullYear();
+            inst.month = d.getMonth();
+            renderCalendarG_(key);
+            document.getElementById(`calPopup_${key}`).classList.remove('hidden');
+        }
+
+        function changeCalendarMonthG_(key, delta, evt) {
+            if (evt) evt.stopPropagation(); // 팝업이 다시 그려지며 바깥 클릭으로 오인되어 즉시 닫히는 것을 방지
+            const inst = calendarInstances[key];
+            inst.month += delta;
+            if (inst.month < 0) { inst.month = 11; inst.year--; }
+            if (inst.month > 11) { inst.month = 0; inst.year++; }
+            renderCalendarG_(key);
+        }
+
+        // 이미 구글시트에 기록이 있는 날짜는 점으로 표시
+        function renderCalendarG_(key) {
+            const inst = calendarInstances[key];
+            const popup = document.getElementById(`calPopup_${key}`);
+            if (!popup) return;
+
+            const recordDates = new Set(cachedParsedData.map(item => item.date));
+            const today = todayStr_();
+            const firstOfMonth = new Date(inst.year, inst.month, 1);
+            const startWeekday = firstOfMonth.getDay();
+            const daysInMonth = new Date(inst.year, inst.month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(inst.year, inst.month, 0).getDate();
+            const dowLabels = ['일', '월', '화', '수', '목', '금', '토'];
+
+            let cellsHtml = '';
+            for (let i = 0; i < startWeekday; i++) {
+                cellsHtml += `<div class="text-center text-[11px] text-slate-700 py-1.5">${daysInPrevMonth - startWeekday + i + 1}</div>`;
+            }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${inst.year}-${String(inst.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isToday = dateStr === today;
+                const isSelected = dateStr === inst.value;
+                const hasRecord = recordDates.has(dateStr);
+
+                let cls = "relative text-center text-[11px] py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition ";
+                if (isSelected) cls += "bg-violet-600 text-white font-bold ";
+                else if (isToday) cls += "border border-violet-500 text-violet-400 font-bold ";
+                else cls += "text-slate-300 ";
+
+                cellsHtml += `
+                    <div class="${cls}" onclick="selectCalendarDateG_('${key}', '${dateStr}')">
+                        ${day}
+                        ${hasRecord ? `<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-sky-400'}"></span>` : ''}
+                    </div>`;
+            }
+            const remaining = (7 - ((startWeekday + daysInMonth) % 7)) % 7;
+            for (let i = 1; i <= remaining; i++) {
+                cellsHtml += `<div class="text-center text-[11px] text-slate-700 py-1.5">${i}</div>`;
+            }
+
+            popup.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <button onclick="changeCalendarMonthG_('${key}', -1, event)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-up"></i></button>
+                    <span class="text-xs font-bold text-slate-200">${inst.year}년 ${inst.month + 1}월</span>
+                    <button onclick="changeCalendarMonthG_('${key}', 1, event)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-down"></i></button>
+                </div>
+                <div class="grid grid-cols-7 gap-0.5 mb-0.5">
+                    ${dowLabels.map(l => `<div class="text-center text-[10px] text-slate-500 font-semibold pb-1">${l}</div>`).join('')}
+                </div>
+                <div class="grid grid-cols-7 gap-0.5">${cellsHtml}</div>
+                <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-800">
+                    <span class="text-[9px] text-slate-600"><span class="inline-block w-1 h-1 rounded-full bg-sky-400 mr-1"></span>기록 있음</span>
+                    <button onclick="resetCalendarFilterG_('${key}', event)" class="text-[10px] text-rose-400 hover:text-rose-300 font-semibold">전체보기</button>
+                </div>
+            `;
+        }
+
+        function updateCalendarLabelG_(key, dateStr) {
+            const label = document.getElementById(`calLabel_${key}`);
+            if (!label) return;
+            if (dateStr) {
+                label.innerText = dateStr;
+                label.classList.remove('text-slate-500');
+                label.classList.add('text-violet-300');
+            } else {
+                label.innerText = '전체';
+                label.classList.add('text-slate-500');
+                label.classList.remove('text-violet-300');
+            }
+        }
+
+        function selectCalendarDateG_(key, dateStr) {
+            calendarInstances[key].value = dateStr;
+            localStorage.setItem(`chartStartDate_${key}`, dateStr);
+            updateCalendarLabelG_(key, dateStr);
+            document.getElementById(`calPopup_${key}`).classList.add('hidden');
+            if (CALENDAR_APPLY_CALLBACKS[key]) CALENDAR_APPLY_CALLBACKS[key]();
+        }
+
+        function resetCalendarFilterG_(key, evt) {
+            if (evt) evt.stopPropagation();
+            calendarInstances[key].value = '';
+            localStorage.removeItem(`chartStartDate_${key}`);
+            updateCalendarLabelG_(key, '');
+            document.getElementById(`calPopup_${key}`).classList.add('hidden');
+            if (CALENDAR_APPLY_CALLBACKS[key]) CALENDAR_APPLY_CALLBACKS[key]();
+        }
+
+        // 열려있는 팝업 바깥을 클릭하면 닫기 (모든 캘린더 인스턴스 공통 처리)
+        document.addEventListener('click', (e) => {
+            Object.keys(calendarInstances).forEach(key => {
+                const popup = document.getElementById(`calPopup_${key}`);
+                const btn = document.getElementById(`calBtn_${key}`);
+                if (popup && btn && !popup.classList.contains('hidden') && !popup.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+                    popup.classList.add('hidden');
+                }
+            });
+        });
+
+        // 저장되어 있던 개별 시작일 필터를 페이지 로드 시 복원
+        function restoreCalendarFiltersFromStorage_() {
+            ['combo', 'acc', 'mdd', 'yearly', 'monthlyReturn', 'table'].forEach(key => {
+                initCalendarInstance_(key);
+                const saved = localStorage.getItem(`chartStartDate_${key}`);
+                if (saved) {
+                    calendarInstances[key].value = saved;
+                    updateCalendarLabelG_(key, saved);
+                }
+            });
         }
 
         function calculateMonthlyStats(data) {
@@ -1663,11 +1910,11 @@
             return count > 0 ? yearlyData.slice(-count) : yearlyData;
         }
 
-        function toggleAccChartFilter(mode) { activeAccChartFilter = mode; updateFilterButtonStyles('Acc', mode); renderAccountChart(cachedParsedData); }
-        function toggleMddChartFilter(mode) { activeMddChartFilter = mode; updateFilterButtonStyles('Mdd', mode); renderMddChart(cachedParsedData); }
-        function toggleComboChartFilter(mode) { activeComboChartFilter = mode; updateFilterButtonStyles('Combo', mode); renderMonthlyComboChart(groupDataByMonth(cachedParsedData)); }
-        function toggleMonthlyReturnChartFilter(mode) { activeMonthlyReturnChartFilter = mode; updateFilterButtonStyles('MonRet', mode); renderMonthlyReturnChart(calculateMonthlyStats(cachedParsedData).monthlyDetails); }
-        function toggleYearlyChartFilter(mode) { activeYearlyChartFilter = mode; updateFilterButtonStyles('Yearly', mode); renderYearlyBarChart(groupDataByYear(cachedParsedData)); }
+        function toggleAccChartFilter(mode) { activeAccChartFilter = mode; updateFilterButtonStyles('Acc', mode); rerenderAcc_(); }
+        function toggleMddChartFilter(mode) { activeMddChartFilter = mode; updateFilterButtonStyles('Mdd', mode); rerenderMdd_(); }
+        function toggleComboChartFilter(mode) { activeComboChartFilter = mode; updateFilterButtonStyles('Combo', mode); rerenderCombo_(); }
+        function toggleMonthlyReturnChartFilter(mode) { activeMonthlyReturnChartFilter = mode; updateFilterButtonStyles('MonRet', mode); rerenderMonthlyReturn_(); }
+        function toggleYearlyChartFilter(mode) { activeYearlyChartFilter = mode; updateFilterButtonStyles('Yearly', mode); rerenderYearly_(); }
 
         function updateFilterButtonStyles(type, filterMode) {
             const btn3 = document.getElementById(`btn${type}Filter3M`) || document.getElementById(`btn${type}Filter3Y`);
@@ -1681,15 +1928,6 @@
 
             const activeBtn = document.getElementById(`btn${type}Filter${filterMode}`);
             if (activeBtn) activeBtn.className = "px-2 py-1 rounded-lg font-semibold transition-all duration-200 bg-sky-600 text-white shadow-sm";
-        }
-
-        function renderCharts(dailyData, monthlyData, yearlyData, latestPortfolio, monthlyStatsDetails) {
-            renderMonthlyComboChart(monthlyData);
-            renderPortfolioDonutChart(latestPortfolio);
-            renderAccountChart(dailyData);
-            renderMddChart(dailyData);
-            renderYearlyBarChart(yearlyData);
-            renderMonthlyReturnChart(monthlyStatsDetails);
         }
 
         function renderMonthlyComboChart(monthlyData) {
@@ -1860,13 +2098,13 @@
                 tableSortField = field;
                 tableSortDir = 'desc'; // 처음 클릭하면 "가장 높은 값"부터 보여줌
             }
-            renderDetailTable(cachedParsedData);
+            renderDetailTable(cachedChartData);
         }
 
         function resetTableSort() {
             tableSortField = null;
             tableSortDir = 'desc';
-            renderDetailTable(cachedParsedData);
+            renderDetailTable(cachedChartData);
         }
 
         function updateSortIcons_() {
@@ -1887,7 +2125,7 @@
             activeTableMode = mode;
             document.getElementById('btnTableRecent').className = mode === 'recent' ? "px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
             document.getElementById('btnTableAll').className = mode === 'all' ? "px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
-            renderDetailTable(cachedParsedData);
+            renderDetailTable(cachedChartData);
         }
 
         function renderDetailTable(data) {
@@ -1939,9 +2177,9 @@
                 return;
             }
 
-            searchMatches = cachedParsedData
+            searchMatches = cachedChartData
                 .filter(item => item.memo && item.memo.toLowerCase().includes(term))
-                .map(item => item.date); // cachedParsedData는 날짜 오름차순 정렬되어 있음
+                .map(item => item.date); // cachedChartData는 날짜 오름차순 정렬되어 있음
 
             searchMatchIndex = searchMatches.length > 0 ? 0 : -1;
             updateSearchCounter_();
@@ -1953,7 +2191,7 @@
                 if (activeTableMode !== 'all') {
                     toggleTableMode('all'); // 내부적으로 renderDetailTable 호출됨
                 } else {
-                    renderDetailTable(cachedParsedData);
+                    renderDetailTable(cachedChartData);
                 }
                 jumpToSearchMatch_();
             } else {
