@@ -40,7 +40,7 @@
 
     <!-- 상단 헤더 네비게이션 -->
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
                     <i class="fa-solid fa-chart-pie text-xl animate-pulse"></i>
@@ -58,10 +58,73 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <main class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- 지표 요약 카드 그리드 (전체 폭으로 확장 - 3개 열 전부를 가로질러 맨 위에 배치) -->
+        <div class="lg:col-span-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">누적 수익금</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiTotalRevenue" class="text-base lg:text-lg font-extrabold text-emerald-400">$0.00</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">현재 계좌 평가액</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiCurrentAccount" class="text-base lg:text-lg font-extrabold text-slate-100">$0.00</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
+                    <button onclick="setAvgRevenueStartDate()" title="일평균 계산 기준일 설정" class="text-slate-600 hover:text-sky-400 text-[10px]">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                </div>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiAvgRevenue" class="text-base lg:text-lg font-extrabold text-sky-400">$0.00</span>
+                </div>
+                <span id="kpiAvgRevenueRange" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">최대 낙폭 (MDD)</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiMaxMDD" class="text-base lg:text-lg font-extrabold text-rose-500">0.00%</span>
+                </div>
+                <span id="kpiMaxMDDAmount" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">월 평균 수익금</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiMonthlyAvgRevenue" class="text-base lg:text-lg font-extrabold text-emerald-400">$0.00</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">월 평균 수익률</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiMonthlyAvgReturn" class="text-base lg:text-lg font-extrabold text-sky-400">0.00%</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">연환산 수익률</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiAnnualReturn" class="text-base lg:text-lg font-extrabold text-amber-400">0.00%</span>
+                </div>
+            </div>
+        </div>
         
-        <!-- 왼쪽 패널: 구글 시트 연동 및 데이터 관리 (4 cols) -->
-        <section class="lg:col-span-4 flex flex-col gap-6">
+        <!-- 1열: 일일 기록 입력 (가장 자주 쓰는 카드라 단독 배치) -->
+        <!-- 좌측 메가컬럼: 일일기록입력 + 계산기(2열 하위 그리드), 그 아래로 상세데이터테이블/메모장이 전체 폭으로 이어짐 -->
+        <section class="lg:col-span-6 flex flex-col gap-6">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col gap-6">
 
             <!-- 일일 기록 입력 카드 (대시보드 -> 구글시트 자동 반영) -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
@@ -99,18 +162,6 @@
                         class="w-full bg-slate-950 text-slate-200 text-sm font-bold p-2.5 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
                 </div>
 
-                <div class="mb-2">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-[10px] text-slate-500 font-semibold">종목별 매입금액 ($)</label>
-                        <button onclick="addTickerFromDailyEntry()"
-                            class="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
-                            <i class="fa-solid fa-plus"></i> 종목 추가
-                        </button>
-                    </div>
-                    <div id="dailyEntryTickerRows" class="grid grid-cols-2 gap-1.5 overflow-y-auto pr-1"></div>
-                    <p class="text-[10px] text-slate-600 mt-1.5">매입금액 합계(참고): <span id="dailyEntryPurchaseSumHint">$0.00</span></p>
-                </div>
-
                 <div class="mb-3">
                     <label class="block text-[10px] text-slate-500 font-semibold mb-1">종목 합산 평가금액 ($)</label>
                     <input type="number" id="dailyEntryStockSumInput" step="0.01" placeholder="0" oninput="updateDailyEntrySummary()"
@@ -135,126 +186,12 @@
                     <i class="fa-solid fa-cloud-arrow-up"></i> 저장하고 구글시트에 반영
                 </button>
                 <p class="text-[10px] text-slate-500 leading-relaxed mt-2">
-                    건너뛴 날짜가 있으면 저장 시 직전 입력값으로 자동 채워집니다. 동기화 주소는 아래 "종목별 7차 분할매수" 카드에서 설정한 주소를 함께 사용합니다.
+                    건너뛴 날짜가 있으면 저장 시 직전 입력값으로 자동 채워집니다. 동기화 주소는 아래 "Apps Script 동기화 설정" 카드에서 설정합니다.
                 </p>
             </div>
-
-            <!-- 종목별 7차 분할매수 계산기 카드 (+추가/-삭제 기능 탑재) -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
-                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
-                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-calculator text-amber-400"></i> 종목별 7차 분할매수
-                    </h2>
-                    <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                        <i class="fa-solid fa-floppy-disk mr-1"></i>자동 저장
-                    </span>
                 </div>
 
-                <!-- 종목 선택 및 추가/삭제 컨트롤러 -->
-                <div class="mb-4 space-y-1.5">
-                    <label class="block text-[11px] text-slate-400 font-semibold">관리 종목 선택</label>
-                    <div class="flex gap-1.5">
-                        <select id="selectedTickerSelect" onchange="onTickerChange()" 
-                            class="flex-1 bg-slate-950 text-amber-400 font-bold text-xs p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500">
-                        </select>
-                        <button onclick="addNewTickerPrompt()" 
-                            class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 rounded-xl text-xs font-bold border border-slate-700 transition"
-                            title="새 종목 추가">
-                            <i class="fa-solid fa-plus text-emerald-400"></i> 추가
-                        </button>
-                        <button onclick="deleteCurrentTicker()" 
-                            class="bg-slate-800 hover:bg-rose-950/40 text-rose-400 border border-rose-900/50 px-2.5 rounded-xl text-xs font-bold transition"
-                            title="현재 종목 삭제">
-                            <i class="fa-solid fa-minus text-rose-400"></i> 삭제
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="space-y-3">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-[11px]">
-                            <thead>
-                                <tr class="text-slate-400 border-b border-slate-800 pb-2">
-                                    <th class="pb-2 w-10">차수</th>
-                                    <th class="pb-2">할당 ($)</th>
-                                    <th class="pb-2">1/2 예시</th>
-                                    <th class="pb-2">매수 ($)</th>
-                                    <th class="pb-2 text-right">잔여 ($)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="splitBuyTableBody" class="divide-y divide-slate-800/40">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 분할매수 데이터 - 구글시트(Apps Script) 실시간 동기화 -->
-                <div class="mt-4 pt-4 border-t border-slate-800/70 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <label class="block text-[11px] text-slate-400 font-semibold">분할매수 동기화 주소 (Apps Script 웹앱 URL)</label>
-                        <span id="splitBuySyncStatus" class="text-[10px] text-slate-500">
-                            <i class="fa-solid fa-circle-notch mr-1"></i>미설정
-                        </span>
-                    </div>
-                    <div class="flex gap-1.5">
-                        <input type="text" id="splitBuyApiUrlInput"
-                            class="flex-1 bg-slate-950 text-slate-300 text-[11px] p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500"
-                            placeholder="https://script.google.com/macros/s/.../exec">
-                        <button onclick="saveSplitBuyApiUrl()"
-                            class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-xl text-xs font-bold border border-slate-700 transition"
-                            title="저장 및 동기화">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
-                    </div>
-                    <p class="text-[10px] text-slate-500 leading-relaxed">
-                        입력하면 이 기기뿐 아니라 PC/폰 어디서든 같은 분할매수 데이터를 볼 수 있어요.
-                    </p>
-                </div>
-            </div>
-
-            <!-- 실시간 동기화 설정 카드 -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-1 h-full bg-sky-500"></div>
-                <h2 class="text-md font-bold text-slate-200 flex items-center gap-2 mb-3">
-                    <i class="fa-solid fa-link text-sky-400"></i> 구글 시트 실시간 자동 연동
-                </h2>
-                <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-                    시트 상단 브라우저 주소창의 <strong>전체 주소(URL)</strong>를 그대로 복사해서 아래 붙여넣어 주세요!
-                </p>
-
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1.5">구글 시트 주소</label>
-                        <input type="text" id="googleSheetUrl" 
-                            class="w-full bg-slate-950 text-slate-300 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
-                            placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=0">
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="saveAndSyncUrl()" 
-                            class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-lg shadow-sky-500/10">
-                            <i class="fa-solid fa-floppy-disk"></i> 저장 및 동기화
-                        </button>
-                        <button onclick="fetchGoogleSheetData()" 
-                            class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-3.5 rounded-xl text-xs transition border border-slate-700"
-                            title="즉시 새로고침">
-                            <i class="fa-solid fa-arrows-rotate"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 상태 표시 알림창 -->
-            <div id="statusNotification" class="hidden p-5 rounded-2xl text-xs transition-all duration-300 bg-slate-900 border border-slate-800">
-                <div class="flex items-start gap-3">
-                    <div id="statusIconContainer" class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-                        <i id="statusIcon" class="fa-solid fa-circle-info text-base"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h4 id="statusTitle" class="font-bold text-sm text-slate-200 mb-1">상태 알림</h4>
-                        <div id="statusMessage" class="text-slate-400 leading-relaxed text-[11px] space-y-2"></div>
-                    </div>
-                </div>
-            </div>
+                <div class="flex flex-col gap-6">
 
             <!-- 퍼센트 계산기 -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
@@ -269,73 +206,166 @@
 
                 <label class="block text-[10px] text-slate-500 font-semibold mb-1">기준 금액 ($)</label>
                 <input type="number" id="percentCalcInput" step="0.01" placeholder="예: 1000" oninput="updatePercentCalc()"
-                    class="w-full bg-slate-950 text-slate-200 text-sm font-bold p-2.5 rounded-lg border border-slate-800 focus:outline-none focus:border-fuchsia-500 mb-3">
+                    class="w-full bg-slate-950 text-slate-200 text-sm font-bold p-2.5 rounded-lg border border-slate-800 focus:outline-none focus:border-fuchsia-500 mb-2">
 
-                <div id="percentCalcResults" class="grid grid-cols-3 gap-1.5"></div>
+                <div class="flex items-center gap-2">
+                    <select id="percentCalcSelect" onchange="updatePercentCalc()"
+                        class="bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-fuchsia-500">
+                        <option value="90">90%</option><option value="80">80%</option><option value="70">70%</option>
+                        <option value="60">60%</option><option value="50">50%</option><option value="40">40%</option>
+                        <option value="30">30%</option><option value="20">20%</option><option value="10">10%</option>
+                    </select>
+                    <div id="percentCalcResult" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-right font-mono font-bold text-fuchsia-400 text-sm">-</div>
+                </div>
             </div>
+
+            <!-- 수익률 퍼센트 계산기 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
+                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-amber-400"></i> 수익률 퍼센트 계산기
+                    </h2>
+                    <button onclick="resetReturnPercentCalc()" class="text-[10px] text-slate-500 hover:text-rose-400 transition">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> 초기화
+                    </button>
+                </div>
+
+                <label class="block text-[10px] text-slate-500 font-semibold mb-1">기준 금액 ($)</label>
+                <input type="number" id="returnPercentCalcInput" step="0.01" placeholder="예: 1000" oninput="updateReturnPercentCalc()"
+                    class="w-full bg-slate-950 text-slate-200 text-sm font-bold p-2.5 rounded-lg border border-slate-800 focus:outline-none focus:border-amber-500 mb-2">
+
+                <div class="flex items-center gap-2">
+                    <select id="returnPercentCalcSelect" onchange="updateReturnPercentCalc()"
+                        class="bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-amber-500">
+                        <optgroup label="상승">
+                            <option value="1">+1%</option><option value="2">+2%</option><option value="3">+3%</option>
+                            <option value="4">+4%</option><option value="5">+5%</option><option value="6">+6%</option>
+                            <option value="7">+7%</option><option value="8">+8%</option><option value="9">+9%</option>
+                        </optgroup>
+                        <optgroup label="하락">
+                            <option value="-1">-1%</option><option value="-2">-2%</option><option value="-3">-3%</option>
+                            <option value="-4">-4%</option><option value="-5">-5%</option><option value="-6">-6%</option>
+                            <option value="-7">-7%</option><option value="-8">-8%</option><option value="-9">-9%</option>
+                        </optgroup>
+                    </select>
+                    <div id="returnPercentCalcResult" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-right font-mono font-bold text-amber-400 text-sm">-</div>
+                </div>
+            </div>
+                </div>
+            </div>
+
+            <!-- 데이터 상세 테이블 보기 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-list-ol text-slate-400"></i> 상세 데이터 테이블
+                        </h3>
+                        <span class="text-xs text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80" id="totalRowsCount">총 0개 기록</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <div class="relative">
+                            <button type="button" id="calBtn_table" onclick="toggleCalendarG_('table')" title="시작일 필터"
+                                class="flex items-center gap-1 text-[10px] px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_table">전체</span>
+                            </button>
+                            <div id="calPopup_table" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                        </div>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                            <button id="btnTableRecent" onclick="toggleTableMode('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 3일</button>
+                            <button id="btnTableAll" onclick="toggleTableMode('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 특이사항 검색 (예: '전쟁' 입력 시 해당 날짜로 이동, 여러 건이면 다음/이전으로 순회) -->
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="relative flex-1 max-w-xs">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                        <input type="text" id="memoSearchInput" placeholder="특이사항 검색 (예: 전쟁)"
+                            oninput="searchMemo()"
+                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); searchNext(); }"
+                            class="w-full bg-slate-950 text-slate-200 text-xs pl-8 pr-2 py-2 rounded-lg border border-slate-800 focus:outline-none focus:border-sky-500">
+                    </div>
+                    <span id="memoSearchCounter" class="text-[11px] text-slate-500 min-w-[70px]"></span>
+                    <button onclick="searchPrev()" title="이전 결과" class="text-slate-400 hover:text-sky-400 text-xs px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950">
+                        <i class="fa-solid fa-chevron-up"></i>
+                    </button>
+                    <button onclick="searchNext()" title="다음 결과" class="text-slate-400 hover:text-sky-400 text-xs px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <button onclick="resetTableSort()" title="날짜순으로 정렬 초기화" class="text-slate-400 hover:text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-950 whitespace-nowrap">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> 정렬 초기화
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
+                                <th class="p-3">날짜</th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('revenue')">당일 수익금 <span id="sortIcon_revenue" class="text-[10px]"></span></th>
+                                <th class="p-3 text-right">누적 수익금</th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('accountVal')">계좌 평가액 <span id="sortIcon_accountVal" class="text-[10px]"></span></th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('cash')">현금 <span id="sortIcon_cash" class="text-[10px]"></span></th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('mdd')">MDD <span id="sortIcon_mdd" class="text-[10px]"></span></th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('dailyReturn')">일별 수익률 <span id="sortIcon_dailyReturn" class="text-[10px]"></span></th>
+                                <th class="p-3 text-left">특이사항</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailTableBody" class="text-slate-300 divide-y divide-slate-800/50"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 메모장: 일일 기록 입력의 날짜를 따라가는 자유 메모 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-note-sticky text-yellow-400"></i> 메모장
+                        </h3>
+                        <span id="notepadSyncStatus" class="text-[10px] text-slate-500">
+                            <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                            <button id="btnNotepadRecent" onclick="toggleNotepadMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 1일</button>
+                            <button id="btnNotepadAll" onclick="toggleNotepadMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 메모 검색 (상세 데이터 테이블의 특이사항 검색과 동일한 방식: 입력하면 이동, 여러 건이면 다음/이전 순회) -->
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="relative flex-1 max-w-xs">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                        <input type="text" id="notepadSearchInput" placeholder="메모 검색"
+                            oninput="searchNotepad_()"
+                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); searchNotepadNext_(); }"
+                            class="w-full bg-slate-950 text-slate-200 text-xs pl-8 pr-2 py-2 rounded-lg border border-slate-800 focus:outline-none focus:border-yellow-500">
+                    </div>
+                    <span id="notepadSearchCounter" class="text-[11px] text-slate-500 min-w-[70px]"></span>
+                    <button onclick="searchNotepadPrev_()" title="이전 결과" class="text-slate-400 hover:text-yellow-400 text-xs px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950">
+                        <i class="fa-solid fa-chevron-up"></i>
+                    </button>
+                    <button onclick="searchNotepadNext_()" title="다음 결과" class="text-slate-400 hover:text-yellow-400 text-xs px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse" id="notepadTable"></table>
+                </div>
+            </div>
+
         </section>
 
-        <!-- 오른쪽 패널: 대시보드 리포트 (8 cols) -->
-        <section class="lg:col-span-8 flex flex-col gap-6">
-            
-            <!-- 지표 요약 카드 그리드 -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">누적 수익금</span>
-                    <div class="mt-1 flex items-baseline gap-1">
-                        <span id="kpiTotalRevenue" class="text-base lg:text-lg font-extrabold text-emerald-400">$0.00</span>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">현재 계좌 평가액</span>
-                    <div class="mt-1 flex items-baseline gap-1">
-                        <span id="kpiCurrentAccount" class="text-base lg:text-lg font-extrabold text-slate-100">$0.00</span>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
-                        <button onclick="setAvgRevenueStartDate()" title="일평균 계산 기준일 설정" class="text-slate-600 hover:text-sky-400 text-[10px]">
-                            <i class="fa-solid fa-gear"></i>
-                        </button>
-                    </div>
-                    <div class="mt-1 flex items-baseline gap-1">
-                        <span id="kpiAvgRevenue" class="text-base lg:text-lg font-extrabold text-sky-400">$0.00</span>
-                    </div>
-                    <span id="kpiAvgRevenueRange" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">최대 낙폭 (MDD)</span>
-                    <div class="mt-1 flex items-baseline gap-1">
-                        <span id="kpiMaxMDD" class="text-base lg:text-lg font-extrabold text-rose-500">0.00%</span>
-                    </div>
-                    <span id="kpiMaxMDDAmount" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">월 평균 수익금</span>
-                    <div class="mt-1 flex items-baseline gap-1">
-                        <span id="kpiMonthlyAvgRevenue" class="text-base lg:text-lg font-extrabold text-emerald-400">$0.00</span>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">월 평균 수익률</span>
-                    <div class="mt-1 flex items-baseline gap-1">
-                        <span id="kpiMonthlyAvgReturn" class="text-base lg:text-lg font-extrabold text-sky-400">0.00%</span>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">연환산 수익률</span>
-                    <div class="mt-1 flex items-baseline gap-1">
-                        <span id="kpiAnnualReturn" class="text-base lg:text-lg font-extrabold text-amber-400">0.00%</span>
-                    </div>
-                </div>
-            </div>
+        <!-- 차트 컬럼 -->
+        <section class="lg:col-span-6 flex flex-col gap-6">
 
             <!-- 차트 영역 1단 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -498,71 +528,158 @@
                 </div>
             </div>
 
-            <!-- 데이터 상세 테이블 보기 -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
-                    <div class="flex items-center gap-3">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-list-ol text-slate-400"></i> 상세 데이터 테이블
-                        </h3>
-                        <span class="text-xs text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80" id="totalRowsCount">총 0개 기록</span>
-                    </div>
-                    
-                    <div class="flex items-center gap-2 self-start sm:self-auto">
-                        <div class="relative">
-                            <button type="button" id="calBtn_table" onclick="toggleCalendarG_('table')" title="시작일 필터"
-                                class="flex items-center gap-1 text-[10px] px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_table">전체</span>
-                            </button>
-                            <div id="calPopup_table" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                        </div>
-                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
-                            <button id="btnTableRecent" onclick="toggleTableMode('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 15일</button>
-                            <button id="btnTableAll" onclick="toggleTableMode('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
-                        </div>
-                    </div>
-                </div>
+        </section>
 
-                <!-- 특이사항 검색 (예: '전쟁' 입력 시 해당 날짜로 이동, 여러 건이면 다음/이전으로 순회) -->
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="relative flex-1 max-w-xs">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
-                        <input type="text" id="memoSearchInput" placeholder="특이사항 검색 (예: 전쟁)"
-                            oninput="searchMemo()"
-                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); searchNext(); }"
-                            class="w-full bg-slate-950 text-slate-200 text-xs pl-8 pr-2 py-2 rounded-lg border border-slate-800 focus:outline-none focus:border-sky-500">
+        <!-- 전량폭 그리드 기능: 매매 예정 / 매수 목록 / 차수 기록 (종목 컬럼이 많아 전체 너비 사용) -->
+        <section class="lg:col-span-12 flex flex-col gap-6">
+
+            <!-- 매매 예정 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-list text-orange-400"></i> 매매 예정
+                        <span id="tradePlanSyncStatus" class="text-[10px] text-slate-500 font-normal">
+                            <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
+                        </span>
+                        <span id="tradePlanTickerList" class="text-[10px] text-orange-300 font-normal"></span>
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="addTickerPromptForGrid_('tradePlan')" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> 종목 추가
+                        </button>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px]">
+                            <button id="btnTradePlanRecent" onclick="toggleTradePlanMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-orange-600 text-white shadow-sm">최신만</button>
+                            <button id="btnTradePlanAll" onclick="toggleTradePlanMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                        </div>
                     </div>
-                    <span id="memoSearchCounter" class="text-[11px] text-slate-500 min-w-[70px]"></span>
-                    <button onclick="searchPrev()" title="이전 결과" class="text-slate-400 hover:text-sky-400 text-xs px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950">
-                        <i class="fa-solid fa-chevron-up"></i>
-                    </button>
-                    <button onclick="searchNext()" title="다음 결과" class="text-slate-400 hover:text-sky-400 text-xs px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950">
-                        <i class="fa-solid fa-chevron-down"></i>
-                    </button>
-                    <button onclick="resetTableSort()" title="날짜순으로 정렬 초기화" class="text-slate-400 hover:text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-950 whitespace-nowrap">
-                        <i class="fa-solid fa-arrow-rotate-left"></i> 정렬 초기화
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse" id="tradePlanTable"></table>
+                </div>
+                <p class="text-[10px] text-slate-600 mt-2">종목 칸의 드롭박스를 고르면 문구가 자동으로 채워지고, 그 문구를 자유롭게 고쳐 쓸 수도 있습니다. 날짜는 "일일 기록 입력"의 날짜와 함께 갱신되며, 새 날짜에 아직 입력이 없으면 직전 내용이 그대로 표시됩니다.</p>
+            </div>
+
+            <!-- 종목별 매수 관리 (기존 "종목별 7차 분할매수" + "매수 목록" 통합) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-cyan-400"></i> 종목별 매수 관리 (7계좌)
+                        <span id="buyListSyncStatus" class="text-[10px] text-slate-500 font-normal">
+                            <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
+                        </span>
+                        <span id="buyManagementTickerList" class="text-[10px] text-cyan-300 font-normal"></span>
+                    </h2>
+                    <button onclick="addNewTickerPrompt()" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
+                        <i class="fa-solid fa-plus"></i> 종목 추가
                     </button>
                 </div>
-                
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
-                                <th class="p-3">날짜</th>
-                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('revenue')">당일 수익금 <span id="sortIcon_revenue" class="text-[10px]"></span></th>
-                                <th class="p-3 text-right">누적 수익금</th>
-                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('accountVal')">계좌 평가액 <span id="sortIcon_accountVal" class="text-[10px]"></span></th>
-                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('cash')">현금 <span id="sortIcon_cash" class="text-[10px]"></span></th>
-                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('mdd')">MDD <span id="sortIcon_mdd" class="text-[10px]"></span></th>
-                                <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('dailyReturn')">일별 수익률 <span id="sortIcon_dailyReturn" class="text-[10px]"></span></th>
-                                <th class="p-3 text-left">특이사항</th>
-                            </tr>
-                        </thead>
-                        <tbody id="detailTableBody" class="text-slate-300 divide-y divide-slate-800/50"></tbody>
-                    </table>
+                    <table class="w-full text-left text-xs border-collapse" id="buyManagementTable"></table>
+                </div>
+                <p class="text-[10px] text-slate-600 mt-2">계좌마다 할당($)과 매수($)를 입력하면 잔여 금액과 1/2 예시가 자동 계산됩니다. 계좌별 메모도 함께 저장됩니다.</p>
+            </div>
+
+            <!-- 차수 기록 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-violet-400"></i> 차수 기록
+                        <span id="stepLogSyncStatus" class="text-[10px] text-slate-500 font-normal">
+                            <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
+                        </span>
+                        <span id="stepLogTickerList" class="text-[10px] text-violet-300 font-normal"></span>
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="addTickerPromptForGrid_('stepLog')" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> 종목 추가
+                        </button>
+                        <button onclick="addStepLogRow_()" class="text-[11px] text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> 차수 추가
+                        </button>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px]">
+                            <button id="btnStepLog10" onclick="toggleStepLogMode_('10')" class="px-3 py-1.5 rounded-lg font-semibold bg-violet-600 text-white shadow-sm">10차수까지</button>
+                            <button id="btnStepLogAll" onclick="toggleStepLogMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse" id="stepLogTable"></table>
                 </div>
             </div>
 
+            <!-- 동기화 설정 + 알림 (차수 기록 아래로 이동) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <!-- Apps Script 동기화 설정 카드 (일일기록/매매예정/매수목록/차수기록이 공용으로 사용) -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                        <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-plug-circle-bolt text-amber-400"></i> Apps Script 동기화 설정
+                        </h2>
+                        <span id="splitBuySyncStatus" class="text-[10px] text-slate-500">
+                            <i class="fa-solid fa-circle-notch mr-1"></i>미설정
+                        </span>
+                    </div>
+                    <label class="block text-[11px] text-slate-400 font-semibold mb-1.5">Apps Script 웹앱 URL</label>
+                    <div class="flex gap-1.5">
+                        <input type="text" id="splitBuyApiUrlInput"
+                            class="flex-1 bg-slate-950 text-slate-300 text-[11px] p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500"
+                            placeholder="https://script.google.com/macros/s/.../exec">
+                        <button onclick="saveSplitBuyApiUrl()"
+                            class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-xl text-xs font-bold border border-slate-700 transition"
+                            title="저장 및 동기화">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-relaxed mt-2">
+                        일일 기록 입력 / 매매 예정 / 매수 목록 / 차수 기록이 모두 이 주소로 구글시트와 동기화됩니다. 입력하면 PC/폰 어디서든 같은 데이터를 볼 수 있어요.
+                    </p>
+                </div>
+
+                <!-- 실시간 동기화 설정 카드 -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-sky-500"></div>
+                    <h2 class="text-md font-bold text-slate-200 flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-link text-sky-400"></i> 구글 시트 실시간 자동 연동
+                    </h2>
+                    <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+                        시트 상단 브라우저 주소창의 <strong>전체 주소(URL)</strong>를 그대로 복사해서 아래 붙여넣어 주세요!
+                    </p>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1.5">구글 시트 주소</label>
+                            <input type="text" id="googleSheetUrl" 
+                                class="w-full bg-slate-950 text-slate-300 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+                                placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=0">
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="saveAndSyncUrl()" 
+                                class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-lg shadow-sky-500/10">
+                                <i class="fa-solid fa-floppy-disk"></i> 저장 및 동기화
+                            </button>
+                            <button onclick="fetchGoogleSheetData()" 
+                                class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-3.5 rounded-xl text-xs transition border border-slate-700"
+                                title="즉시 새로고침">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 상태 표시 알림창 -->
+                <div id="statusNotification" class="hidden p-5 rounded-2xl text-xs transition-all duration-300 bg-slate-900 border border-slate-800">
+                    <div class="flex items-start gap-3">
+                        <div id="statusIconContainer" class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                            <i id="statusIcon" class="fa-solid fa-circle-info text-base"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 id="statusTitle" class="font-bold text-sm text-slate-200 mb-1">상태 알림</h4>
+                            <div id="statusMessage" class="text-slate-400 leading-relaxed text-[11px] space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
     </main>
@@ -584,17 +701,15 @@
         
         let cachedParsedData = [];
         let cachedChartData = [];       // "차트 시작일" 필터가 적용된 데이터 (차트/상세 테이블용)
-        let cachedLatestPortfolio = null; // 포트폴리오 비중 도넛은 필터 대상이 아니므로 전체 데이터 기준으로 캐시해둠
         let parsedHeaders = [];
 
-        // 기본 지원 종목 리스트
+        // 기본 지원 종목 리스트 (일일 기록 입력의 "종목별 매입금액"에서 관리)
         let availableTickers = ["DIVO", "MTUM", "PTNQ", "SCHD", "SOXL", "SPMO", "TQQQ", "VYM", "XLP"];
-        let currentSelectedTicker = "DIVO";
+        let splitBuyRemoteData = { tickers: [], data: {} }; // 종목별 매수 관리(7계좌) 데이터 캐시
+        const splitBuySaveTimers = {}; // (ticker,계좌)별 저장 디바운스 타이머 - 여러 칸을 동시에 편집해도 서로 씹히지 않도록
 
-        // --- 분할매수 데이터 구글시트(Apps Script) 동기화 상태 ---
+        // --- Apps Script 웹앱 동기화 주소 (일일기록/매매예정/매수목록/차수기록 공용) ---
         let splitBuyApiUrl = localStorage.getItem('splitBuyApiUrl') || '';
-        let splitBuyRemoteData = { tickers: [], data: {} }; // Apps Script에서 받아온 최신 데이터 캐시
-        let splitBuySaveTimer = null; // 입력 디바운스 타이머
 
         const sampleRawData = `날짜	수익금	수익금 총합	전체계좌	최고점 대비 하락률	일별 수익률	특이사항	현금	divo	mtum	ptnq	schd	soxl	spmo	tqqq	vym	xlp
 2026-01-30	31.66	31.66	41,543.20	0.00%	0.00%	첫 거래 및 계좌 개설	31,653.36	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
@@ -673,8 +788,7 @@
         };
 
         window.onload = function() {
-            initTickerDropdown();
-            renderSplitBuyTable(currentSelectedTicker);
+            renderBuyManagement_();
 
             restoreCalendarFiltersFromStorage_();
 
@@ -682,6 +796,7 @@
             if (splitBuyApiUrl) {
                 initSplitBuySync();
             }
+            initAllGrids_();
 
             const savedUrl = localStorage.getItem('googleSheetCsvUrl');
             if (savedUrl) {
@@ -716,6 +831,7 @@
             splitBuyApiUrl = urlInput;
             localStorage.setItem('splitBuyApiUrl', urlInput);
             initSplitBuySync();
+            initAllGrids_();
         }
 
         // 페이지 로드 시 / URL 저장 시: Apps Script에서 전체 데이터를 받아와 화면에 반영
@@ -731,13 +847,13 @@
 
                 splitBuyRemoteData = { tickers: json.tickers || [], data: json.data || {} };
 
-                // 시트에 저장된 종목 목록을 드롭다운에 병합
+                // 시트에 저장된 종목 목록을 병합 (일일 기록 입력의 종목별 매입금액에도 함께 반영됨)
                 if (splitBuyRemoteData.tickers.length > 0) {
                     availableTickers = Array.from(new Set([...availableTickers, ...splitBuyRemoteData.tickers]));
-                    initTickerDropdown();
+                    renderDailyEntryForm();
                 }
 
-                renderSplitBuyTable(currentSelectedTicker);
+                renderBuyManagement_();
                 setSplitBuySyncStatus('ok', '구글시트 동기화 완료');
             } catch (err) {
                 setSplitBuySyncStatus('error', '동기화 실패 (URL 확인)');
@@ -748,9 +864,10 @@
         // 입력값 변경 300ms 후 서버로 저장 (너무 잦은 호출 방지)
         function scheduleSplitBuyRemoteSave(ticker, step, alloc, bought) {
             if (!splitBuyApiUrl) return;
-            clearTimeout(splitBuySaveTimer);
+            const key = `${ticker}__${step}`;
+            clearTimeout(splitBuySaveTimers[key]);
             setSplitBuySyncStatus('loading', '저장 중...');
-            splitBuySaveTimer = setTimeout(() => {
+            splitBuySaveTimers[key] = setTimeout(() => {
                 saveSplitBuyStepRemote(ticker, step, alloc, bought);
             }, 500);
         }
@@ -776,11 +893,17 @@
         async function addTickerRemote(ticker) {
             if (!splitBuyApiUrl) return;
             try {
-                await fetch(splitBuyApiUrl, {
+                const res = await fetch(splitBuyApiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'addTicker', ticker })
                 });
+                const json = await res.json();
+                if (json.success) {
+                    splitBuyRemoteData.tickers = json.tickers || splitBuyRemoteData.tickers;
+                    splitBuyRemoteData.data = json.data || splitBuyRemoteData.data;
+                    renderBuyManagement_(); // 서버가 확정한 순서(항상 맨 뒤)로 다시 그림
+                }
             } catch (err) {
                 console.error('종목 추가 동기화 실패:', err);
             }
@@ -795,6 +918,7 @@
                     body: JSON.stringify({ action: 'deleteTicker', ticker })
                 });
                 delete splitBuyRemoteData.data[ticker];
+                splitBuyRemoteData.tickers = splitBuyRemoteData.tickers.filter(t => t !== ticker);
             } catch (err) {
                 console.error('종목 삭제 동기화 실패:', err);
             }
@@ -820,6 +944,505 @@
 
         // --- 📊 종목별 7차 분할 매수 계산기 (+추가 / -삭제) ---
 
+        // ===================================================================
+        // 🗂️ 범용 그리드 기능: 매매 예정 / 매수 목록 / 차수 기록
+        // 세 기능 모두 "행(rowLabel) x 종목(ticker) = 자유 텍스트 값" 구조를 공유합니다.
+        // ===================================================================
+
+        const GRID_CONFIGS = {
+            tradePlan: { sheetName: '매매예정' },
+            buyList: { sheetName: '매수목록' }, // 종목 데이터는 더 이상 안 씀 - 계좌별 메모 저장 전용으로만 재사용
+            stepLog: { sheetName: '차수기록' },
+            notepad: { sheetName: '메모장' }
+        };
+
+        const MEMO_TICKER_KEY = '메모'; // Apps Script의 MEMO_HEADER와 동일한 이름이어야 함
+        const NOTEPAD_CONTENT_KEY = '내용'; // 메모장은 날짜당 이 고정된 한 칸만 사용
+
+        const gridCache = {
+            tradePlan: { rowLabels: [], tickers: [], data: {}, memos: {} },
+            buyList: { rowLabels: [], tickers: [], data: {}, memos: {} },
+            stepLog: { rowLabels: [], tickers: [], data: {}, memos: {} },
+            notepad: { rowLabels: [], tickers: [], data: {}, memos: {} }
+        };
+        const gridSaveTimers = {};
+
+        let tradePlanMode = 'recent'; // 'recent' | 'all'
+        let stepLogMode = '10';       // '10' | 'all'
+        let stepLogExtraRows = 0;     // "차수 추가" 버튼으로 늘어난, 아직 저장 안 된 빈 칸 수
+        let notepadMode = 'recent';   // 'recent' | 'all'
+
+        function setGridSyncStatus_(key, state, text) {
+            const idMap = { tradePlan: 'tradePlanSyncStatus', buyList: 'buyListSyncStatus', stepLog: 'stepLogSyncStatus', notepad: 'notepadSyncStatus' };
+            const el = document.getElementById(idMap[key]);
+            if (!el) return;
+            const styles = {
+                idle: { icon: 'fa-circle-notch', color: 'text-slate-500' },
+                loading: { icon: 'fa-circle-notch animate-spin', color: 'text-sky-400' },
+                ok: { icon: 'fa-circle-check', color: 'text-emerald-400' },
+                error: { icon: 'fa-triangle-exclamation', color: 'text-rose-400' }
+            };
+            const s = styles[state] || styles.idle;
+            el.className = `text-[10px] font-normal ${s.color}`;
+            el.innerHTML = `<i class="fa-solid ${s.icon} mr-1"></i>${text}`;
+        }
+
+        function applyGridResponse_(key, json) {
+            gridCache[key] = { rowLabels: json.rowLabels || [], tickers: json.tickers || [], data: json.data || {}, memos: json.memos || {} };
+        }
+
+        // 헤더의 동기화 상태 배지 옆에 현재 추적 중인 종목명을 표시 (매매예정/종목별 매수관리/차수기록 공통)
+        function updateGridTickerLabel_(elementId, tickers) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.innerText = (tickers && tickers.length > 0) ? tickers.join(', ') : '';
+        }
+
+        async function fetchGrid_(key) {
+            if (!splitBuyApiUrl) { setGridSyncStatus_(key, 'error', '동기화 주소 미설정'); renderGrid_(key); return; }
+            const cfg = GRID_CONFIGS[key];
+            setGridSyncStatus_(key, 'loading', '불러오는 중...');
+            try {
+                const res = await fetch(`${splitBuyApiUrl}?action=getGrid&sheetName=${encodeURIComponent(cfg.sheetName)}`);
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || '조회 실패');
+                applyGridResponse_(key, json);
+                setGridSyncStatus_(key, 'ok', '동기화됨');
+            } catch (err) {
+                setGridSyncStatus_(key, 'error', '조회 실패 (Apps Script 재배포 필요할 수 있음)');
+                console.error(`${key} 그리드 조회 실패:`, err);
+            }
+            renderGrid_(key);
+        }
+
+        async function saveGridCellRemote_(key, rowLabel, ticker, value) {
+            if (!splitBuyApiUrl) return;
+            const cfg = GRID_CONFIGS[key];
+            setGridSyncStatus_(key, 'loading', '저장 중...');
+            try {
+                const res = await fetch(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'saveGridCell', sheetName: cfg.sheetName, rowLabel, ticker, value })
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || '저장 실패');
+                applyGridResponse_(key, json);
+                setGridSyncStatus_(key, 'ok', '저장 완료');
+            } catch (err) {
+                setGridSyncStatus_(key, 'error', '저장 실패');
+                showNotification(`저장에 실패했습니다: ${err.message}\n(Apps Script를 최신 코드로 재배포했는지 확인해주세요)`, 'error', '저장 실패');
+                console.error(`${key} 저장 실패:`, err);
+            }
+        }
+
+        function scheduleGridCellSave_(key, rowLabel, ticker, value) {
+            const timerKey = `${key}__${rowLabel}__${ticker}`;
+            clearTimeout(gridSaveTimers[timerKey]);
+            gridSaveTimers[timerKey] = setTimeout(() => saveGridCellRemote_(key, rowLabel, ticker, value), 500);
+        }
+
+        async function addTickerPromptForGrid_(key) {
+            if (!splitBuyApiUrl) { showNotification('먼저 "종목별 7차 분할매수" 카드에서 Apps Script 웹앱 URL을 저장해주세요.', 'error', '동기화 주소 미설정'); return; }
+            const ticker = prompt('추가할 종목명을 입력하세요 (예: SCHD):');
+            if (!ticker || !ticker.trim()) return;
+            const formatted = ticker.trim().toUpperCase();
+            const cfg = GRID_CONFIGS[key];
+            try {
+                const res = await fetch(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'addGridTicker', sheetName: cfg.sheetName, ticker: formatted })
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || '추가 실패');
+                applyGridResponse_(key, json);
+                showNotification(`'${formatted}' 종목이 추가되었습니다.`, 'success', '종목 추가 완료');
+            } catch (err) {
+                showNotification(`종목 추가에 실패했습니다: ${err.message}\n(Apps Script를 최신 코드로 재배포했는지 확인해주세요)`, 'error', '종목 추가 실패');
+                console.error('종목 추가 실패:', err);
+            }
+            renderGrid_(key);
+        }
+
+        async function deleteTickerFromGrid_(key, ticker) {
+            if (!confirm(`'${ticker}' 종목을 삭제하시겠습니까?\n저장된 값도 함께 삭제됩니다.`)) return;
+            if (!splitBuyApiUrl) return;
+            const cfg = GRID_CONFIGS[key];
+            try {
+                const res = await fetch(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'deleteGridTicker', sheetName: cfg.sheetName, ticker })
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || '삭제 실패');
+                applyGridResponse_(key, json);
+                showNotification(`'${ticker}' 종목이 삭제되었습니다.`, 'info', '종목 삭제 완료');
+            } catch (err) {
+                showNotification(`종목 삭제에 실패했습니다: ${err.message}`, 'error', '종목 삭제 실패');
+                console.error('종목 삭제 실패:', err);
+            }
+            renderGrid_(key);
+        }
+
+        function onGridCellInput_(key, rowLabel, ticker, value) {
+            if (!gridCache[key].data[rowLabel]) gridCache[key].data[rowLabel] = {};
+            gridCache[key].data[rowLabel][ticker] = value;
+            if (!gridCache[key].rowLabels.includes(rowLabel)) gridCache[key].rowLabels.push(rowLabel);
+            scheduleGridCellSave_(key, rowLabel, ticker, value);
+        }
+
+        // 메모는 종목별 칸이 아니라 행(날짜/계좌/차수) 하나당 한 칸만 존재 (내부적으로는 예약된 '메모' 컬럼에 저장됨)
+        function onGridMemoInput_(key, rowLabel, value) {
+            if (!gridCache[key].memos) gridCache[key].memos = {};
+            gridCache[key].memos[rowLabel] = value;
+            if (!gridCache[key].rowLabels.includes(rowLabel)) gridCache[key].rowLabels.push(rowLabel);
+            scheduleGridCellSave_(key, rowLabel, MEMO_TICKER_KEY, value);
+        }
+
+        // 어느 그리드든 다시 그려야 할 때 이 함수 하나로 분기
+        function renderGrid_(key) {
+            if (key === 'tradePlan') renderTradePlanTable_();
+            else if (key === 'buyList') renderBuyManagement_(); // '매수목록' 시트는 이제 계좌별 메모 저장 전용
+            else if (key === 'stepLog') renderStepLogTable_();
+            else if (key === 'notepad') renderNotepadTable_();
+        }
+
+        // --- [매매 예정] ---
+        // 드롭박스 프리셋: 기본 문구 + 1~7번 계좌별 문구 (선택하면 입력칸에 채워지고, 자유롭게 수정 가능)
+        function getTradePlanPresetGroups_() {
+            const groups = [{ label: '기본', options: ['전량매도', '매수 완료', '1/2 매수', '1/2 매도'] }];
+            for (let n = 1; n <= 7; n++) {
+                groups.push({
+                    label: `${n}번 계좌`,
+                    options: [`${n}번 계좌 1/2 매수`, `${n}번 계좌 1/2 매도`, `${n}번 계좌 전량매수`, `${n}번 계좌 전량매도`]
+                });
+            }
+            return groups;
+        }
+
+        function tradePlanPresetOptionsHtml_() {
+            return getTradePlanPresetGroups_().map(g =>
+                `<optgroup label="${g.label}">${g.options.map(o => `<option value="${o}">${o}</option>`).join('')}</optgroup>`
+            ).join('');
+        }
+
+        function toggleTradePlanMode_(mode) {
+            tradePlanMode = mode;
+            document.getElementById('btnTradePlanRecent').className = mode === 'recent' ? "px-3 py-1.5 rounded-lg font-semibold bg-orange-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
+            document.getElementById('btnTradePlanAll').className = mode === 'all' ? "px-3 py-1.5 rounded-lg font-semibold bg-orange-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
+            renderTradePlanTable_();
+        }
+
+        function applyTradePlanPreset_(rowLabel, ticker, presetText, inputEl) {
+            if (!presetText) return;
+            inputEl.value = presetText;
+            onGridCellInput_('tradePlan', rowLabel, ticker, presetText);
+        }
+
+        function renderTradePlanTable_() {
+            const table = document.getElementById('tradePlanTable');
+            if (!table) return;
+
+            const cache = gridCache.tradePlan;
+            const tickers = cache.tickers;
+            const activeDate = dailyEntryDateValue || todayStr_();
+
+            updateGridTickerLabel_('tradePlanTickerList', tickers);
+
+            const headerHtml = `
+                <thead>
+                    <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
+                        <th class="p-2 w-28">날짜</th>
+                        <th class="p-2 min-w-[160px]">메모</th>
+                        ${tickers.map(t => `<th class="p-2 min-w-[150px]">${t} <button onclick="deleteTickerFromGrid_('tradePlan','${t}')" class="text-slate-600 hover:text-rose-400 ml-1"><i class="fa-solid fa-xmark"></i></button></th>`).join('')}
+                        ${tickers.length === 0 ? '<th class="p-2 text-slate-600 font-normal">종목을 추가해주세요</th>' : ''}
+                    </tr>
+                </thead>`;
+
+            let bodyRows = '';
+
+            if (tradePlanMode === 'recent') {
+                // 활성 날짜(=일일 기록 입력의 날짜)에 데이터가 없으면, 가장 최근 기록 내용을 그대로 이어서 보여줌
+                const existing = cache.data[activeDate];
+                const fallbackLabel = [...cache.rowLabels].sort().reverse()[0];
+                const source = existing || (fallbackLabel ? cache.data[fallbackLabel] : {}) || {};
+                const memoVal = cache.memos[activeDate] !== undefined ? cache.memos[activeDate] : '';
+
+                bodyRows = `
+                    <tr class="border-b border-slate-800/30 bg-orange-500/5">
+                        <td class="p-2 font-bold text-orange-300">${activeDate}</td>
+                        <td class="p-2">
+                            <input type="text" value="${String(memoVal).replace(/"/g, '&quot;')}" placeholder="이 날짜 메모"
+                                oninput="onGridMemoInput_('tradePlan','${activeDate}', this.value)"
+                                class="w-full bg-slate-950 text-amber-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
+                        </td>
+                        ${tickers.map(t => {
+                            const val = (source[t] !== undefined ? source[t] : '');
+                            return `
+                                <td class="p-2">
+                                    <div class="flex flex-col gap-1">
+                                        <input type="text" value="${String(val).replace(/"/g, '&quot;')}" placeholder="예: 430달러 매수"
+                                            oninput="onGridCellInput_('tradePlan','${activeDate}','${t}', this.value)"
+                                            class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-orange-500">
+                                        <select onchange="applyTradePlanPreset_('${activeDate}','${t}', this.value, this.previousElementSibling); this.selectedIndex=0;"
+                                            class="w-full bg-slate-950 text-slate-500 text-[10px] p-1 rounded border border-slate-800">
+                                            <option value="">빠른 선택...</option>
+                                            ${tradePlanPresetOptionsHtml_()}
+                                        </select>
+                                    </div>
+                                </td>`;
+                        }).join('')}
+                        ${tickers.length === 0 ? '<td class="p-2"></td>' : ''}
+                    </tr>`;
+            } else {
+                const sortedLabels = [...cache.rowLabels].sort().reverse();
+                bodyRows = sortedLabels.map(rowLabel => `
+                    <tr class="border-b border-slate-800/30 hover:bg-slate-800/20">
+                        <td class="p-2 font-semibold text-slate-300">${rowLabel}</td>
+                        <td class="p-2">
+                            <input type="text" value="${String(cache.memos[rowLabel] || '').replace(/"/g, '&quot;')}" placeholder="-"
+                                oninput="onGridMemoInput_('tradePlan','${rowLabel}', this.value)"
+                                class="w-full bg-slate-950 text-amber-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
+                        </td>
+                        ${tickers.map(t => {
+                            const val = (cache.data[rowLabel] && cache.data[rowLabel][t] !== undefined) ? cache.data[rowLabel][t] : '';
+                            return `
+                                <td class="p-2">
+                                    <input type="text" value="${String(val).replace(/"/g, '&quot;')}" placeholder="-"
+                                        oninput="onGridCellInput_('tradePlan','${rowLabel}','${t}', this.value)"
+                                        class="w-full bg-slate-950 text-slate-300 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-orange-500">
+                                </td>`;
+                        }).join('')}
+                        ${tickers.length === 0 ? '<td class="p-2"></td>' : ''}
+                    </tr>`).join('');
+                if (!bodyRows) bodyRows = `<tr><td class="p-3 text-slate-600" colspan="${tickers.length + 2}">아직 기록이 없습니다.</td></tr>`;
+            }
+
+            table.innerHTML = headerHtml + `<tbody>${bodyRows}</tbody>`;
+        }
+
+        // --- [차수 기록] : "N차수" 행이 계속 늘어날 수 있음 (기본 10개까지만 표시, 전체 보기 가능) ---
+        function toggleStepLogMode_(mode) {
+            stepLogMode = mode;
+            document.getElementById('btnStepLog10').className = mode === '10' ? "px-3 py-1.5 rounded-lg font-semibold bg-violet-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
+            document.getElementById('btnStepLogAll').className = mode === 'all' ? "px-3 py-1.5 rounded-lg font-semibold bg-violet-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
+            renderStepLogTable_();
+        }
+
+        function addStepLogRow_() {
+            stepLogExtraRows++;
+            stepLogMode = 'all'; // 새로 추가한 차수가 바로 보이도록 전체 보기로 전환
+            toggleStepLogMode_('all');
+        }
+
+        function getStepLogLabels_() {
+            const cache = gridCache.stepLog;
+            const existingNums = cache.rowLabels.map(l => parseInt(l)).filter(n => !isNaN(n));
+            const maxExisting = existingNums.length > 0 ? Math.max(...existingNums) : 0;
+            const baseCount = Math.max(maxExisting, 10) + stepLogExtraRows;
+            const displayCount = stepLogMode === 'all' ? baseCount : Math.min(10, baseCount);
+            const labels = [];
+            for (let i = 1; i <= displayCount; i++) labels.push(`${i}차수`);
+            return labels;
+        }
+
+        function renderStepLogTable_() {
+            const table = document.getElementById('stepLogTable');
+            if (!table) return;
+
+            const cache = gridCache.stepLog;
+            const tickers = cache.tickers;
+            const labels = getStepLogLabels_();
+
+            updateGridTickerLabel_('stepLogTickerList', tickers);
+
+            const headerHtml = `
+                <thead>
+                    <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
+                        <th class="p-2 w-20">차수</th>
+                        <th class="p-2 min-w-[140px]">메모</th>
+                        ${tickers.map(t => `<th class="p-2 min-w-[110px]">${t} <button onclick="deleteTickerFromGrid_('stepLog','${t}')" class="text-slate-600 hover:text-rose-400 ml-1"><i class="fa-solid fa-xmark"></i></button></th>`).join('')}
+                        ${tickers.length === 0 ? '<th class="p-2 text-slate-600 font-normal">종목을 추가해주세요</th>' : ''}
+                    </tr>
+                </thead>`;
+
+            const bodyRows = labels.map(rowLabel => `
+                <tr class="border-b border-slate-800/30 hover:bg-slate-800/20">
+                    <td class="p-2 font-semibold text-slate-300">${rowLabel}</td>
+                    <td class="p-2">
+                        <input type="text" value="${String((cache.memos && cache.memos[rowLabel]) || '').replace(/"/g, '&quot;')}" placeholder="-"
+                            oninput="onGridMemoInput_('stepLog','${rowLabel}', this.value)"
+                            class="w-full bg-slate-950 text-violet-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                    </td>
+                    ${tickers.map(t => {
+                        const val = (cache.data[rowLabel] && cache.data[rowLabel][t] !== undefined) ? cache.data[rowLabel][t] : '';
+                        return `
+                            <td class="p-2">
+                                <input type="text" value="${String(val).replace(/"/g, '&quot;')}" placeholder="-"
+                                    oninput="onGridCellInput_('stepLog','${rowLabel}','${t}', this.value)"
+                                    class="w-full bg-slate-950 text-slate-300 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                            </td>`;
+                    }).join('')}
+                    ${tickers.length === 0 ? '<td class="p-2"></td>' : ''}
+                </tr>`).join('');
+
+            table.innerHTML = headerHtml + `<tbody>${bodyRows}</tbody>`;
+        }
+
+        // ===================================================================
+        // 📝 메모장: "일일 기록 입력"의 날짜를 따라가는 자유 메모
+        // (기존 범용 그리드 백엔드를 재사용 - 시트명 '메모장', 날짜당 '내용' 칸 하나만 사용)
+        // ===================================================================
+
+        function escapeHtml_(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function getNotepadContent_(dateLabel) {
+            const cache = gridCache.notepad;
+            return (cache.data[dateLabel] && cache.data[dateLabel][NOTEPAD_CONTENT_KEY] !== undefined)
+                ? cache.data[dateLabel][NOTEPAD_CONTENT_KEY] : undefined;
+        }
+
+        function toggleNotepadMode_(mode) {
+            notepadMode = mode;
+            document.getElementById('btnNotepadRecent').className = mode === 'recent' ? "px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
+            document.getElementById('btnNotepadAll').className = mode === 'all' ? "px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
+            renderNotepadTable_();
+        }
+
+        function renderNotepadTable_() {
+            const table = document.getElementById('notepadTable');
+            if (!table) return;
+
+            const cache = gridCache.notepad;
+            const activeDate = dailyEntryDateValue || todayStr_();
+
+            let rowLabels;
+            if (notepadMode === 'recent') {
+                rowLabels = [activeDate];
+            } else {
+                rowLabels = Array.from(new Set([activeDate, ...cache.rowLabels])).sort().reverse();
+            }
+
+            const lastKnownLabel = [...cache.rowLabels].sort().reverse()[0];
+
+            const bodyRows = rowLabels.map(dateLabel => {
+                let content = getNotepadContent_(dateLabel);
+                // 활성 날짜(오늘)에 아직 입력이 없으면, 직전에 작성된 내용을 그대로 이어서 보여줌 (수정 전까지는 저장 안 됨)
+                if (content === undefined) {
+                    content = (dateLabel === activeDate && lastKnownLabel) ? (getNotepadContent_(lastKnownLabel) || '') : '';
+                }
+                const isActive = dateLabel === activeDate;
+                return `
+                    <tr class="border-b border-slate-800/30 ${isActive ? 'bg-yellow-500/5' : 'hover:bg-slate-800/20'}" data-notepad-date="${dateLabel}">
+                        <td class="p-3 w-28 align-top font-bold ${isActive ? 'text-yellow-300' : 'text-slate-400'}">${dateLabel}</td>
+                        <td class="p-3">
+                            <textarea rows="2" placeholder="메모를 입력하세요"
+                                oninput="onNotepadInput_('${dateLabel}', this.value)"
+                                class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-yellow-500 resize-none">${escapeHtml_(content)}</textarea>
+                        </td>
+                    </tr>`;
+            }).join('');
+
+            table.innerHTML = `<tbody>${bodyRows || `<tr><td class="p-3 text-slate-600">아직 메모가 없습니다.</td></tr>`}</tbody>`;
+            reapplyNotepadHighlight_();
+        }
+
+        // 입력 즉시 로컬 캐시 반영 + 디바운스 저장 (구글시트에 자동 반영)
+        function onNotepadInput_(dateLabel, value) {
+            if (!gridCache.notepad.data[dateLabel]) gridCache.notepad.data[dateLabel] = {};
+            gridCache.notepad.data[dateLabel][NOTEPAD_CONTENT_KEY] = value;
+            if (!gridCache.notepad.rowLabels.includes(dateLabel)) gridCache.notepad.rowLabels.push(dateLabel);
+            scheduleGridCellSave_('notepad', dateLabel, NOTEPAD_CONTENT_KEY, value);
+        }
+
+        // --- 메모장 검색 (상세 데이터 테이블의 특이사항 검색과 동일한 UX) ---
+        let notepadSearchMatches = [];
+        let notepadSearchMatchIndex = -1;
+        const NOTEPAD_HIGHLIGHT_CLASSES = ['bg-amber-500/20', 'ring-1', 'ring-inset', 'ring-amber-400'];
+
+        function searchNotepad_() {
+            const term = document.getElementById('notepadSearchInput').value.trim().toLowerCase();
+            const counterEl = document.getElementById('notepadSearchCounter');
+
+            if (!term) {
+                notepadSearchMatches = [];
+                notepadSearchMatchIndex = -1;
+                clearNotepadHighlight_();
+                if (counterEl) counterEl.innerText = '';
+                return;
+            }
+
+            notepadSearchMatches = Object.keys(gridCache.notepad.data)
+                .filter(date => {
+                    const content = gridCache.notepad.data[date][NOTEPAD_CONTENT_KEY];
+                    return content && content.toLowerCase().includes(term);
+                })
+                .sort();
+
+            notepadSearchMatchIndex = notepadSearchMatches.length > 0 ? 0 : -1;
+
+            if (notepadSearchMatches.length > 0) {
+                if (notepadMode !== 'all') toggleNotepadMode_('all'); else renderNotepadTable_();
+                jumpToNotepadMatch_();
+            } else {
+                clearNotepadHighlight_();
+                if (counterEl) counterEl.innerText = '검색 결과 없음';
+            }
+        }
+
+        function jumpToNotepadMatch_() {
+            if (notepadSearchMatchIndex < 0 || notepadSearchMatches.length === 0) return;
+            const targetDate = notepadSearchMatches[notepadSearchMatchIndex];
+            const row = document.querySelector(`#notepadTable tr[data-notepad-date="${targetDate}"]`);
+            clearNotepadHighlight_();
+            if (row) {
+                row.classList.add(...NOTEPAD_HIGHLIGHT_CLASSES);
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            const counterEl = document.getElementById('notepadSearchCounter');
+            if (counterEl) counterEl.innerText = `${notepadSearchMatchIndex + 1} / ${notepadSearchMatches.length}건`;
+        }
+
+        function reapplyNotepadHighlight_() {
+            if (notepadSearchMatchIndex < 0 || notepadSearchMatches.length === 0) return;
+            const targetDate = notepadSearchMatches[notepadSearchMatchIndex];
+            const row = document.querySelector(`#notepadTable tr[data-notepad-date="${targetDate}"]`);
+            if (row) row.classList.add(...NOTEPAD_HIGHLIGHT_CLASSES);
+        }
+
+        function clearNotepadHighlight_() {
+            document.querySelectorAll('#notepadTable tr').forEach(el => el.classList.remove(...NOTEPAD_HIGHLIGHT_CLASSES));
+        }
+
+        function searchNotepadNext_() {
+            if (notepadSearchMatches.length === 0) return;
+            notepadSearchMatchIndex = (notepadSearchMatchIndex + 1) % notepadSearchMatches.length;
+            jumpToNotepadMatch_();
+        }
+
+        function searchNotepadPrev_() {
+            if (notepadSearchMatches.length === 0) return;
+            notepadSearchMatchIndex = (notepadSearchMatchIndex - 1 + notepadSearchMatches.length) % notepadSearchMatches.length;
+            jumpToNotepadMatch_();
+        }
+
+        function initAllGrids_() {
+            fetchGrid_('tradePlan');
+            fetchGrid_('buyList');
+            fetchGrid_('stepLog');
+            fetchGrid_('notepad');
+        }
+
+
+
         function getMergedTickerList_() {
             const customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
             const deletedTickers = JSON.parse(localStorage.getItem('deletedTickersList')) || [];
@@ -827,32 +1450,6 @@
             merged = merged.filter(t => !deletedTickers.includes(t));
             if (merged.length === 0) merged = ["DEFAULT"];
             return merged;
-        }
-
-        function initTickerDropdown() {
-            const select = document.getElementById('selectedTickerSelect');
-            select.innerHTML = '';
-
-            const mergedTickers = getMergedTickerList_();
-
-            mergedTickers.forEach(ticker => {
-                const opt = document.createElement('option');
-                opt.value = ticker;
-                opt.innerText = ticker;
-                select.appendChild(opt);
-            });
-
-            if (!mergedTickers.includes(currentSelectedTicker)) {
-                currentSelectedTicker = mergedTickers[0];
-            }
-
-            select.value = currentSelectedTicker;
-        }
-
-        function onTickerChange() {
-            const select = document.getElementById('selectedTickerSelect');
-            currentSelectedTicker = select.value;
-            renderSplitBuyTable(currentSelectedTicker);
         }
 
         // ===================================================================
@@ -899,6 +1496,8 @@
             if (dailyEntryDateValue !== defaultDate) {
                 dailyEntryDateValue = defaultDate;
                 setDailyEntryDateLabel_(defaultDate);
+                if (tradePlanMode === 'recent') renderTradePlanTable_(); // 매매예정도 최신 날짜를 따라감
+                if (notepadMode === 'recent') renderNotepadTable_();     // 메모장도 최신 날짜를 따라감
             }
         }
 
@@ -999,6 +1598,8 @@
             setDailyEntryDateLabel_(dateStr);
             document.getElementById('dailyEntryCalendarPopup').classList.add('hidden');
             loadDateIntoForm_(dateStr);
+            if (tradePlanMode === 'recent') renderTradePlanTable_(); // 매매예정도 선택한 날짜를 따라감
+            if (notepadMode === 'recent') renderNotepadTable_();     // 메모장도 선택한 날짜를 따라감
         }
 
         function loadDateIntoForm_(dateStr) {
@@ -1010,11 +1611,6 @@
             document.getElementById('dailyEntryAccountVal').value = source ? source.accountVal : '';
             document.getElementById('dailyEntryStockSumInput').value = source ? (source.stockSumAgg || '') : '';
             document.getElementById('dailyEntryMemo').value = existing ? (existing.memo || '') : '';
-
-            getMergedTickerList_().forEach(ticker => {
-                const el = document.getElementById(`dailyTicker_${ticker}`);
-                if (el) el.value = (source && source.portfolio && source.portfolio[ticker] !== undefined) ? source.portfolio[ticker] : '';
-            });
 
             updateDailyEntrySummary();
 
@@ -1032,12 +1628,11 @@
             }
         });
 
-        // 종목 리스트 + 최근 기록값을 기반으로 입력 폼을 다시 그림
+        // 최근 기록값을 기반으로 입력 폼 기본값을 채움 (종목별 입력은 이제 "종목별 매수 관리"에서 관리)
         function renderDailyEntryForm() {
             const accInput = document.getElementById('dailyEntryAccountVal');
             const stockSumInput = document.getElementById('dailyEntryStockSumInput');
-            const rowsContainer = document.getElementById('dailyEntryTickerRows');
-            if (!rowsContainer) return;
+            if (!accInput || !stockSumInput) return;
 
             const latest = getLatestRecord_();
 
@@ -1052,47 +1647,16 @@
                 stockSumInput.value = latest.stockSumAgg || '';
             }
 
-            rowsContainer.innerHTML = '';
-            const mergedList = getMergedTickerList_();
-            mergedList.forEach(ticker => {
-                const prevVal = (latest && latest.portfolio && latest.portfolio[ticker] !== undefined) ? latest.portfolio[ticker] : '';
-                rowsContainer.insertAdjacentHTML('beforeend', `
-                    <div class="flex items-center gap-1">
-                        <label class="w-12 text-[10px] text-slate-500 font-semibold truncate">${ticker}</label>
-                        <input type="number" step="0.01" id="dailyTicker_${ticker}" value="${prevVal}" placeholder="0"
-                            oninput="updateDailyEntrySummary()"
-                            class="flex-1 min-w-0 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
-                        <button onclick="deleteTickerFromDailyEntry('${ticker}')" title="'${ticker}' 종목 삭제"
-                            class="text-slate-600 hover:text-rose-400 text-[10px] px-1">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
-                `);
-            });
-
-            // 종목이 적으면 스크롤 없이 다 보이도록, 많아지면(8개=4행 초과) 그때부터만 스크롤되도록 높이를 자동 조절
-            const rowCount = Math.ceil(mergedList.length / 2);
-            const rowHeightPx = 34;
-            const maxVisibleRows = 4;
-            rowsContainer.style.maxHeight = `${Math.min(rowCount, maxVisibleRows) * rowHeightPx + (rowCount > maxVisibleRows ? 4 : 0)}px`;
-
             updateDailyEntrySummary();
             setDailyEntrySyncStatus(splitBuyApiUrl ? 'idle' : 'idle', splitBuyApiUrl ? '연동 준비됨' : '동기화 주소 미설정');
         }
 
-        // 종목별 매입금액 합계(참고용 힌트) + 계좌평가액 - 종목합산평가금액(수동입력) = 현금 실시간 계산
+        // 계좌평가액 - 종목합산평가금액(수동입력) = 현금 실시간 계산
         function updateDailyEntrySummary() {
-            let purchaseSum = 0;
-            getMergedTickerList_().forEach(ticker => {
-                const el = document.getElementById(`dailyTicker_${ticker}`);
-                if (el) purchaseSum += parseFloat(el.value) || 0;
-            });
-
             const accountVal = parseFloat(document.getElementById('dailyEntryAccountVal').value) || 0;
             const stockSumAgg = parseFloat(document.getElementById('dailyEntryStockSumInput').value) || 0;
             const cash = accountVal - stockSumAgg;
 
-            document.getElementById('dailyEntryPurchaseSumHint').innerText = `$${purchaseSum.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             const cashEl = document.getElementById('dailyEntryCash');
             cashEl.innerText = `$${cash.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             cashEl.className = cash < 0 ? "font-mono font-bold text-rose-400" : "font-mono font-bold text-cyan-400";
@@ -1112,15 +1676,6 @@
             el.innerHTML = `<i class="fa-solid ${s.icon} mr-1"></i>${text}`;
         }
 
-        // 일일 기록 카드 안에서 종목 추가/삭제 (분할매수 계산기와 동일한 종목 목록을 공유)
-        function addTickerFromDailyEntry() {
-            addNewTickerPrompt();
-        }
-
-        function deleteTickerFromDailyEntry(ticker) {
-            deleteTickerByName_(ticker);
-        }
-
         async function saveDailyRecordToSheet() {
             if (!splitBuyApiUrl) {
                 showNotification('먼저 "종목별 7차 분할매수" 카드에서 Apps Script 웹앱 URL을 저장해주세요.', 'error', '동기화 주소 미설정');
@@ -1138,12 +1693,6 @@
             const stockSumVal = parseFloat(document.getElementById('dailyEntryStockSumInput').value) || 0;
             const memo = document.getElementById('dailyEntryMemo').value.trim();
 
-            const tickerValues = {};
-            getMergedTickerList_().forEach(ticker => {
-                const el = document.getElementById(`dailyTicker_${ticker}`);
-                tickerValues[ticker] = el ? (parseFloat(el.value) || 0) : 0;
-            });
-
             // 간단한 범위 체크: 직전 기록값 대비 ±50% 이상 차이나는 항목이 있으면 오타 등을 의심할 수 있도록 한 번 더 확인
             const latest = getLatestRecord_();
             if (latest) {
@@ -1156,12 +1705,6 @@
                 if (pctChange(latest.stockSumAgg, stockSumVal) > 0.5) {
                     warnings.push(`종목 합산 평가금액: $${(latest.stockSumAgg || 0).toLocaleString()} → $${stockSumVal.toLocaleString()}`);
                 }
-                Object.keys(tickerValues).forEach(ticker => {
-                    const prev = (latest.portfolio && latest.portfolio[ticker]) || 0;
-                    if (pctChange(prev, tickerValues[ticker]) > 0.5) {
-                        warnings.push(`${ticker} 매입금액: $${prev.toLocaleString()} → $${tickerValues[ticker].toLocaleString()}`);
-                    }
-                });
 
                 if (warnings.length > 0) {
                     const proceed = confirm(`직전 기록보다 50% 이상 차이나는 값이 있습니다. 입력값이 맞는지 확인해주세요.\n\n${warnings.join('\n')}\n\n이대로 저장하시겠습니까?`);
@@ -1175,7 +1718,7 @@
                 const res = await fetch(splitBuyApiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Apps Script 프리플라이트(CORS) 회피용
-                    body: JSON.stringify({ action: 'saveDailyRecord', date, revenue, accountVal, stockSumVal, memo, tickerValues })
+                    body: JSON.stringify({ action: 'saveDailyRecord', date, revenue, accountVal, stockSumVal, memo, tickerValues: {} })
                 });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '저장 실패');
@@ -1183,7 +1726,7 @@
                 setDailyEntrySyncStatus('ok', '구글시트 반영 완료');
                 showNotification(`${date} 기록이 구글시트에 저장되었습니다. (현금 자동계산: $${(json.cash ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2})})`, 'success', '저장 완료');
 
-                // 다음 입력을 위해 날짜/수익금/특이사항만 초기화 (계좌평가액·종목합산·종목값은 다음 기본값 재계산 시 갱신)
+                // 다음 입력을 위해 날짜/수익금/특이사항만 초기화 (계좌평가액·종목합산은 다음 기본값 재계산 시 갱신)
                 dailyEntryDateTouched = false;
                 dailyEntryDateValue = '';
                 refreshDailyEntryDate_(); // 바로 다음날 기본값으로 갱신 (gviz 재조회를 기다리지 않고 즉시 반영)
@@ -1208,133 +1751,140 @@
             const newTicker = prompt("새로 추가할 종목명을 입력하세요 (예: TSLA, AAPL):");
             if (newTicker && newTicker.trim() !== "") {
                 const formatted = newTicker.trim().toUpperCase();
-                
-                // 삭제 기록이 있다면 삭제 목록에서 제거
-                let deletedTickers = JSON.parse(localStorage.getItem('deletedTickersList')) || [];
-                deletedTickers = deletedTickers.filter(t => t !== formatted);
-                localStorage.setItem('deletedTickersList', JSON.stringify(deletedTickers));
 
-                // 커스텀 목록에 추가
-                const customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
-                if (!customTickers.includes(formatted)) {
-                    customTickers.push(formatted);
-                    localStorage.setItem('customTickersList', JSON.stringify(customTickers));
+                // 항상 맨 뒤(오른쪽)에 추가 (서버 응답이 오기 전에도 즉시 화면에 반영)
+                if (!splitBuyRemoteData.tickers.includes(formatted)) {
+                    splitBuyRemoteData.tickers.push(formatted);
                 }
+                if (!splitBuyRemoteData.data[formatted]) splitBuyRemoteData.data[formatted] = {};
 
-                currentSelectedTicker = formatted;
-                initTickerDropdown();
-                renderSplitBuyTable(currentSelectedTicker);
-                renderDailyEntryForm();
+                renderBuyManagement_();
                 addTickerRemote(formatted);
             }
         }
 
-        // --- 🗑️ 종목 삭제 기능 추가 ---
-        function deleteCurrentTicker() {
-            const select = document.getElementById('selectedTickerSelect');
-            deleteTickerByName_(select.value);
-        }
-
-        // 분할매수 카드의 드롭다운 삭제와 일일 기록 카드의 인라인(x) 삭제가 공유하는 로직
+        // --- 🗑️ 종목 삭제 기능 ---
         function deleteTickerByName_(targetTicker) {
             if (!targetTicker) return;
 
-            if (confirm(`'${targetTicker}' 종목을 목록에서 삭제하시겠습니까?\n(입력된 매입금액/7차 분할매수 데이터도 함께 삭제됩니다)`)) {
-                
-                // 1. 삭제된 종목 블랙리스트에 추가
-                const deletedTickers = JSON.parse(localStorage.getItem('deletedTickersList')) || [];
-                if (!deletedTickers.includes(targetTicker)) {
-                    deletedTickers.push(targetTicker);
-                    localStorage.setItem('deletedTickersList', JSON.stringify(deletedTickers));
-                }
+            if (confirm(`'${targetTicker}' 종목을 목록에서 삭제하시겠습니까?\n(입력된 매입금액/매수 관리 데이터도 함께 삭제됩니다)`)) {
 
-                // 2. 커스텀 종목 리스트에서 제거
-                let customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
-                customTickers = customTickers.filter(t => t !== targetTicker);
-                localStorage.setItem('customTickersList', JSON.stringify(customTickers));
+                // 즉시 화면에서 제거 (서버 응답을 기다리지 않고)
+                splitBuyRemoteData.tickers = splitBuyRemoteData.tickers.filter(t => t !== targetTicker);
+                delete splitBuyRemoteData.data[targetTicker];
 
-                // 3. 해당 종목의 분할매수 계산기 데이터 삭제
                 localStorage.removeItem(`splitBuyData_${targetTicker}`);
                 deleteTickerRemote(targetTicker);
                 zeroTickerInMainSheet_(targetTicker); // 메인 시트에서도 매입금액을 0으로 처리 (계속 이월되지 않도록)
 
-                // 4. 드롭다운 및 테이블 갱신
-                initTickerDropdown();
-                renderSplitBuyTable(currentSelectedTicker);
-                renderDailyEntryForm();
+                renderBuyManagement_();
 
                 showNotification(`'${targetTicker}' 종목이 삭제되었습니다.`, "info", "종목 삭제 완료");
             }
         }
 
-        function renderSplitBuyTable(ticker) {
-            const tbody = document.getElementById('splitBuyTableBody');
-            tbody.innerHTML = '';
+        // ===================================================================
+        // 🧮 종목별 매수 관리 (기존 "종목별 7차 분할매수" + "매수 목록" 통합)
+        // 종목을 한 번에 모두 보여주면서, 계좌(1~7)마다 할당/매수/잔여/1-2예시를 자동 계산.
+        // 계좌별 메모는 "매수목록" 시트의 예약 메모 컬럼을 그대로 재사용합니다.
+        // ===================================================================
 
-            // 구글시트(Apps Script) 동기화 데이터가 있으면 우선 사용, 없으면 이 기기의 localStorage 백업 사용
-            const remoteData = (splitBuyApiUrl && splitBuyRemoteData.data[ticker]) ? splitBuyRemoteData.data[ticker] : null;
-            const savedData = remoteData || JSON.parse(localStorage.getItem(`splitBuyData_${ticker}`)) || {};
+        const BUY_MGMT_ACCOUNTS = ['1번 계좌', '2번 계좌', '3번 계좌', '4번 계좌', '5번 계좌', '6번 계좌', '7번 계좌'];
 
-            for (let i = 1; i <= 7; i++) {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-800/30 transition";
-                
-                const stepData = savedData[i] || { alloc: (i === 1 ? 4500 : ''), bought: (i === 1 ? 2500 : '') };
+        function renderBuyManagement_() {
+            const table = document.getElementById('buyManagementTable');
+            if (!table) return;
 
-                tr.innerHTML = `
-                    <td class="py-2 font-bold text-amber-400">${i}차</td>
-                    <td class="py-2">
-                        <input type="number" id="alloc_${i}" value="${stepData.alloc}" oninput="calcAndSaveSplitBuy('${ticker}', ${i})" placeholder="0"
-                            class="w-14 sm:w-20 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
-                    </td>
-                    <td class="py-2 font-mono text-slate-400 text-[10px]" id="half_${i}">$0.00</td>
-                    <td class="py-2">
-                        <input type="number" id="bought_${i}" value="${stepData.bought}" oninput="calcAndSaveSplitBuy('${ticker}', ${i})" placeholder="0"
-                            class="w-14 sm:w-20 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
-                    </td>
-                    <td class="py-2 text-right font-mono font-bold text-sky-400" id="rem_${i}">$0.00</td>
-                `;
-                tbody.appendChild(tr);
-                updateSplitRowUI(i);
+            const tickers = splitBuyRemoteData.tickers || [];
+            const memos = (gridCache.buyList && gridCache.buyList.memos) || {};
+
+            updateGridTickerLabel_('buyManagementTickerList', tickers);
+
+            const headerHtml = `
+                <thead>
+                    <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
+                        <th class="p-2 w-20">계좌</th>
+                        <th class="p-2 min-w-[140px]">메모</th>
+                        ${tickers.map(t => `<th class="p-2 min-w-[190px] text-center">${t} <button onclick="deleteTickerByName_('${t}')" title="'${t}' 종목 삭제" class="text-slate-600 hover:text-rose-400 ml-1"><i class="fa-solid fa-xmark"></i></button></th>`).join('')}
+                    </tr>
+                </thead>`;
+
+            const bodyRows = BUY_MGMT_ACCOUNTS.map((accountLabel, idx) => {
+                const step = idx + 1; // 1~7
+                const cells = tickers.map(t => {
+                    const remoteData = (splitBuyApiUrl && splitBuyRemoteData.data[t]) ? splitBuyRemoteData.data[t] : null;
+                    const savedData = remoteData || JSON.parse(localStorage.getItem(`splitBuyData_${t}`)) || {};
+                    const stepData = savedData[step] || { alloc: '', bought: '' };
+                    const allocNum = parseFloat(stepData.alloc) || 0;
+                    const boughtNum = parseFloat(stepData.bought) || 0;
+                    const half = allocNum / 2;
+                    const remain = allocNum - boughtNum;
+
+                    return `
+                        <td class="p-2">
+                            <div class="flex gap-1">
+                                <input type="number" step="0.01" id="buyMgmtAlloc_${t}_${step}" value="${stepData.alloc}" placeholder="할당"
+                                    oninput="onBuyMgmtInput_('${t}', ${step})"
+                                    class="w-1/2 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-cyan-500">
+                                <input type="number" step="0.01" id="buyMgmtBought_${t}_${step}" value="${stepData.bought}" placeholder="매수"
+                                    oninput="onBuyMgmtInput_('${t}', ${step})"
+                                    class="w-1/2 bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div class="flex justify-between mt-1 text-[9px]" id="buyMgmtCalc_${t}_${step}">
+                                <span class="text-slate-500">1/2: $${half.toLocaleString(undefined, {maximumFractionDigits: 1})}</span>
+                                <span class="font-bold ${remain < 0 ? 'text-rose-400' : 'text-sky-400'}">잔여: $${remain.toLocaleString(undefined, {maximumFractionDigits: 1})}</span>
+                            </div>
+                        </td>`;
+                }).join('');
+
+                return `
+                    <tr class="border-b border-slate-800/30 hover:bg-slate-800/20">
+                        <td class="p-2 font-bold text-amber-400">${accountLabel}</td>
+                        <td class="p-2">
+                            <input type="text" value="${String(memos[accountLabel] || '').replace(/"/g, '&quot;')}" placeholder="-"
+                                oninput="onGridMemoInput_('buyList','${accountLabel}', this.value)"
+                                class="w-full bg-slate-950 text-cyan-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-cyan-500">
+                        </td>
+                        ${cells}
+                        ${tickers.length === 0 ? '<td class="p-2 text-slate-600">종목을 추가해주세요</td>' : ''}
+                    </tr>`;
+            }).join('');
+
+            table.innerHTML = headerHtml + `<tbody>${bodyRows}</tbody>`;
+
+            if (cachedParsedData && cachedParsedData.length > 0) {
+                renderPortfolioDonutChart(buildPortfolioFromBuyManagement_());
             }
         }
 
-        function calcAndSaveSplitBuy(ticker, step) {
-            updateSplitRowUI(step);
-
-            const splitData = {};
-            for (let i = 1; i <= 7; i++) {
-                const allocVal = document.getElementById(`alloc_${i}`).value;
-                const boughtVal = document.getElementById(`bought_${i}`).value;
-                splitData[i] = { alloc: allocVal, bought: boughtVal };
-            }
+        function onBuyMgmtInput_(ticker, step) {
+            const allocVal = document.getElementById(`buyMgmtAlloc_${ticker}_${step}`).value;
+            const boughtVal = document.getElementById(`buyMgmtBought_${ticker}_${step}`).value;
 
             // 이 기기용 즉시 백업 (오프라인 대비)
+            const splitData = JSON.parse(localStorage.getItem(`splitBuyData_${ticker}`)) || {};
+            splitData[step] = { alloc: allocVal, bought: boughtVal };
             localStorage.setItem(`splitBuyData_${ticker}`, JSON.stringify(splitData));
 
-            // 구글시트로 실시간 전송 (변경된 차수만)
-            const allocVal = document.getElementById(`alloc_${step}`).value;
-            const boughtVal = document.getElementById(`bought_${step}`).value;
-            scheduleSplitBuyRemoteSave(ticker, step, allocVal, boughtVal);
-        }
+            // 낙관적으로 즉시 반영 (서버 응답을 기다리지 않고 자산 포트폴리오 비중에 바로 반영되도록)
+            if (!splitBuyRemoteData.data[ticker]) splitBuyRemoteData.data[ticker] = {};
+            splitBuyRemoteData.data[ticker][step] = { alloc: allocVal, bought: boughtVal };
+            renderPortfolioDonutChart(buildPortfolioFromBuyManagement_());
 
-        function updateSplitRowUI(step) {
-            const allocInput = parseFloat(document.getElementById(`alloc_${step}`).value) || 0;
-            const boughtInput = parseFloat(document.getElementById(`bought_${step}`).value) || 0;
-
-            const halfVal = allocInput / 2;
-            const remVal = allocInput - boughtInput;
-
-            document.getElementById(`half_${step}`).innerText = `$${halfVal.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
-            
-            const remEl = document.getElementById(`rem_${step}`);
-            remEl.innerText = `$${remVal.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
-            
-            if (remVal < 0) {
-                remEl.className = "py-2 text-right font-mono font-bold text-rose-400";
-            } else {
-                remEl.className = "py-2 text-right font-mono font-bold text-sky-400";
+            // 화면의 1/2 예시·잔여 값만 즉시 갱신 (표 전체를 다시 그리면 입력 중 포커스가 끊김)
+            const allocNum = parseFloat(allocVal) || 0;
+            const boughtNum = parseFloat(boughtVal) || 0;
+            const half = allocNum / 2;
+            const remain = allocNum - boughtNum;
+            const calcEl = document.getElementById(`buyMgmtCalc_${ticker}_${step}`);
+            if (calcEl) {
+                calcEl.innerHTML = `
+                    <span class="text-slate-500">1/2: $${half.toLocaleString(undefined, {maximumFractionDigits: 1})}</span>
+                    <span class="font-bold ${remain < 0 ? 'text-rose-400' : 'text-sky-400'}">잔여: $${remain.toLocaleString(undefined, {maximumFractionDigits: 1})}</span>`;
             }
+
+            // 구글시트로 실시간 전송 (디바운스)
+            scheduleSplitBuyRemoteSave(ticker, step, allocVal, boughtVal);
         }
 
         // --- 📈 대시보드 공통 연동 시스템 ---
@@ -1373,31 +1923,48 @@
         }
 
         // ===================================================================
-        // 🧮 퍼센트 계산기
+        // 🧮 퍼센트 계산기 (드롭박스 + 결과 한 줄)
         // ===================================================================
 
         function updatePercentCalc() {
-            const container = document.getElementById('percentCalcResults');
+            const resultEl = document.getElementById('percentCalcResult');
             const raw = document.getElementById('percentCalcInput').value;
             const base = parseFloat(raw);
+            const p = parseFloat(document.getElementById('percentCalcSelect').value);
 
             if (raw === '' || isNaN(base)) {
-                container.innerHTML = '';
+                resultEl.innerText = '-';
                 return;
             }
-
-            const percents = [90, 80, 70, 60, 50, 40, 30, 20, 10];
-            container.innerHTML = percents.map(p => `
-                <div class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-center">
-                    <div class="text-[9px] text-slate-500">${p}%</div>
-                    <div class="text-[11px] font-mono font-bold text-fuchsia-400">${(base * p / 100).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
-                </div>
-            `).join('');
+            resultEl.innerText = (base * p / 100).toLocaleString(undefined, { maximumFractionDigits: 2 });
         }
 
         function resetPercentCalc() {
             document.getElementById('percentCalcInput').value = '';
-            document.getElementById('percentCalcResults').innerHTML = '';
+            document.getElementById('percentCalcResult').innerText = '-';
+        }
+
+        // --- 수익률 퍼센트 계산기: 기준 금액에 선택한 %를 적용했을 때의 결과값 ---
+        function updateReturnPercentCalc() {
+            const resultEl = document.getElementById('returnPercentCalcResult');
+            const raw = document.getElementById('returnPercentCalcInput').value;
+            const base = parseFloat(raw);
+            const p = parseFloat(document.getElementById('returnPercentCalcSelect').value);
+
+            if (raw === '' || isNaN(base)) {
+                resultEl.innerText = '-';
+                return;
+            }
+            const val = base * (1 + p / 100);
+            resultEl.innerText = val.toLocaleString(undefined, { maximumFractionDigits: 2 });
+            resultEl.className = `flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-right font-mono font-bold text-sm ${p >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+        }
+
+        function resetReturnPercentCalc() {
+            document.getElementById('returnPercentCalcInput').value = '';
+            const resultEl = document.getElementById('returnPercentCalcResult');
+            resultEl.innerText = '-';
+            resultEl.className = 'flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-right font-mono font-bold text-amber-400 text-sm';
         }
 
         function saveAndSyncUrl() {
@@ -1444,9 +2011,7 @@
 
             const memoIndex = 6;
             const stockSumAggIndex = 7; // H열: 종목 합산 평가금액 (사용자가 별도로 입력한 값 → 현금 계산에 사용)
-            const stockStartIndex = 8;  // I열부터: 종목별 매입금액 (포트폴리오 비중 계산에 사용)
-
-            let latestPortfolio = null;
+            const stockStartIndex = 8;  // I열부터: 과거에 종목별 매입금액을 기록하던 영역 (지금은 미사용, 종목 목록 자동감지 용도로만 참고)
 
             const detectedTickers = [];
             for (let sIdx = stockStartIndex; sIdx < headers.length; sIdx++) {
@@ -1458,7 +2023,7 @@
 
             if (detectedTickers.length > 0) {
                 availableTickers = Array.from(new Set([...availableTickers, ...detectedTickers]));
-                initTickerDropdown();
+                renderBuyManagement_();
             }
 
             for (let i = 1; i < rawMatrix.length; i++) {
@@ -1487,25 +2052,8 @@
                     let dailyReturn = (prevAccountVal !== null && prevAccountVal > 0) ? (totalAccVal - prevAccountVal) / prevAccountVal : 0;
                     prevAccountVal = totalAccVal;
 
-                    // 종목별 매입금액 (자산 포트폴리오 비중 계산용)
-                    const portfolioItems = {};
-                    let totalPurchaseSum = 0;
-
-                    for (let sIdx = stockStartIndex; sIdx < cols.length; sIdx++) {
-                        const ticker = headers[sIdx];
-                        if (ticker && ticker !== "" && ticker.toUpperCase() !== "현금") {
-                            const rawStockVal = cols[sIdx]?.trim();
-                            const stockVal = parseFloat(rawStockVal?.replace(/[^0-9.-]/g, '')) || 0;
-                            portfolioItems[ticker.toUpperCase()] = stockVal;
-                            totalPurchaseSum += stockVal;
-                        }
-                    }
-
                     // 현금 = 계좌 평가액 - 종목 합산 평가금액 (수동 입력값 기준)
                     const rawCash = totalAccVal - stockSumAgg; // 실제 계산값 (음수여도 그대로 유지 → 입력 실수를 발견할 수 있도록)
-                    const autoCalculatedCash = Math.max(0, rawCash); // 도넛차트는 음수 슬라이스를 그릴 수 없어 차트용으로만 0 이상 처리
-                    portfolioItems["현금"] = autoCalculatedCash;
-                    const totalPortfolioSum = totalPurchaseSum + autoCalculatedCash;
 
                     const record = {
                         date: dateStr,
@@ -1517,20 +2065,10 @@
                         dailyReturn: dailyReturn,
                         memo: memoVal,
                         stockSumAgg: stockSumAgg,
-                        cash: rawCash,
-                        portfolio: portfolioItems,
-                        portfolioSum: totalPortfolioSum
+                        cash: rawCash
                     };
 
                     parsedData.push(record);
-
-                    if (totalPortfolioSum > 0) {
-                        latestPortfolio = {
-                            totalAccount: totalAccVal,
-                            items: portfolioItems,
-                            sum: totalPortfolioSum
-                        };
-                    }
                 }
             }
 
@@ -1543,17 +2081,44 @@
             });
 
             cachedParsedData = parsedData;
-            cachedLatestPortfolio = latestPortfolio;
 
             updateKpiCards(parsedData); // KPI 카드는 항상 전체 기간 기준 (일평균 수익금만 별도 기준일 옵션 있음)
             rebuildChartsAndTable_();
             renderDailyEntryForm();
         }
 
+        // "자산 포트폴리오 비중"은 이제 "종목별 매수 관리(7계좌)"의 매수 금액 합계를 소스로 사용.
+        // 현금은 "일일 기록 입력"의 최신 계좌평가액 - 종목합산평가금액 그대로 사용.
+        function buildPortfolioFromBuyManagement_() {
+            const items = {};
+            let stockSum = 0;
+
+            Object.keys(splitBuyRemoteData.data || {}).forEach(ticker => {
+                const steps = splitBuyRemoteData.data[ticker] || {};
+                let boughtSum = 0;
+                Object.values(steps).forEach(step => {
+                    boughtSum += parseFloat(step && step.bought) || 0;
+                });
+                if (boughtSum !== 0) {
+                    items[ticker] = boughtSum;
+                    stockSum += boughtSum;
+                }
+            });
+
+            const latest = getLatestRecord_();
+            const cashVal = latest ? Math.max(0, latest.cash) : 0;
+            items["현금"] = cashVal;
+
+            const totalVal = stockSum + cashVal;
+            if (totalVal <= 0) return null;
+
+            return { totalAccount: latest ? latest.accountVal : totalVal, items, sum: totalVal };
+        }
+
         // 각 차트/테이블을 처음 그릴 때 + 개별 시작일 필터가 바뀔 때 모두 이 함수들로 다시 그림
         function rebuildChartsAndTable_() {
             if (!cachedParsedData || cachedParsedData.length === 0) return;
-            renderPortfolioDonutChart(cachedLatestPortfolio); // 포트폴리오 비중은 필터 대상이 아니라 항상 최신 데이터 기준
+            renderPortfolioDonutChart(buildPortfolioFromBuyManagement_()); // 포트폴리오 비중 = 종목별 매수 관리(7계좌)의 매수 합계 + 현금
             rerenderCombo_();
             rerenderAcc_();
             rerenderMdd_();
@@ -2130,11 +2695,11 @@
 
         function renderDetailTable(data) {
             const sortedData = sortTableData_(data);
-            // 정렬 기준이 없을 때(기본 날짜순)만 "최근 15일" 슬라이싱 의미가 있음. 정렬 중엔 상위 15개(최댓값/최솟값 top15)를 보여줌.
-            const displayData = activeTableMode === 'recent' ? sortedData.slice(0, 15) : sortedData;
+            // 정렬 기준이 없을 때(기본 날짜순)만 "최근 3일" 슬라이싱 의미가 있음. 정렬 중엔 상위 3개(최댓값/최솟값 top3)를 보여줌.
+            const displayData = activeTableMode === 'recent' ? sortedData.slice(0, 3) : sortedData;
 
             document.getElementById('totalRowsCount').innerText = activeTableMode === 'recent'
-                ? `총 ${data.length}개 중 ${tableSortField ? '상위 15개' : '최근 15일'}`
+                ? `총 ${data.length}개 중 ${tableSortField ? '상위 3개' : '최근 3일'}`
                 : `전체 ${data.length}개 기록`;
 
             const tbody = document.getElementById('detailTableBody');
