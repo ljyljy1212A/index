@@ -1820,6 +1820,10 @@
                 document.getElementById('dailyEntryAccountVal').value = '';
                 document.getElementById('dailyEntryStockSumInput').value = '';
 
+                // 저장 완료 후 "날짜 확인함" 체크 해제 (다음 입력 시 다시 확인하도록)
+                localStorage.removeItem('dateCheckedFor');
+                if (checkboxEl) checkboxEl.checked = false;
+
                 // 대시보드 새로고침 (구글시트 gviz 재조회) - 캐시 반영 지연에 대비해 한 번 더 재시도
                 if (document.getElementById('googleSheetUrl').value.trim()) {
                     setTimeout(() => fetchGoogleSheetData(), 800);
