@@ -60,7 +60,7 @@
 
     <main class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- 지표 요약 카드 그리드 (전체 폭으로 확장 - 3개 열 전부를 가로질러 맨 위에 배치) -->
+        <!-- 지표 요약 카드 그리드 -->
         <div class="lg:col-span-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
                 <span class="text-[10px] text-slate-400 font-semibold leading-tight">누적 수익금</span>
@@ -119,14 +119,13 @@
             </div>
         </div>
         
-        <!-- 1열: 일일 기록 입력 (가장 자주 쓰는 카드라 단독 배치) -->
-        <!-- 좌측 메가컬럼: 일일기록입력 + 계산기(2열 하위 그리드), 그 아래로 상세데이터테이블/메모장이 전체 폭으로 이어짐 -->
+        <!-- 1열: 일일 기록 입력 & 계산기 영역 -->
         <section class="lg:col-span-6 flex flex-col gap-6">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="flex flex-col gap-6">
 
-            <!-- 일일 기록 입력 카드 (대시보드 -> 구글시트 자동 반영) -->
+            <!-- 일일 기록 입력 카드 -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
                 <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
                     <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -297,7 +296,7 @@
                     </div>
                 </div>
 
-                <!-- 특이사항 검색 (예: '전쟁' 입력 시 해당 날짜로 이동, 여러 건이면 다음/이전으로 순회) -->
+                <!-- 특이사항 검색 -->
                 <div class="flex items-center gap-2 mb-4">
                     <div class="relative flex-1 max-w-xs">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
@@ -337,7 +336,7 @@
                 </div>
             </div>
 
-            <!-- 수익률 데이터: 일평균/월평균 수익금·수익률/연환산 수익률을 날짜별로 자동 기록 -->
+            <!-- 수익률 데이터 -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
                     <div class="flex items-center gap-3">
@@ -372,9 +371,9 @@
                 <p class="text-[10px] text-slate-600 mt-2">대시보드를 새로고침할 때마다 그 시점의 지표 값이 오늘 날짜로 자동 기록됩니다.</p>
             </div>
 
-            <!-- 메모장: 일일 기록 입력의 날짜를 따라가는 자유 메모 -->
+            <!-- 메모장 (단일 덮어쓰기 메모장) -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
+                <div class="flex items-center justify-between gap-4 mb-3">
                     <div class="flex items-center gap-3">
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-note-sticky text-yellow-400"></i> 메모장
@@ -383,36 +382,14 @@
                             <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
                         </span>
                     </div>
-
-                    <div class="flex items-center gap-2 self-start sm:self-auto">
-                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
-                            <button id="btnNotepadRecent" onclick="toggleNotepadMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 1일</button>
-                            <button id="btnNotepadAll" onclick="toggleNotepadMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
-                        </div>
-                    </div>
                 </div>
 
-                <!-- 메모 검색 (상세 데이터 테이블의 특이사항 검색과 동일한 방식: 입력하면 이동, 여러 건이면 다음/이전 순회) -->
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="relative flex-1 max-w-xs">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
-                        <input type="text" id="notepadSearchInput" placeholder="메모 검색"
-                            oninput="searchNotepad_()"
-                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); searchNotepadNext_(); }"
-                            class="w-full bg-slate-950 text-slate-200 text-xs pl-8 pr-2 py-2 rounded-lg border border-slate-800 focus:outline-none focus:border-yellow-500">
-                    </div>
-                    <span id="notepadSearchCounter" class="text-[11px] text-slate-500 min-w-[70px]"></span>
-                    <button onclick="searchNotepadPrev_()" title="이전 결과" class="text-slate-400 hover:text-yellow-400 text-xs px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950">
-                        <i class="fa-solid fa-chevron-up"></i>
-                    </button>
-                    <button onclick="searchNotepadNext_()" title="다음 결과" class="text-slate-400 hover:text-yellow-400 text-xs px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950">
-                        <i class="fa-solid fa-chevron-down"></i>
-                    </button>
+                <div class="w-full">
+                    <textarea id="notepadSingleInput" rows="6" placeholder="자유롭게 메모를 입력하세요 (자동 덮어쓰기 저장)"
+                        oninput="onNotepadSingleInput_(this.value)"
+                        class="w-full bg-slate-950 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-yellow-500 resize-y"></textarea>
                 </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse" id="notepadTable"></table>
-                </div>
+                <p class="text-[10px] text-slate-600 mt-2">입력한 메모는 항상 최신 상태로 덮어씌워져 구글 시트에 자동으로 저장됩니다.</p>
             </div>
 
         </section>
@@ -612,36 +589,10 @@
 
         </section>
 
-        <!-- 전량폭 그리드 기능: 매매 예정 / 매수 목록 / 차수 기록 (종목 컬럼이 많아 전체 너비 사용) -->
+        <!-- 그리드 기능: 매수 목록 / 차수 기록 -->
         <section class="lg:col-span-12 flex flex-col gap-6">
 
-            <!-- 매매 예정 -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
-                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-clipboard-list text-orange-400"></i> 매매 예정
-                        <span id="tradePlanSyncStatus" class="text-[10px] text-slate-500 font-normal">
-                            <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
-                        </span>
-                        <span id="tradePlanTickerList" class="text-[10px] text-orange-300 font-normal"></span>
-                    </h2>
-                    <div class="flex items-center gap-2">
-                        <button onclick="addTickerPromptForGrid_('tradePlan')" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
-                            <i class="fa-solid fa-plus"></i> 종목 추가
-                        </button>
-                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px]">
-                            <button id="btnTradePlanRecent" onclick="toggleTradePlanMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-orange-600 text-white shadow-sm">최신만</button>
-                            <button id="btnTradePlanAll" onclick="toggleTradePlanMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse" id="tradePlanTable"></table>
-                </div>
-                <p class="text-[10px] text-slate-600 mt-2">종목 칸의 드롭박스를 고르면 문구가 자동으로 채워지고, 그 문구를 자유롭게 고쳐 쓸 수도 있습니다. 날짜는 "일일 기록 입력"의 날짜와 함께 갱신되며, 새 날짜에 아직 입력이 없으면 직전 내용이 그대로 표시됩니다.</p>
-            </div>
-
-            <!-- 종목별 매수 관리 (기존 "종목별 7차 분할매수" + "매수 목록" 통합) -->
+            <!-- 종목별 매수 관리 -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
                     <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -658,7 +609,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse" id="buyManagementTable"></table>
                 </div>
-                <p class="text-[10px] text-slate-600 mt-2">계좌마다 할당($)과 매수($)를 입력하면 잔여 금액과 1/2 예시가 자동 계산됩니다. 계좌별 메모도 함께 저장됩니다.</p>
+                <p class="text-[10px] text-slate-600 mt-2">계좌마다 할당($)과 매수($)를 입력하면 잔여 금액과 1/2 예시가 자동 계산됩니다.</p>
             </div>
 
             <!-- 차수 기록 -->
@@ -689,10 +640,10 @@
                 </div>
             </div>
 
-            <!-- 동기화 설정 + 알림 (차수 기록 아래로 이동) -->
+            <!-- 동기화 설정 카드 -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                <!-- Apps Script 동기화 설정 카드 (일일기록/매매예정/매수목록/차수기록이 공용으로 사용) -->
+                <!-- Apps Script 동기화 설정 카드 -->
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
                     <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
                         <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -714,7 +665,7 @@
                         </button>
                     </div>
                     <p class="text-[10px] text-slate-500 leading-relaxed mt-2">
-                        일일 기록 입력 / 매매 예정 / 매수 목록 / 차수 기록이 모두 이 주소로 구글시트와 동기화됩니다. 입력하면 PC/폰 어디서든 같은 데이터를 볼 수 있어요.
+                        일일 기록 입력 / 매수 목록 / 차수 기록 / 메모장이 모두 이 주소로 구글시트와 동기화됩니다.
                     </p>
                 </div>
 
@@ -725,7 +676,7 @@
                         <i class="fa-solid fa-link text-sky-400"></i> 구글 시트 실시간 자동 연동
                     </h2>
                     <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-                        시트 상단 브라우저 주소창의 <strong>전체 주소(URL)</strong>를 그대로 복사해서 아래 붙여넣어 주세요!
+                        시트 상단 브라우저 주소창의 <strong>전체 주소(URL)</strong>를 그대로 복사해서 붙여넣어 주세요!
                     </p>
 
                     <div class="space-y-3">
@@ -769,33 +720,31 @@
         let activeYearlyChartFilter = 'ALL';
         
         let cachedParsedData = [];
-        let cachedChartData = [];       // "차트 시작일" 필터가 적용된 데이터 (차트/상세 테이블용)
+        let cachedChartData = [];
         let parsedHeaders = [];
 
-        // 기본 지원 종목 리스트 (일일 기록 입력의 "종목별 매입금액"에서 관리)
         let availableTickers = ["DIVO", "MTUM", "PTNQ", "SCHD", "SOXL", "SPMO", "TQQQ", "VYM", "XLP"];
-        let splitBuyRemoteData = { tickers: [], data: {} }; // 종목별 매수 관리(7계좌) 데이터 캐시
-        const splitBuySaveTimers = {}; // (ticker,계좌)별 저장 디바운스 타이머 - 여러 칸을 동시에 편집해도 서로 씹히지 않도록
+        let splitBuyRemoteData = { tickers: [], data: {} };
+        const splitBuySaveTimers = {};
 
-        // --- Apps Script 웹앱 동기화 주소 (일일기록/매매예정/매수목록/차수기록 공용) ---
         let splitBuyApiUrl = localStorage.getItem('splitBuyApiUrl') || '';
 
-        const sampleRawData = `날짜	수익금	수익금 총합	전체계좌	최고점 대비 하락률	일별 수익률	특이사항	현금	divo	mtum	ptnq	schd	soxl	spmo	tqqq	vym	xlp
-2026-01-30	31.66	31.66	41,543.20	0.00%	0.00%	첫 거래 및 계좌 개설	31,653.36	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
-2026-01-31	37.31	68.97	41,543.20	0.00%	0.00%	평가금액 유지	31,653.36	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
-2026-02-01	28.76	97.73	41,646.90	0.00%	0.25%	미국 성장주 강세	31,653.36	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
-2026-02-02	23.2	120.93	41,538.68	-0.26%	-0.26%		31,500.00	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
-2026-02-03	17.84	138.77	41,513.33	-0.32%	-0.06%	소폭 리밸런싱 진행	31,450.00	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
-2026-02-04	0	138.77	41,336.75	-0.74%	-0.43%		31,250.00	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
-2026-02-05	6.08	144.85	41,336.75	-0.74%	0.00%		31,250.00	1069	3913	5706.56	670	100	6041.7	201.31	1447.56	1023
-2026-02-06	0	144.85	41,761.01	0.00%	1.03%	빅테크 실적 발표 호재	31,400.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
-2026-02-07	0	144.85	41,761.01	0.00%	0.00%		31,400.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
-2026-02-08	217.04	361.89	41,761.01	0.00%	0.00%	배당금 대거 수령	31,400.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
-2026-02-09	0	361.89	41,761.01	0.00%	0.00%		31,400.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
-2026-02-10	19.7	381.59	41,841.08	0.00%	0.19%		31,450.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
-2026-02-11	5.77	387.36	41,839.00	0.00%	0.00%		31,440.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
-2026-02-12	59.19	446.55	41,896.18	0.00%	0.14%	금리 동결 발표 안정	31,440.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050
-2026-02-13	0	446.55	41,709.63	-0.45%	-0.45%	인플레이션 우려 하락	31,250.00	1150	3950	5800.00	700	100	6100.0	210.00	1480.00	1050`;
+        const sampleRawData = `날짜\t수익금\t수익금 총합\t전체계좌\t최고점 대비 하락률\t일별 수익률\t특이사항\t현금\tdivo\tmtum\tptnq\tschd\tsoxl\tspmo\ttqqq\tvym\txlp
+2026-01-30\t31.66\t31.66\t41,543.20\t0.00%\t0.00%\t첫 거래 및 계좌 개설\t31,653.36\t1069\t3913\t5706.56\t670\t100\t6041.7\t201.31\t1447.56\t1023
+2026-01-31\t37.31\t68.97\t41,543.20\t0.00%\t0.00%\t평가금액 유지\t31,653.36\t1069\t3913\t5706.56\t670\t100\t6041.7\t201.31\t1447.56\t1023
+2026-02-01\t28.76\t97.73\t41,646.90\t0.00%\t0.25%\t미국 성장주 강세\t31,653.36\t1069\t3913\t5706.56\t670\t100\t6041.7\t201.31\t1447.56\t1023
+2026-02-02\t23.2\t120.93\t41,538.68\t-0.26%\t-0.26%\t\t31,500.00\t1069\t3913\t5706.56\t670\t100\t6041.7\t201.31\t1447.56\t1023
+2026-02-03\t17.84\t138.77\t41,513.33\t-0.32%\t-0.06%\t소폭 리밸런싱 진행\t31,450.00\t1069\t3913\t5706.56\t670\t100\t6041.7\t201.31\t1447.56\t1023
+2026-02-04\t0\t138.77\t41,336.75\t-0.74%\t-0.43%\t\t31,250.00\t1069\t3913\t5706.56\t670\t100\t6041.7\t201.31\t1447.56\t1023
+2026-02-05\t6.08\t144.85\t41,336.75\t-0.74%\t0.00%\t\t31,250.00\t1069\t3913\t5706.56\t670\t100\t6041.7\t201.31\t1447.56\t1023
+2026-02-06\t0\t144.85\t41,761.01\t0.00%\t1.03%\t빅테크 실적 발표 호재\t31,400.00\t1150\t3950\t5800.00\t700\t100\t6100.0\t210.00\t1480.00\t1050
+2026-02-07\t0\t144.85\t41,761.01\t0.00%\t0.00%\t\t31,400.00\t1150\t3950\t5800.00\t700\t100\t6100.0\t210.00\t1480.00\t1050
+2026-02-08\t217.04\t361.89\t41,761.01\t0.00%\t0.00%\t배당금 대거 수령\t31,400.00\t1150\t3950\t5800.00\t700\t100\t6100.0\t210.00\t1480.00\t1050
+2026-02-09\t0\t361.89\t41,761.01\t0.00%\t0.00%\t\t31,400.00\t1150\t3950\t5800.00\t700\t100\t6100.0\t210.00\t1480.00\t1050
+2026-02-10\t19.7\t381.59\t41,841.08\t0.00%\t0.19%\t\t31,450.00\t1150\t3950\t5800.00\t700\t100\t6100.0\t210.00\t1480.00\t1050
+2026-02-11\t5.77\t387.36\t41,839.00\t0.00%\t0.00%\t\t31,440.00\t1150\t3950\t5800.00\t700\t100\t6100.0\t210.00\t1480.00\t1050
+2026-02-12\t59.19\t446.55\t41,896.18\t0.00%\t0.14%\t금리 동결 발표 안정\t31,440.00\t1150\t3950\t5800.00\t700\t100\t6100.0\t210.00\t1480.00\t1050
+2026-02-13\t0\t446.55\t41,709.63\t-0.45%\t-0.45%\t인플레이션 우려 하락\t31,250.00\t1150\t3950\t5800.00\t700\t100\t6100.0\t210.00\t1480.00\t1050`;
 
         window.google = {
             visualization: {
@@ -822,7 +771,7 @@
                                 throw new Error("가용 데이터 행이 비어있습니다.");
                             }
 
-                            parsedHeaders = table.cols.map(col => col.label || "").filter(label => label !== "");
+                            parsedHeaders = table.cols ? table.cols.map(col => col ? (col.label || "") : "").filter(label => label !== "") : [];
 
                             const parsedMatrix = table.rows.map(row => {
                                 if (!row || !row.c) return [];
@@ -834,8 +783,8 @@
                                 });
                             });
 
-                            if (parsedMatrix.length > 0 && parsedMatrix[0][0] !== table.cols[0].label) {
-                                parsedMatrix.unshift(table.cols.map(c => c.label || ""));
+                            if (parsedMatrix.length > 0 && table.cols && table.cols[0] && parsedMatrix[0][0] !== table.cols[0].label) {
+                                parsedMatrix.unshift(table.cols.map(c => c ? (c.label || "") : ""));
                             }
 
                             parseAndRenderData(parsedMatrix, "구글 API 연동");
@@ -858,7 +807,6 @@
 
         window.onload = function() {
             renderBuyManagement_();
-
             restoreCalendarFiltersFromStorage_();
 
             document.getElementById('splitBuyApiUrlInput').value = splitBuyApiUrl;
@@ -875,10 +823,6 @@
                 loadDemoData_();
             }
         };
-
-        // ===================================================================
-        // 📡 분할매수 데이터 - 구글시트(Apps Script) 실시간 동기화
-        // ===================================================================
 
         function setSplitBuySyncStatus(state, text) {
             const el = document.getElementById('splitBuySyncStatus');
@@ -903,7 +847,6 @@
             initAllGrids_();
         }
 
-        // 페이지 로드 시 / URL 저장 시: Apps Script에서 전체 데이터를 받아와 화면에 반영
         async function initSplitBuySync() {
             if (!splitBuyApiUrl) return;
             setSplitBuySyncStatus('loading', '동기화 중...');
@@ -916,7 +859,6 @@
 
                 splitBuyRemoteData = { tickers: json.tickers || [], data: json.data || {} };
 
-                // 시트에 저장된 종목 목록을 병합 (일일 기록 입력의 종목별 매입금액에도 함께 반영됨)
                 if (splitBuyRemoteData.tickers.length > 0) {
                     availableTickers = Array.from(new Set([...availableTickers, ...splitBuyRemoteData.tickers]));
                     renderDailyEntryForm();
@@ -930,7 +872,6 @@
             }
         }
 
-        // 입력값 변경 300ms 후 서버로 저장 (너무 잦은 호출 방지)
         function scheduleSplitBuyRemoteSave(ticker, step, alloc, bought) {
             if (!splitBuyApiUrl) return;
             const key = `${ticker}__${step}`;
@@ -945,7 +886,7 @@
             try {
                 const res = await fetch(splitBuyApiUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Apps Script 프리플라이트(CORS) 회피용
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'saveStep', ticker, step, alloc, bought })
                 });
                 const json = await res.json();
@@ -971,7 +912,7 @@
                 if (json.success) {
                     splitBuyRemoteData.tickers = json.tickers || splitBuyRemoteData.tickers;
                     splitBuyRemoteData.data = json.data || splitBuyRemoteData.data;
-                    renderBuyManagement_(); // 서버가 확정한 순서(항상 맨 뒤)로 다시 그림
+                    renderBuyManagement_();
                 }
             } catch (err) {
                 console.error('종목 추가 동기화 실패:', err);
@@ -993,7 +934,6 @@
             }
         }
 
-        // 메인 시트(일일 기록)에서 해당 종목의 매입금액을 0으로 처리 (그래야 다음 저장부터 계속 이월되지 않음)
         async function zeroTickerInMainSheet_(ticker) {
             if (!splitBuyApiUrl) return;
             try {
@@ -1011,27 +951,20 @@
             }
         }
 
-        // --- 📊 종목별 7차 분할 매수 계산기 (+추가 / -삭제) ---
-
-        // ===================================================================
-        // 🗂️ 범용 그리드 기능: 매매 예정 / 매수 목록 / 차수 기록
-        // 세 기능 모두 "행(rowLabel) x 종목(ticker) = 자유 텍스트 값" 구조를 공유합니다.
-        // ===================================================================
-
         const GRID_CONFIGS = {
-            tradePlan: { sheetName: '매매예정' },
-            buyList: { sheetName: '매수목록' }, // 종목 데이터는 더 이상 안 씀 - 계좌별 메모 저장 전용으로만 재사용
+            buyList: { sheetName: '매수목록' },
             stepLog: { sheetName: '차수기록' },
             notepad: { sheetName: '메모장' },
             yieldData: { sheetName: '수익률데이터' }
         };
 
-        const MEMO_TICKER_KEY = '메모'; // Apps Script의 MEMO_HEADER와 동일한 이름이어야 함
-        const NOTEPAD_CONTENT_KEY = '내용'; // 메모장은 날짜당 이 고정된 한 칸만 사용
+        const MEMO_TICKER_KEY = '메모';
+        const NOTEPAD_CONTENT_KEY = '내용';
+        const NOTEPAD_SINGLE_ROW = '메모';
+        const STEPLOG_DATE_KEY = '날짜';
         const YIELD_FIELDS = ['일평균수익금', '월평균수익금', '월평균수익률', '연환산수익률'];
 
         const gridCache = {
-            tradePlan: { rowLabels: [], tickers: [], data: {}, memos: {} },
             buyList: { rowLabels: [], tickers: [], data: {}, memos: {} },
             stepLog: { rowLabels: [], tickers: [], data: {}, memos: {} },
             notepad: { rowLabels: [], tickers: [], data: {}, memos: {} },
@@ -1039,15 +972,13 @@
         };
         const gridSaveTimers = {};
 
-        let tradePlanMode = 'recent'; // 'recent' | 'all'
-        let stepLogMode = '10';       // '10' | 'all'
-        let stepLogExtraRows = 0;     // "차수 추가" 버튼으로 늘어난, 아직 저장 안 된 빈 칸 수
-        let notepadMode = 'recent';   // 'recent' | 'all'
-        let yieldMode = 'recent';     // 'recent' | 'all'
-        let lastYieldSnapshotSig = ''; // 값이 안 바뀌었으면 중복 저장하지 않기 위한 서명
+        let stepLogMode = '10';
+        let stepLogExtraRows = 0;
+        let yieldMode = 'recent';
+        let lastYieldSnapshotSig = '';
 
         function setGridSyncStatus_(key, state, text) {
-            const idMap = { tradePlan: 'tradePlanSyncStatus', buyList: 'buyListSyncStatus', stepLog: 'stepLogSyncStatus', notepad: 'notepadSyncStatus', yieldData: 'yieldSyncStatus' };
+            const idMap = { buyList: 'buyListSyncStatus', stepLog: 'stepLogSyncStatus', notepad: 'notepadSyncStatus', yieldData: 'yieldSyncStatus' };
             const el = document.getElementById(idMap[key]);
             if (!el) return;
             const styles = {
@@ -1065,7 +996,6 @@
             gridCache[key] = { rowLabels: json.rowLabels || [], tickers: json.tickers || [], data: json.data || {}, memos: json.memos || {} };
         }
 
-        // 헤더의 동기화 상태 배지 옆에 현재 추적 중인 종목명을 표시 (매매예정/종목별 매수관리/차수기록 공통)
         function updateGridTickerLabel_(elementId, tickers) {
             const el = document.getElementById(elementId);
             if (!el) return;
@@ -1082,11 +1012,31 @@
                 if (!json.success) throw new Error(json.error || '조회 실패');
                 applyGridResponse_(key, json);
                 setGridSyncStatus_(key, 'ok', '동기화됨');
+                if (key === 'stepLog') ensureStepLogDateColumn_();
             } catch (err) {
-                setGridSyncStatus_(key, 'error', '조회 실패 (Apps Script 재배포 필요할 수 있음)');
+                setGridSyncStatus_(key, 'error', '조회 실패');
                 console.error(`${key} 그리드 조회 실패:`, err);
             }
             renderGrid_(key);
+        }
+
+        async function ensureStepLogDateColumn_() {
+            if (!splitBuyApiUrl) return;
+            if (gridCache.stepLog.tickers.includes(STEPLOG_DATE_KEY)) return;
+            try {
+                const res = await fetch(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'addGridTicker', sheetName: GRID_CONFIGS.stepLog.sheetName, ticker: STEPLOG_DATE_KEY })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    applyGridResponse_('stepLog', json);
+                    renderGrid_('stepLog');
+                }
+            } catch (err) {
+                console.error('차수 기록 날짜 칸 생성 실패:', err);
+            }
         }
 
         async function saveGridCellRemote_(key, rowLabel, ticker, value) {
@@ -1101,11 +1051,11 @@
                 });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '저장 실패');
-                applyGridResponse_(key, json);
+                if (value !== '') applyGridResponse_(key, json);
                 setGridSyncStatus_(key, 'ok', '저장 완료');
             } catch (err) {
                 setGridSyncStatus_(key, 'error', '저장 실패');
-                showNotification(`저장에 실패했습니다: ${err.message}\n(Apps Script를 최신 코드로 재배포했는지 확인해주세요)`, 'error', '저장 실패');
+                showNotification(`저장에 실패했습니다: ${err.message}`, 'error', '저장 실패');
                 console.error(`${key} 저장 실패:`, err);
             }
         }
@@ -1121,6 +1071,10 @@
             const ticker = prompt('추가할 종목명을 입력하세요 (예: SCHD):');
             if (!ticker || !ticker.trim()) return;
             const formatted = ticker.trim().toUpperCase();
+            if (key === 'stepLog' && formatted === STEPLOG_DATE_KEY) {
+                showNotification('"날짜"는 차수 기록 전용 칸이라 종목명으로 사용할 수 없습니다.', 'error', '추가 불가');
+                return;
+            }
             const cfg = GRID_CONFIGS[key];
             try {
                 const res = await fetch(splitBuyApiUrl, {
@@ -1133,7 +1087,7 @@
                 applyGridResponse_(key, json);
                 showNotification(`'${formatted}' 종목이 추가되었습니다.`, 'success', '종목 추가 완료');
             } catch (err) {
-                showNotification(`종목 추가에 실패했습니다: ${err.message}\n(Apps Script를 최신 코드로 재배포했는지 확인해주세요)`, 'error', '종목 추가 실패');
+                showNotification(`종목 추가에 실패했습니다: ${err.message}`, 'error', '종목 추가 실패');
                 console.error('종목 추가 실패:', err);
             }
             renderGrid_(key);
@@ -1167,7 +1121,6 @@
             scheduleGridCellSave_(key, rowLabel, ticker, value);
         }
 
-        // 메모는 종목별 칸이 아니라 행(날짜/계좌/차수) 하나당 한 칸만 존재 (내부적으로는 예약된 '메모' 컬럼에 저장됨)
         function onGridMemoInput_(key, rowLabel, value) {
             if (!gridCache[key].memos) gridCache[key].memos = {};
             gridCache[key].memos[rowLabel] = value;
@@ -1175,130 +1128,13 @@
             scheduleGridCellSave_(key, rowLabel, MEMO_TICKER_KEY, value);
         }
 
-        // 어느 그리드든 다시 그려야 할 때 이 함수 하나로 분기
         function renderGrid_(key) {
-            if (key === 'tradePlan') renderTradePlanTable_();
-            else if (key === 'buyList') renderBuyManagement_(); // '매수목록' 시트는 이제 계좌별 메모 저장 전용
+            if (key === 'buyList') renderBuyManagement_();
             else if (key === 'stepLog') renderStepLogTable_();
-            else if (key === 'notepad') renderNotepadTable_();
+            else if (key === 'notepad') renderNotepadArea_();
             else if (key === 'yieldData') renderYieldTable_();
         }
 
-        // --- [매매 예정] ---
-        // 드롭박스 프리셋: 기본 문구 + 1~7번 계좌별 문구 (선택하면 입력칸에 채워지고, 자유롭게 수정 가능)
-        function getTradePlanPresetGroups_() {
-            const groups = [{ label: '기본', options: ['전량매도', '매수 완료', '1/2 매수', '1/2 매도'] }];
-            for (let n = 1; n <= 7; n++) {
-                groups.push({
-                    label: `${n}번 계좌`,
-                    options: [`${n}번 계좌 1/2 매수`, `${n}번 계좌 1/2 매도`, `${n}번 계좌 전량매수`, `${n}번 계좌 전량매도`]
-                });
-            }
-            return groups;
-        }
-
-        function tradePlanPresetOptionsHtml_() {
-            return getTradePlanPresetGroups_().map(g =>
-                `<optgroup label="${g.label}">${g.options.map(o => `<option value="${o}">${o}</option>`).join('')}</optgroup>`
-            ).join('');
-        }
-
-        function toggleTradePlanMode_(mode) {
-            tradePlanMode = mode;
-            document.getElementById('btnTradePlanRecent').className = mode === 'recent' ? "px-3 py-1.5 rounded-lg font-semibold bg-orange-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
-            document.getElementById('btnTradePlanAll').className = mode === 'all' ? "px-3 py-1.5 rounded-lg font-semibold bg-orange-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
-            renderTradePlanTable_();
-        }
-
-        function applyTradePlanPreset_(rowLabel, ticker, presetText, inputEl) {
-            if (!presetText) return;
-            inputEl.value = presetText;
-            onGridCellInput_('tradePlan', rowLabel, ticker, presetText);
-        }
-
-        function renderTradePlanTable_() {
-            const table = document.getElementById('tradePlanTable');
-            if (!table) return;
-
-            const cache = gridCache.tradePlan;
-            const tickers = cache.tickers;
-            const activeDate = dailyEntryDateValue || todayStr_();
-
-            updateGridTickerLabel_('tradePlanTickerList', tickers);
-
-            const headerHtml = `
-                <thead>
-                    <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
-                        <th class="p-2 w-28">날짜</th>
-                        <th class="p-2 min-w-[160px]">메모</th>
-                        ${tickers.map(t => `<th class="p-2 min-w-[150px]">${t} <button onclick="deleteTickerFromGrid_('tradePlan','${t}')" class="text-slate-600 hover:text-rose-400 ml-1"><i class="fa-solid fa-xmark"></i></button></th>`).join('')}
-                        ${tickers.length === 0 ? '<th class="p-2 text-slate-600 font-normal">종목을 추가해주세요</th>' : ''}
-                    </tr>
-                </thead>`;
-
-            let bodyRows = '';
-
-            if (tradePlanMode === 'recent') {
-                // 활성 날짜(=일일 기록 입력의 날짜)에 데이터가 없으면, 가장 최근 기록 내용을 그대로 이어서 보여줌
-                const existing = cache.data[activeDate];
-                const fallbackLabel = [...cache.rowLabels].sort().reverse()[0];
-                const source = existing || (fallbackLabel ? cache.data[fallbackLabel] : {}) || {};
-                const memoVal = cache.memos[activeDate] !== undefined ? cache.memos[activeDate] : '';
-
-                bodyRows = `
-                    <tr class="border-b border-slate-800/30 bg-orange-500/5">
-                        <td class="p-2 font-bold text-orange-300">${activeDate}</td>
-                        <td class="p-2">
-                            <input type="text" value="${String(memoVal).replace(/"/g, '&quot;')}" placeholder="이 날짜 메모"
-                                oninput="onGridMemoInput_('tradePlan','${activeDate}', this.value)"
-                                class="w-full bg-slate-950 text-amber-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
-                        </td>
-                        ${tickers.map(t => {
-                            const val = (source[t] !== undefined ? source[t] : '');
-                            return `
-                                <td class="p-2">
-                                    <div class="flex flex-col gap-1">
-                                        <input type="text" value="${String(val).replace(/"/g, '&quot;')}" placeholder="예: 430달러 매수"
-                                            oninput="onGridCellInput_('tradePlan','${activeDate}','${t}', this.value)"
-                                            class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-orange-500">
-                                        <select onchange="applyTradePlanPreset_('${activeDate}','${t}', this.value, this.previousElementSibling); this.selectedIndex=0;"
-                                            class="w-full bg-slate-950 text-slate-500 text-[10px] p-1 rounded border border-slate-800">
-                                            <option value="">빠른 선택...</option>
-                                            ${tradePlanPresetOptionsHtml_()}
-                                        </select>
-                                    </div>
-                                </td>`;
-                        }).join('')}
-                        ${tickers.length === 0 ? '<td class="p-2"></td>' : ''}
-                    </tr>`;
-            } else {
-                const sortedLabels = [...cache.rowLabels].sort().reverse();
-                bodyRows = sortedLabels.map(rowLabel => `
-                    <tr class="border-b border-slate-800/30 hover:bg-slate-800/20">
-                        <td class="p-2 font-semibold text-slate-300">${rowLabel}</td>
-                        <td class="p-2">
-                            <input type="text" value="${String(cache.memos[rowLabel] || '').replace(/"/g, '&quot;')}" placeholder="-"
-                                oninput="onGridMemoInput_('tradePlan','${rowLabel}', this.value)"
-                                class="w-full bg-slate-950 text-amber-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
-                        </td>
-                        ${tickers.map(t => {
-                            const val = (cache.data[rowLabel] && cache.data[rowLabel][t] !== undefined) ? cache.data[rowLabel][t] : '';
-                            return `
-                                <td class="p-2">
-                                    <input type="text" value="${String(val).replace(/"/g, '&quot;')}" placeholder="-"
-                                        oninput="onGridCellInput_('tradePlan','${rowLabel}','${t}', this.value)"
-                                        class="w-full bg-slate-950 text-slate-300 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-orange-500">
-                                </td>`;
-                        }).join('')}
-                        ${tickers.length === 0 ? '<td class="p-2"></td>' : ''}
-                    </tr>`).join('');
-                if (!bodyRows) bodyRows = `<tr><td class="p-3 text-slate-600" colspan="${tickers.length + 2}">아직 기록이 없습니다.</td></tr>`;
-            }
-
-            table.innerHTML = headerHtml + `<tbody>${bodyRows}</tbody>`;
-        }
-
-        // --- [차수 기록] : "N차수" 행이 계속 늘어날 수 있음 (기본 10개까지만 표시, 전체 보기 가능) ---
         function toggleStepLogMode_(mode) {
             stepLogMode = mode;
             document.getElementById('btnStepLog10').className = mode === '10' ? "px-3 py-1.5 rounded-lg font-semibold bg-violet-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
@@ -1308,7 +1144,7 @@
 
         function addStepLogRow_() {
             stepLogExtraRows++;
-            stepLogMode = 'all'; // 새로 추가한 차수가 바로 보이도록 전체 보기로 전환
+            stepLogMode = 'all';
             toggleStepLogMode_('all');
         }
 
@@ -1328,7 +1164,7 @@
             if (!table) return;
 
             const cache = gridCache.stepLog;
-            const tickers = cache.tickers;
+            const tickers = cache.tickers.filter(t => t !== STEPLOG_DATE_KEY);
             const labels = getStepLogLabels_();
 
             updateGridTickerLabel_('stepLogTickerList', tickers);
@@ -1337,6 +1173,7 @@
                 <thead>
                     <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
                         <th class="p-2 w-20">차수</th>
+                        <th class="p-2 w-36"><i class="fa-solid fa-calendar-days mr-1"></i>날짜</th>
                         <th class="p-2 min-w-[140px]">메모</th>
                         ${tickers.map(t => `<th class="p-2 min-w-[110px]">${t} <button onclick="deleteTickerFromGrid_('stepLog','${t}')" class="text-slate-600 hover:text-rose-400 ml-1"><i class="fa-solid fa-xmark"></i></button></th>`).join('')}
                         ${tickers.length === 0 ? '<th class="p-2 text-slate-600 font-normal">종목을 추가해주세요</th>' : ''}
@@ -1346,6 +1183,11 @@
             const bodyRows = labels.map(rowLabel => `
                 <tr class="border-b border-slate-800/30 hover:bg-slate-800/20">
                     <td class="p-2 font-semibold text-slate-300">${rowLabel}</td>
+                    <td class="p-2">
+                        <input type="date" value="${String((cache.data[rowLabel] && cache.data[rowLabel][STEPLOG_DATE_KEY]) || '').replace(/"/g, '&quot;')}"
+                            onchange="onGridCellInput_('stepLog','${rowLabel}','${STEPLOG_DATE_KEY}', this.value)"
+                            class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                    </td>
                     <td class="p-2">
                         <input type="text" value="${String((cache.memos && cache.memos[rowLabel]) || '').replace(/"/g, '&quot;')}" placeholder="-"
                             oninput="onGridMemoInput_('stepLog','${rowLabel}', this.value)"
@@ -1366,158 +1208,36 @@
             table.innerHTML = headerHtml + `<tbody>${bodyRows}</tbody>`;
         }
 
-        // ===================================================================
-        // 📝 메모장: "일일 기록 입력"의 날짜를 따라가는 자유 메모
-        // (기존 범용 그리드 백엔드를 재사용 - 시트명 '메모장', 날짜당 '내용' 칸 하나만 사용)
-        // ===================================================================
-
-        function escapeHtml_(str) {
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
-        }
-
-        function getNotepadContent_(dateLabel) {
-            const cache = gridCache.notepad;
-            return (cache.data[dateLabel] && cache.data[dateLabel][NOTEPAD_CONTENT_KEY] !== undefined)
-                ? cache.data[dateLabel][NOTEPAD_CONTENT_KEY] : undefined;
-        }
-
-        function toggleNotepadMode_(mode) {
-            notepadMode = mode;
-            document.getElementById('btnNotepadRecent').className = mode === 'recent' ? "px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
-            document.getElementById('btnNotepadAll').className = mode === 'all' ? "px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
-            renderNotepadTable_();
-        }
-
-        function renderNotepadTable_() {
-            const table = document.getElementById('notepadTable');
-            if (!table) return;
+        function renderNotepadArea_() {
+            const input = document.getElementById('notepadSingleInput');
+            if (!input) return;
 
             const cache = gridCache.notepad;
-            const activeDate = dailyEntryDateValue || todayStr_();
-
-            let rowLabels;
-            if (notepadMode === 'recent') {
-                rowLabels = [activeDate];
-            } else {
-                rowLabels = Array.from(new Set([activeDate, ...cache.rowLabels])).sort().reverse();
-            }
-
-            const lastKnownLabel = [...cache.rowLabels].sort().reverse()[0];
-
-            const bodyRows = rowLabels.map(dateLabel => {
-                let content = getNotepadContent_(dateLabel);
-                // 활성 날짜(오늘)에 아직 입력이 없으면, 직전에 작성된 내용을 그대로 이어서 보여줌 (수정 전까지는 저장 안 됨)
-                if (content === undefined) {
-                    content = (dateLabel === activeDate && lastKnownLabel) ? (getNotepadContent_(lastKnownLabel) || '') : '';
+            let val = '';
+            if (cache.data[NOTEPAD_SINGLE_ROW] && cache.data[NOTEPAD_SINGLE_ROW][NOTEPAD_CONTENT_KEY] !== undefined) {
+                val = cache.data[NOTEPAD_SINGLE_ROW][NOTEPAD_CONTENT_KEY];
+            } else if (cache.rowLabels.length > 0) {
+                const firstLabel = cache.rowLabels[0];
+                if (cache.data[firstLabel] && cache.data[firstLabel][NOTEPAD_CONTENT_KEY] !== undefined) {
+                    val = cache.data[firstLabel][NOTEPAD_CONTENT_KEY];
                 }
-                const isActive = dateLabel === activeDate;
-                return `
-                    <tr class="border-b border-slate-800/30 ${isActive ? 'bg-yellow-500/5' : 'hover:bg-slate-800/20'}" data-notepad-date="${dateLabel}">
-                        <td class="p-3 w-28 align-top font-bold ${isActive ? 'text-yellow-300' : 'text-slate-400'}">${dateLabel}</td>
-                        <td class="p-3">
-                            <textarea rows="2" placeholder="메모를 입력하세요"
-                                oninput="onNotepadInput_('${dateLabel}', this.value)"
-                                class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-yellow-500 resize-none">${escapeHtml_(content)}</textarea>
-                        </td>
-                    </tr>`;
-            }).join('');
-
-            table.innerHTML = `<tbody>${bodyRows || `<tr><td class="p-3 text-slate-600">아직 메모가 없습니다.</td></tr>`}</tbody>`;
-            reapplyNotepadHighlight_();
-        }
-
-        // 입력 즉시 로컬 캐시 반영 + 디바운스 저장 (구글시트에 자동 반영)
-        function onNotepadInput_(dateLabel, value) {
-            if (!gridCache.notepad.data[dateLabel]) gridCache.notepad.data[dateLabel] = {};
-            gridCache.notepad.data[dateLabel][NOTEPAD_CONTENT_KEY] = value;
-            if (!gridCache.notepad.rowLabels.includes(dateLabel)) gridCache.notepad.rowLabels.push(dateLabel);
-            scheduleGridCellSave_('notepad', dateLabel, NOTEPAD_CONTENT_KEY, value);
-        }
-
-        // --- 메모장 검색 (상세 데이터 테이블의 특이사항 검색과 동일한 UX) ---
-        let notepadSearchMatches = [];
-        let notepadSearchMatchIndex = -1;
-        const NOTEPAD_HIGHLIGHT_CLASSES = ['bg-amber-500/20', 'ring-1', 'ring-inset', 'ring-amber-400'];
-
-        function searchNotepad_() {
-            const term = document.getElementById('notepadSearchInput').value.trim().toLowerCase();
-            const counterEl = document.getElementById('notepadSearchCounter');
-
-            if (!term) {
-                notepadSearchMatches = [];
-                notepadSearchMatchIndex = -1;
-                clearNotepadHighlight_();
-                if (counterEl) counterEl.innerText = '';
-                return;
             }
-
-            notepadSearchMatches = Object.keys(gridCache.notepad.data)
-                .filter(date => {
-                    const content = gridCache.notepad.data[date][NOTEPAD_CONTENT_KEY];
-                    return content && content.toLowerCase().includes(term);
-                })
-                .sort();
-
-            notepadSearchMatchIndex = notepadSearchMatches.length > 0 ? 0 : -1;
-
-            if (notepadSearchMatches.length > 0) {
-                if (notepadMode !== 'all') toggleNotepadMode_('all'); else renderNotepadTable_();
-                jumpToNotepadMatch_();
-            } else {
-                clearNotepadHighlight_();
-                if (counterEl) counterEl.innerText = '검색 결과 없음';
-            }
+            input.value = val;
         }
 
-        function jumpToNotepadMatch_() {
-            if (notepadSearchMatchIndex < 0 || notepadSearchMatches.length === 0) return;
-            const targetDate = notepadSearchMatches[notepadSearchMatchIndex];
-            const row = document.querySelector(`#notepadTable tr[data-notepad-date="${targetDate}"]`);
-            clearNotepadHighlight_();
-            if (row) {
-                row.classList.add(...NOTEPAD_HIGHLIGHT_CLASSES);
-                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            const counterEl = document.getElementById('notepadSearchCounter');
-            if (counterEl) counterEl.innerText = `${notepadSearchMatchIndex + 1} / ${notepadSearchMatches.length}건`;
-        }
-
-        function reapplyNotepadHighlight_() {
-            if (notepadSearchMatchIndex < 0 || notepadSearchMatches.length === 0) return;
-            const targetDate = notepadSearchMatches[notepadSearchMatchIndex];
-            const row = document.querySelector(`#notepadTable tr[data-notepad-date="${targetDate}"]`);
-            if (row) row.classList.add(...NOTEPAD_HIGHLIGHT_CLASSES);
-        }
-
-        function clearNotepadHighlight_() {
-            document.querySelectorAll('#notepadTable tr').forEach(el => el.classList.remove(...NOTEPAD_HIGHLIGHT_CLASSES));
-        }
-
-        function searchNotepadNext_() {
-            if (notepadSearchMatches.length === 0) return;
-            notepadSearchMatchIndex = (notepadSearchMatchIndex + 1) % notepadSearchMatches.length;
-            jumpToNotepadMatch_();
-        }
-
-        function searchNotepadPrev_() {
-            if (notepadSearchMatches.length === 0) return;
-            notepadSearchMatchIndex = (notepadSearchMatchIndex - 1 + notepadSearchMatches.length) % notepadSearchMatches.length;
-            jumpToNotepadMatch_();
+        function onNotepadSingleInput_(value) {
+            if (!gridCache.notepad.data[NOTEPAD_SINGLE_ROW]) gridCache.notepad.data[NOTEPAD_SINGLE_ROW] = {};
+            gridCache.notepad.data[NOTEPAD_SINGLE_ROW][NOTEPAD_CONTENT_KEY] = value;
+            if (!gridCache.notepad.rowLabels.includes(NOTEPAD_SINGLE_ROW)) gridCache.notepad.rowLabels.push(NOTEPAD_SINGLE_ROW);
+            scheduleGridCellSave_('notepad', NOTEPAD_SINGLE_ROW, NOTEPAD_CONTENT_KEY, value);
         }
 
         function initAllGrids_() {
-            fetchGrid_('tradePlan');
             fetchGrid_('buyList');
             fetchGrid_('stepLog');
             fetchGrid_('notepad');
             fetchGrid_('yieldData');
         }
-
-
 
         function getMergedTickerList_() {
             const customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
@@ -1528,13 +1248,9 @@
             return merged;
         }
 
-        // ===================================================================
-        // 📝 일일 기록 입력 (대시보드 -> 구글시트 자동 반영)
-        // ===================================================================
-
         function getLatestRecord_() {
             if (!cachedParsedData || cachedParsedData.length === 0) return null;
-            return cachedParsedData[cachedParsedData.length - 1]; // 날짜순 정렬되어 있음 (parseAndRenderData에서 sort)
+            return cachedParsedData[cachedParsedData.length - 1];
         }
 
         function addDaysToDateStr_(dateStr, n) {
@@ -1547,11 +1263,10 @@
             return new Date().toISOString().slice(0, 10);
         }
 
-        // --- 날짜 상태 관리 (더 이상 <input type=date>가 아니라 커스텀 캘린더로 관리) ---
-        let dailyEntryDateValue = '';       // 'YYYY-MM-DD'
-        let dailyEntryDateTouched = false;  // 사용자가 직접 날짜를 고른 적이 있으면(과거 데이터 백필 등) 자동 갱신으로 덮어쓰지 않음
+        let dailyEntryDateValue = '';
+        let dailyEntryDateTouched = false;
         let calendarViewYear = null;
-        let calendarViewMonth = null;       // 0-indexed
+        let calendarViewMonth = null;
 
         function computeDefaultDailyEntryDate_() {
             const latest = getLatestRecord_();
@@ -1565,15 +1280,12 @@
             if (label) label.innerText = dateStr || '날짜 선택';
         }
 
-        // 탭을 밤새 켜둔 채로 다음날이 되어도 날짜가 최신으로 갱신되도록 (여러 트리거로 이중 안전장치)
         function refreshDailyEntryDate_() {
             if (dailyEntryDateTouched) return;
             const defaultDate = computeDefaultDailyEntryDate_();
             if (dailyEntryDateValue !== defaultDate) {
                 dailyEntryDateValue = defaultDate;
                 setDailyEntryDateLabel_(defaultDate);
-                if (tradePlanMode === 'recent') renderTradePlanTable_(); // 매매예정도 최신 날짜를 따라감
-                if (notepadMode === 'recent') renderNotepadTable_();     // 메모장도 최신 날짜를 따라감
                 syncDateCheckedCheckbox_();
             }
         }
@@ -1582,10 +1294,9 @@
             if (document.visibilityState === 'visible') refreshDailyEntryDate_();
         });
         window.addEventListener('focus', refreshDailyEntryDate_);
-        window.addEventListener('pageshow', refreshDailyEntryDate_); // 모바일 브라우저의 bfcache 복귀 대응
-        setInterval(refreshDailyEntryDate_, 60000); // 위 이벤트들이 안 잡히는 환경 대비, 1분마다 보조 점검
+        window.addEventListener('pageshow', refreshDailyEntryDate_);
+        setInterval(refreshDailyEntryDate_, 60000);
 
-        // --- 커스텀 캘린더 팝업 ---
         function toggleDailyEntryCalendar() {
             const popup = document.getElementById('dailyEntryCalendarPopup');
             if (!popup) return;
@@ -1609,7 +1320,6 @@
             renderDailyEntryCalendar_();
         }
 
-        // 이미 구글시트에 기록이 있는 날짜는 점(dot)으로 표시
         function renderDailyEntryCalendar_() {
             const popup = document.getElementById('dailyEntryCalendarPopup');
             if (!popup) return;
@@ -1668,15 +1378,12 @@
             `;
         }
 
-        // 날짜를 고르면: 그 날짜에 이미 기록이 있으면 수정할 수 있도록 값을 불러오고, 없으면 직전 값 기준으로 새 입력을 준비
         function selectDailyEntryDate_(dateStr) {
             dailyEntryDateValue = dateStr;
             dailyEntryDateTouched = true;
             setDailyEntryDateLabel_(dateStr);
             document.getElementById('dailyEntryCalendarPopup').classList.add('hidden');
             loadDateIntoForm_(dateStr);
-            if (tradePlanMode === 'recent') renderTradePlanTable_(); // 매매예정도 선택한 날짜를 따라감
-            if (notepadMode === 'recent') renderNotepadTable_();     // 메모장도 선택한 날짜를 따라감
             syncDateCheckedCheckbox_();
         }
 
@@ -1697,7 +1404,6 @@
             }
         }
 
-        // 팝업 바깥을 클릭하면 닫기
         document.addEventListener('click', (e) => {
             const popup = document.getElementById('dailyEntryCalendarPopup');
             const btn = document.getElementById('dailyEntryDateBtn');
@@ -1706,7 +1412,6 @@
             }
         });
 
-        // 최근 기록값을 기반으로 입력 폼 기본값을 채움 (종목별 입력은 이제 "종목별 매수 관리"에서 관리)
         function renderDailyEntryForm() {
             const accInput = document.getElementById('dailyEntryAccountVal');
             const stockSumInput = document.getElementById('dailyEntryStockSumInput');
@@ -1714,10 +1419,8 @@
 
             const latest = getLatestRecord_();
 
-            // 날짜 기본값: 마지막 기록 다음날 (미래면 오늘로). 사용자가 직접 손댄 적 없다면 항상 최신값으로 갱신.
             refreshDailyEntryDate_();
 
-            // 계좌 평가액 / 종목 합산 평가금액 기본값: 직전 기록값 (사용자가 실제 값으로 덮어씀)
             if (accInput.value === '' && latest) {
                 accInput.value = latest.accountVal;
             }
@@ -1730,7 +1433,6 @@
             syncDateCheckedCheckbox_();
         }
 
-        // 계좌평가액 - 종목합산평가금액(수동입력) = 현금 실시간 계산
         function updateDailyEntrySummary() {
             const accountVal = parseFloat(document.getElementById('dailyEntryAccountVal').value) || 0;
             const stockSumAgg = parseFloat(document.getElementById('dailyEntryStockSumInput').value) || 0;
@@ -1778,7 +1480,6 @@
             const stockSumVal = parseFloat(document.getElementById('dailyEntryStockSumInput').value) || 0;
             const memo = document.getElementById('dailyEntryMemo').value.trim();
 
-            // 간단한 범위 체크: 직전 기록값 대비 ±50% 이상 차이나는 항목이 있으면 오타 등을 의심할 수 있도록 한 번 더 확인
             const latest = getLatestRecord_();
             if (latest) {
                 const warnings = [];
@@ -1792,7 +1493,7 @@
                 }
 
                 if (warnings.length > 0) {
-                    const proceed = confirm(`직전 기록보다 50% 이상 차이나는 값이 있습니다. 입력값이 맞는지 확인해주세요.\n\n${warnings.join('\n')}\n\n이대로 저장하시겠습니까?`);
+                    const proceed = confirm(`직전 기록보다 50% 이상 차이나는 값이 있습니다.\n\n${warnings.join('\n')}\n\n이대로 저장하시겠습니까?`);
                     if (!proceed) return;
                 }
             }
@@ -1802,29 +1503,26 @@
             try {
                 const res = await fetch(splitBuyApiUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Apps Script 프리플라이트(CORS) 회피용
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'saveDailyRecord', date, revenue, accountVal, stockSumVal, memo, tickerValues: {} })
                 });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '저장 실패');
 
                 setDailyEntrySyncStatus('ok', '구글시트 반영 완료');
-                showNotification(`${date} 기록이 구글시트에 저장되었습니다. (현금 자동계산: $${(json.cash ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2})})`, 'success', '저장 완료');
+                showNotification(`${date} 기록이 구글시트에 저장되었습니다.`, 'success', '저장 완료');
 
-                // 다음 입력을 위해 날짜/수익금/특이사항만 초기화 (계좌평가액·종목합산은 다음 기본값 재계산 시 갱신)
                 dailyEntryDateTouched = false;
                 dailyEntryDateValue = '';
-                refreshDailyEntryDate_(); // 바로 다음날 기본값으로 갱신 (gviz 재조회를 기다리지 않고 즉시 반영)
+                refreshDailyEntryDate_();
                 document.getElementById('dailyEntryRevenue').value = '';
                 document.getElementById('dailyEntryMemo').value = '';
                 document.getElementById('dailyEntryAccountVal').value = '';
                 document.getElementById('dailyEntryStockSumInput').value = '';
 
-                // 저장 완료 후 "날짜 확인함" 체크 해제 (다음 입력 시 다시 확인하도록)
                 localStorage.removeItem('dateCheckedFor');
                 if (checkboxEl) checkboxEl.checked = false;
 
-                // 대시보드 새로고침 (구글시트 gviz 재조회) - 캐시 반영 지연에 대비해 한 번 더 재시도
                 if (document.getElementById('googleSheetUrl').value.trim()) {
                     setTimeout(() => fetchGoogleSheetData(), 800);
                     setTimeout(() => fetchGoogleSheetData(), 2500);
@@ -1841,7 +1539,6 @@
             if (newTicker && newTicker.trim() !== "") {
                 const formatted = newTicker.trim().toUpperCase();
 
-                // 항상 맨 뒤(오른쪽)에 추가 (서버 응답이 오기 전에도 즉시 화면에 반영)
                 if (!splitBuyRemoteData.tickers.includes(formatted)) {
                     splitBuyRemoteData.tickers.push(formatted);
                 }
@@ -1852,31 +1549,22 @@
             }
         }
 
-        // --- 🗑️ 종목 삭제 기능 ---
         function deleteTickerByName_(targetTicker) {
             if (!targetTicker) return;
 
-            if (confirm(`'${targetTicker}' 종목을 목록에서 삭제하시겠습니까?\n(입력된 매입금액/매수 관리 데이터도 함께 삭제됩니다)`)) {
-
-                // 즉시 화면에서 제거 (서버 응답을 기다리지 않고)
+            if (confirm(`'${targetTicker}' 종목을 목록에서 삭제하시겠습니까?`)) {
                 splitBuyRemoteData.tickers = splitBuyRemoteData.tickers.filter(t => t !== targetTicker);
                 delete splitBuyRemoteData.data[targetTicker];
 
                 localStorage.removeItem(`splitBuyData_${targetTicker}`);
                 deleteTickerRemote(targetTicker);
-                zeroTickerInMainSheet_(targetTicker); // 메인 시트에서도 매입금액을 0으로 처리 (계속 이월되지 않도록)
+                zeroTickerInMainSheet_(targetTicker);
 
                 renderBuyManagement_();
 
                 showNotification(`'${targetTicker}' 종목이 삭제되었습니다.`, "info", "종목 삭제 완료");
             }
         }
-
-        // ===================================================================
-        // 🧮 종목별 매수 관리 (기존 "종목별 7차 분할매수" + "매수 목록" 통합)
-        // 종목을 한 번에 모두 보여주면서, 계좌(1~7)마다 할당/매수/잔여/1-2예시를 자동 계산.
-        // 계좌별 메모는 "매수목록" 시트의 예약 메모 컬럼을 그대로 재사용합니다.
-        // ===================================================================
 
         const BUY_MGMT_ACCOUNTS = ['1번 계좌', '2번 계좌', '3번 계좌', '4번 계좌', '5번 계좌', '6번 계좌', '7번 계좌'];
 
@@ -1899,7 +1587,7 @@
                 </thead>`;
 
             const bodyRows = BUY_MGMT_ACCOUNTS.map((accountLabel, idx) => {
-                const step = idx + 1; // 1~7
+                const step = idx + 1;
                 const cells = tickers.map(t => {
                     const remoteData = (splitBuyApiUrl && splitBuyRemoteData.data[t]) ? splitBuyRemoteData.data[t] : null;
                     const savedData = remoteData || JSON.parse(localStorage.getItem(`splitBuyData_${t}`)) || {};
@@ -1950,17 +1638,14 @@
             const allocVal = document.getElementById(`buyMgmtAlloc_${ticker}_${step}`).value;
             const boughtVal = document.getElementById(`buyMgmtBought_${ticker}_${step}`).value;
 
-            // 이 기기용 즉시 백업 (오프라인 대비)
             const splitData = JSON.parse(localStorage.getItem(`splitBuyData_${ticker}`)) || {};
             splitData[step] = { alloc: allocVal, bought: boughtVal };
             localStorage.setItem(`splitBuyData_${ticker}`, JSON.stringify(splitData));
 
-            // 낙관적으로 즉시 반영 (서버 응답을 기다리지 않고 자산 포트폴리오 비중에 바로 반영되도록)
             if (!splitBuyRemoteData.data[ticker]) splitBuyRemoteData.data[ticker] = {};
             splitBuyRemoteData.data[ticker][step] = { alloc: allocVal, bought: boughtVal };
             renderPortfolioDonutChart(buildPortfolioFromBuyManagement_());
 
-            // 화면의 1/2 예시·잔여 값만 즉시 갱신 (표 전체를 다시 그리면 입력 중 포커스가 끊김)
             const allocNum = parseFloat(allocVal) || 0;
             const boughtNum = parseFloat(boughtVal) || 0;
             const half = allocNum / 2;
@@ -1972,11 +1657,8 @@
                     <span class="font-bold ${remain < 0 ? 'text-rose-400' : 'text-sky-400'}">잔여: $${remain.toLocaleString(undefined, {maximumFractionDigits: 1})}</span>`;
             }
 
-            // 구글시트로 실시간 전송 (디바운스)
             scheduleSplitBuyRemoteSave(ticker, step, allocVal, boughtVal);
         }
-
-        // --- 📈 대시보드 공통 연동 시스템 ---
 
         function showNotification(message, type = 'success', title = "상태 알림") {
             const container = document.getElementById('statusNotification');
@@ -2004,16 +1686,11 @@
             }
         }
 
-        // 구글시트 연동 전 첫 실행 시 보여줄 샘플 데이터 (수동 붙여넣기 UI는 제거되었고, 내부적으로만 사용됨)
         function loadDemoData_() {
             const rows = sampleRawData.trim().split('\n');
             const dataToParse = rows.map(row => row.split('\t')).filter(cols => cols.length >= 2);
             parseAndRenderData(dataToParse, "샘플 데이터");
         }
-
-        // ===================================================================
-        // 🧮 퍼센트 계산기 (드롭박스 + 결과 한 줄)
-        // ===================================================================
 
         function updatePercentCalc() {
             const resultEl = document.getElementById('percentCalcResult');
@@ -2033,7 +1710,6 @@
             document.getElementById('percentCalcResult').innerText = '-';
         }
 
-        // --- 수익률 퍼센트 계산기: 기준 금액에 선택한 %를 적용했을 때의 결과값 ---
         function updateReturnPercentCalc() {
             const resultEl = document.getElementById('returnPercentCalcResult');
             const raw = document.getElementById('returnPercentCalcInput').value;
@@ -2091,7 +1767,7 @@
         }
 
         function parseAndRenderData(rawMatrix, sourceName) {
-            if (rawMatrix.length < 2) return;
+            if (!rawMatrix || rawMatrix.length < 2) return;
 
             const headers = rawMatrix[0].map(h => h.trim());
             const parsedData = [];
@@ -2099,8 +1775,8 @@
             let prevAccountVal = null;
 
             const memoIndex = 6;
-            const stockSumAggIndex = 7; // H열: 종목 합산 평가금액 (사용자가 별도로 입력한 값 → 현금 계산에 사용)
-            const stockStartIndex = 8;  // I열부터: 과거에 종목별 매입금액을 기록하던 영역 (지금은 미사용, 종목 목록 자동감지 용도로만 참고)
+            const stockSumAggIndex = 7;
+            const stockStartIndex = 8;
 
             const detectedTickers = [];
             for (let sIdx = stockStartIndex; sIdx < headers.length; sIdx++) {
@@ -2136,13 +1812,12 @@
                     if (totalAccVal > currentMaxAccountVal) currentMaxAccountVal = totalAccVal;
 
                     const mdd = currentMaxAccountVal > 0 ? ((totalAccVal - currentMaxAccountVal) / currentMaxAccountVal) : 0;
-                    const mddPeak = currentMaxAccountVal;              // 그 당시(직전까지의) 최고 계좌 평가액
-                    const mddAmount = currentMaxAccountVal - totalAccVal; // 최고 계좌평가액 - 최저(현재) 계좌평가액 (달러 하락폭, 0 이상)
+                    const mddPeak = currentMaxAccountVal;
+                    const mddAmount = currentMaxAccountVal - totalAccVal;
                     let dailyReturn = (prevAccountVal !== null && prevAccountVal > 0) ? (totalAccVal - prevAccountVal) / prevAccountVal : 0;
                     prevAccountVal = totalAccVal;
 
-                    // 현금 = 계좌 평가액 - 종목 합산 평가금액 (수동 입력값 기준)
-                    const rawCash = totalAccVal - stockSumAgg; // 실제 계산값 (음수여도 그대로 유지 → 입력 실수를 발견할 수 있도록)
+                    const rawCash = totalAccVal - stockSumAgg;
 
                     const record = {
                         date: dateStr,
@@ -2171,12 +1846,11 @@
 
             cachedParsedData = parsedData;
 
-            updateKpiCards(parsedData); // KPI 카드는 항상 전체 기간 기준 (일평균 수익금만 별도 기준일 옵션 있음)
+            updateKpiCards(parsedData);
             rebuildChartsAndTable_();
             renderDailyEntryForm();
         }
 
-        // --- '일일 기록 입력'의 "날짜 확인함" 체크박스 ---
         function onDateCheckToggle_() {
             const checkboxEl = document.getElementById('dateCheckedInput');
             if (checkboxEl.checked) {
@@ -2192,8 +1866,6 @@
             checkboxEl.checked = localStorage.getItem('dateCheckedFor') === (dailyEntryDateValue || todayStr_());
         }
 
-        // "자산 포트폴리오 비중"은 이제 "종목별 매수 관리(7계좌)"의 매수 금액 합계를 소스로 사용.
-        // 현금은 "일일 기록 입력"의 최신 계좌평가액 - 종목합산평가금액 그대로 사용.
         function buildPortfolioFromBuyManagement_() {
             const items = {};
             let stockSum = 0;
@@ -2220,10 +1892,9 @@
             return { totalAccount: latest ? latest.accountVal : totalVal, items, sum: totalVal };
         }
 
-        // 각 차트/테이블을 처음 그릴 때 + 개별 시작일 필터가 바뀔 때 모두 이 함수들로 다시 그림
         function rebuildChartsAndTable_() {
             if (!cachedParsedData || cachedParsedData.length === 0) return;
-            renderPortfolioDonutChart(buildPortfolioFromBuyManagement_()); // 포트폴리오 비중 = 종목별 매수 관리(7계좌)의 매수 합계 + 현금
+            renderPortfolioDonutChart(buildPortfolioFromBuyManagement_());
             rerenderCombo_();
             rerenderAcc_();
             rerenderMdd_();
@@ -2232,7 +1903,6 @@
             rerenderTable_();
         }
 
-        // "차트 시작일" 필터가 적용된 데이터를 반환 (해당 필터 이후 데이터가 하나도 없으면 전체 기간으로 대체)
         function getFilteredDailyData_(key) {
             const startDate = localStorage.getItem(`chartStartDate_${key}`);
             if (!startDate) return cachedParsedData;
@@ -2247,7 +1917,6 @@
         function rerenderMonthlyReturn_() { renderMonthlyReturnChart(calculateMonthlyStats(getFilteredDailyData_('monthlyReturn')).monthlyDetails); }
         function rerenderTable_() { cachedChartData = getFilteredDailyData_('table'); renderDetailTable(cachedChartData); }
 
-        // 캘린더 필터를 선택했을 때 어느 항목을 다시 그릴지 매핑
         const CALENDAR_APPLY_CALLBACKS = {
             combo: () => rerenderCombo_(),
             acc: () => rerenderAcc_(),
@@ -2257,10 +1926,7 @@
             table: () => rerenderTable_()
         };
 
-        // ===================================================================
-        // 📅 범용 캘린더 필터 팝업 (6개 항목이 각자 독립적인 시작일을 가짐)
-        // ===================================================================
-        const calendarInstances = {}; // { key: { year, month, value } }
+        const calendarInstances = {};
 
         function initCalendarInstance_(key) {
             if (!calendarInstances[key]) calendarInstances[key] = { year: null, month: null, value: '' };
@@ -2284,7 +1950,7 @@
         }
 
         function changeCalendarMonthG_(key, delta, evt) {
-            if (evt) evt.stopPropagation(); // 팝업이 다시 그려지며 바깥 클릭으로 오인되어 즉시 닫히는 것을 방지
+            if (evt) evt.stopPropagation();
             const inst = calendarInstances[key];
             inst.month += delta;
             if (inst.month < 0) { inst.month = 11; inst.year--; }
@@ -2292,7 +1958,6 @@
             renderCalendarG_(key);
         }
 
-        // 이미 구글시트에 기록이 있는 날짜는 점으로 표시
         function renderCalendarG_(key) {
             const inst = calendarInstances[key];
             const popup = document.getElementById(`calPopup_${key}`);
@@ -2380,7 +2045,6 @@
             if (CALENDAR_APPLY_CALLBACKS[key]) CALENDAR_APPLY_CALLBACKS[key]();
         }
 
-        // 열려있는 팝업 바깥을 클릭하면 닫기 (모든 캘린더 인스턴스 공통 처리)
         document.addEventListener('click', (e) => {
             Object.keys(calendarInstances).forEach(key => {
                 const popup = document.getElementById(`calPopup_${key}`);
@@ -2391,7 +2055,6 @@
             });
         });
 
-        // 저장되어 있던 개별 시작일 필터를 페이지 로드 시 복원
         function restoreCalendarFiltersFromStorage_() {
             ['combo', 'acc', 'mdd', 'yearly', 'monthlyReturn', 'table'].forEach(key => {
                 initCalendarInstance_(key);
@@ -2404,7 +2067,7 @@
         }
 
         function calculateMonthlyStats(data) {
-            if (data.length === 0) return { avgMonthlyRevenue: 0, avgMonthlyReturn: 0, monthlyDetails: [] };
+            if (!data || data.length === 0) return { avgMonthlyRevenue: 0, avgMonthlyReturn: 0, monthlyDetails: [] };
 
             const monthlyMap = {};
             data.forEach(item => {
@@ -2452,21 +2115,19 @@
         }
 
         function updateKpiCards(data) {
+            if (!data || data.length === 0) return;
+
             const totalRevenue = data.reduce((sum, item) => sum + item.revenue, 0);
             const currentAccount = data[data.length - 1].accountVal;
 
-            // 최대 낙폭(MDD)이 가장 컸던 날을 찾아 %와 달러 하락폭을 함께 표시
             let worstItem = data[0];
             data.forEach(item => { if (item.mdd < worstItem.mdd) worstItem = item; });
             const minMDD = worstItem.mdd;
 
-            // 일평균 수익금: 데이터가 없는(수익이 발생하지 않은) 날짜도 포함해서 "달력상 전체 일수"로 나눔.
-            // (단순히 시트에 기록된 행 개수로 나누면, 만약 특정 날짜가 통째로 누락되어 있을 때 평균이 부풀려질 수 있음)
             const fullStartDate = new Date(data[0].date);
             const endDate = new Date(data[data.length - 1].date);
-            const totalDaySpan = Math.round((endDate - fullStartDate) / (1000 * 60 * 60 * 24)) + 1; // 시작일·종료일 포함
+            const totalDaySpan = Math.round((endDate - fullStartDate) / (1000 * 60 * 60 * 24)) + 1;
 
-            // 사용자가 "일평균 수익금" 계산 기준일을 별도로 지정했다면 그 날짜부터만 계산
             const customStart = localStorage.getItem('avgRevenueStartDate');
             let avgRangeData = data;
             let avgRangeLabel = '';
@@ -2496,7 +2157,7 @@
             const initialVal = startVal > 0 ? startVal : data[0].accountVal;
             const totalReturn = initialVal > 0 ? (currentAccount - initialVal) / initialVal : 0;
 
-            const diffDays = Math.max(totalDaySpan - 1, 1); // 첫날과 마지막날 사이의 경과일수 (연환산 계산용)
+            const diffDays = Math.max(totalDaySpan - 1, 1);
 
             let annualizedReturn = 0;
             if (totalReturn > -1) {
@@ -2512,11 +2173,10 @@
             });
         }
 
-        // 일평균 수익금 계산 기준일을 사용자가 직접 지정 (예: 초기 테스트성 기록 제외하고 계산하고 싶을 때)
         function setAvgRevenueStartDate() {
             const current = localStorage.getItem('avgRevenueStartDate') || '';
             const input = prompt("일평균 수익금 계산을 시작할 날짜를 입력하세요 (YYYY-MM-DD).\n비워두고 확인을 누르면 기준일이 초기화됩니다.", current);
-            if (input === null) return; // 취소
+            if (input === null) return;
 
             const trimmed = input.trim();
             if (!trimmed) {
@@ -2530,14 +2190,9 @@
             if (cachedParsedData.length > 0) updateKpiCards(cachedParsedData);
         }
 
-        // ===================================================================
-        // 📊 수익률 데이터: 일평균/월평균 수익금·수익률/연환산 수익률을 날짜별로 자동 기록
-        // (KPI 카드가 갱신될 때마다 현재 값을 오늘 날짜로 스냅샷 저장 -> 시간에 따른 변화 추이를 남김)
-        // ===================================================================
-
         function maybeSaveYieldSnapshot_(dateLabel, metrics) {
             const sig = `${dateLabel}|${metrics.avgRevenue.toFixed(2)}|${metrics.avgMonthlyRevenue.toFixed(2)}|${metrics.avgMonthlyReturn.toFixed(4)}|${metrics.annualizedReturn.toFixed(4)}`;
-            if (sig === lastYieldSnapshotSig) { renderYieldTable_(); return; } // 값이 안 바뀌었으면 저장은 건너뛰고 화면만 갱신
+            if (sig === lastYieldSnapshotSig) { renderYieldTable_(); return; }
             lastYieldSnapshotSig = sig;
 
             if (!gridCache.yieldData.data[dateLabel]) gridCache.yieldData.data[dateLabel] = {};
@@ -2568,7 +2223,7 @@
             if (!tbody) return;
 
             const cache = gridCache.yieldData;
-            let labels = [...cache.rowLabels].sort().reverse(); // 최신 순
+            let labels = [...cache.rowLabels].sort().reverse();
             if (yieldMode === 'recent') labels = labels.slice(0, 3);
 
             if (labels.length === 0) {
@@ -2592,7 +2247,6 @@
                     </tr>`;
             }).join('');
         }
-
 
         function groupDataByMonth(data) {
             const groups = {};
@@ -2757,7 +2411,7 @@
             if (mddChartInstance) mddChartInstance.destroy();
             const filtered = sliceDailyData(dailyData, activeMddChartFilter);
 
-            renderMddRecoveryTable_(dailyData); // 3M/6M/1Y 확대와 무관하게, 이 차트의 시작일 필터 기준 전체 이력으로 계산
+            renderMddRecoveryTable_(dailyData);
 
             mddChartInstance = new Chart(mddCtx, {
                 type: 'line',
@@ -2780,14 +2434,10 @@
             });
         }
 
-        // ===================================================================
-        // ⏱️ MDD 회복 이력 (고점 → 저점 → 회복까지 며칠 걸렸는지)
-        // ===================================================================
         function daysBetween_(d1, d2) {
             return Math.round((new Date(d2 + 'T00:00:00') - new Date(d1 + 'T00:00:00')) / (1000 * 60 * 60 * 24));
         }
 
-        // 데이터 전체를 순회하며 "고점 -> 하락 -> 회복" 구간들을 찾아냄
         function calculateDrawdownEpisodes_(data) {
             if (!data || data.length === 0) return [];
             const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -2820,13 +2470,13 @@
                 }
             });
 
-            if (inDrawdown && current) episodes.push(current); // 아직 회복 안 된(진행 중) 하락도 포함해서 보여줌
+            if (inDrawdown && current) episodes.push(current);
 
             return episodes;
         }
 
-        let mddRecoveryMode = 'top3'; // 'top3' | 'all'
-        let mddRecoveryLastData = [];  // 토글 시 재계산할 수 있도록 마지막 렌더에 쓰인 데이터 보관
+        let mddRecoveryMode = 'top3';
+        let mddRecoveryLastData = [];
 
         function toggleMddRecoveryMode_(mode) {
             mddRecoveryMode = mode;
@@ -2843,7 +2493,7 @@
             mddRecoveryLastData = dailyData;
 
             let episodes = calculateDrawdownEpisodes_(dailyData)
-                .filter(ep => ep.peakVal > 0 && ((ep.troughVal - ep.peakVal) / ep.peakVal) <= -0.005); // 0.5% 미만의 미세한 하락은 노이즈로 제외
+                .filter(ep => ep.peakVal > 0 && ((ep.troughVal - ep.peakVal) / ep.peakVal) <= -0.005);
 
             if (episodes.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="py-3 text-slate-600">하락 이력이 없습니다.</td></tr>`;
@@ -2851,7 +2501,6 @@
                 return;
             }
 
-            // 평균 회복일수 요약은 항상 전체 이력 기준으로 계산 (표시 모드와 무관)
             const recovered = episodes.filter(ep => ep.recoveryDate);
             if (summaryEl) {
                 summaryEl.innerText = recovered.length > 0
@@ -2860,14 +2509,13 @@
             }
 
             if (mddRecoveryMode === 'top3') {
-                // 하락률이 가장 큰(가장 많이 떨어진) 순서로 3개
                 episodes = [...episodes].sort((a, b) => {
                     const depthA = (a.troughVal - a.peakVal) / a.peakVal;
                     const depthB = (b.troughVal - b.peakVal) / b.peakVal;
-                    return depthA - depthB; // 더 큰(더 음수인) 하락이 먼저 오도록
+                    return depthA - depthB;
                 }).slice(0, 3);
             } else {
-                episodes = [...episodes].sort((a, b) => new Date(b.peakDate) - new Date(a.peakDate)); // 전체 보기는 최근 순
+                episodes = [...episodes].sort((a, b) => new Date(b.peakDate) - new Date(a.peakDate));
             }
 
             tbody.innerHTML = episodes.map(ep => {
@@ -2911,13 +2559,9 @@
             });
         }
 
-        // ===================================================================
-        // 📊 상세 데이터 테이블: 정렬 + 특이사항 검색
-        // ===================================================================
-
-        let tableSortField = null;   // null이면 날짜 최신순(기본), 그 외 'revenue'|'accountVal'|'cash'|'mdd'|'dailyReturn'
+        let tableSortField = null;
         let tableSortDir = 'desc';
-        let searchMatches = [];      // 특이사항 검색에 매치된 날짜 목록 (오름차순)
+        let searchMatches = [];
         let searchMatchIndex = -1;
 
         const HIGHLIGHT_CLASSES = ['bg-amber-500/20', 'ring-1', 'ring-inset', 'ring-amber-400'];
@@ -2936,7 +2580,7 @@
                     return tableSortDir === 'asc' ? av - bv : bv - av;
                 });
             } else {
-                sorted.sort((a, b) => new Date(b.date) - new Date(a.date)); // 기본: 최신 날짜순
+                sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
             }
             return sorted;
         }
@@ -2946,7 +2590,7 @@
                 tableSortDir = tableSortDir === 'desc' ? 'asc' : 'desc';
             } else {
                 tableSortField = field;
-                tableSortDir = 'desc'; // 처음 클릭하면 "가장 높은 값"부터 보여줌
+                tableSortDir = 'desc';
             }
             renderDetailTable(cachedChartData);
         }
@@ -2980,7 +2624,6 @@
 
         function renderDetailTable(data) {
             const sortedData = sortTableData_(data);
-            // 정렬 기준이 없을 때(기본 날짜순)만 "최근 3일" 슬라이싱 의미가 있음. 정렬 중엔 상위 3개(최댓값/최솟값 top3)를 보여줌.
             const displayData = activeTableMode === 'recent' ? sortedData.slice(0, 3) : sortedData;
 
             document.getElementById('totalRowsCount').innerText = activeTableMode === 'recent'
@@ -3015,7 +2658,6 @@
             reapplySearchHighlight_();
         }
 
-        // --- 특이사항 검색: 입력하면 매치되는 날짜로 자동 이동, 여러 건이면 다음/이전으로 순회 ---
         function searchMemo() {
             const term = document.getElementById('memoSearchInput').value.trim().toLowerCase();
 
@@ -3029,17 +2671,16 @@
 
             searchMatches = cachedChartData
                 .filter(item => item.memo && item.memo.toLowerCase().includes(term))
-                .map(item => item.date); // cachedChartData는 날짜 오름차순 정렬되어 있음
+                .map(item => item.date);
 
             searchMatchIndex = searchMatches.length > 0 ? 0 : -1;
             updateSearchCounter_();
 
             if (searchMatches.length > 0) {
-                // 검색 결과를 실제로 보려면 정렬을 날짜순으로, 표시 모드를 전체 보기로 전환해야 함
                 tableSortField = null;
                 tableSortDir = 'desc';
                 if (activeTableMode !== 'all') {
-                    toggleTableMode('all'); // 내부적으로 renderDetailTable 호출됨
+                    toggleTableMode('all');
                 } else {
                     renderDetailTable(cachedChartData);
                 }
