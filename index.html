@@ -392,6 +392,27 @@
                 <p class="text-[10px] text-slate-600 mt-2">입력한 메모는 항상 최신 상태로 덮어씌워져 구글 시트에 자동으로 저장됩니다.</p>
             </div>
 
+            <!-- 메모장1 (단일 덮어쓰기 메모장, 메모장과 동일 기능/별도 저장소) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
+                <div class="flex items-center justify-between gap-4 mb-3">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-note-sticky text-yellow-400"></i> 메모장1
+                        </h3>
+                        <span id="notepad1SyncStatus" class="text-[10px] text-slate-500">
+                            <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
+                        </span>
+                    </div>
+                </div>
+
+                <div class="w-full">
+                    <textarea id="notepad1SingleInput" rows="6" placeholder="자유롭게 메모를 입력하세요 (자동 덮어쓰기 저장)"
+                        oninput="onNotepad1SingleInput_(this.value)"
+                        class="w-full bg-slate-950 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-yellow-500 resize-y"></textarea>
+                </div>
+                <p class="text-[10px] text-slate-600 mt-2">입력한 메모는 항상 최신 상태로 덮어씌워져 구글 시트에 자동으로 저장됩니다.</p>
+            </div>
+
         </section>
 
         <!-- 차트 컬럼 -->
@@ -665,7 +686,7 @@
                         </button>
                     </div>
                     <p class="text-[10px] text-slate-500 leading-relaxed mt-2">
-                        일일 기록 입력 / 매수 목록 / 차수 기록 / 메모장이 모두 이 주소로 구글시트와 동기화됩니다.
+                        일일 기록 입력 / 매수 목록 / 차수 기록 / 메모장 / 메모장1이 모두 이 주소로 구글시트와 동기화됩니다.
                     </p>
                 </div>
 
@@ -955,6 +976,7 @@
             buyList: { sheetName: '매수목록' },
             stepLog: { sheetName: '차수기록' },
             notepad: { sheetName: '메모장' },
+            notepad1: { sheetName: '메모장1' },
             yieldData: { sheetName: '수익률데이터' }
         };
 
@@ -968,6 +990,7 @@
             buyList: { rowLabels: [], tickers: [], data: {}, memos: {} },
             stepLog: { rowLabels: [], tickers: [], data: {}, memos: {} },
             notepad: { rowLabels: [], tickers: [], data: {}, memos: {} },
+            notepad1: { rowLabels: [], tickers: [], data: {}, memos: {} },
             yieldData: { rowLabels: [], tickers: [], data: {}, memos: {} }
         };
         const gridSaveTimers = {};
@@ -978,7 +1001,7 @@
         let lastYieldSnapshotSig = '';
 
         function setGridSyncStatus_(key, state, text) {
-            const idMap = { buyList: 'buyListSyncStatus', stepLog: 'stepLogSyncStatus', notepad: 'notepadSyncStatus', yieldData: 'yieldSyncStatus' };
+            const idMap = { buyList: 'buyListSyncStatus', stepLog: 'stepLogSyncStatus', notepad: 'notepadSyncStatus', notepad1: 'notepad1SyncStatus', yieldData: 'yieldSyncStatus' };
             const el = document.getElementById(idMap[key]);
             if (!el) return;
             const styles = {
@@ -1132,6 +1155,7 @@
             if (key === 'buyList') renderBuyManagement_();
             else if (key === 'stepLog') renderStepLogTable_();
             else if (key === 'notepad') renderNotepadArea_();
+            else if (key === 'notepad1') renderNotepad1Area_();
             else if (key === 'yieldData') renderYieldTable_();
         }
 
@@ -1232,10 +1256,35 @@
             scheduleGridCellSave_('notepad', NOTEPAD_SINGLE_ROW, NOTEPAD_CONTENT_KEY, value);
         }
 
+        function renderNotepad1Area_() {
+            const input = document.getElementById('notepad1SingleInput');
+            if (!input) return;
+
+            const cache = gridCache.notepad1;
+            let val = '';
+            if (cache.data[NOTEPAD_SINGLE_ROW] && cache.data[NOTEPAD_SINGLE_ROW][NOTEPAD_CONTENT_KEY] !== undefined) {
+                val = cache.data[NOTEPAD_SINGLE_ROW][NOTEPAD_CONTENT_KEY];
+            } else if (cache.rowLabels.length > 0) {
+                const firstLabel = cache.rowLabels[0];
+                if (cache.data[firstLabel] && cache.data[firstLabel][NOTEPAD_CONTENT_KEY] !== undefined) {
+                    val = cache.data[firstLabel][NOTEPAD_CONTENT_KEY];
+                }
+            }
+            input.value = val;
+        }
+
+        function onNotepad1SingleInput_(value) {
+            if (!gridCache.notepad1.data[NOTEPAD_SINGLE_ROW]) gridCache.notepad1.data[NOTEPAD_SINGLE_ROW] = {};
+            gridCache.notepad1.data[NOTEPAD_SINGLE_ROW][NOTEPAD_CONTENT_KEY] = value;
+            if (!gridCache.notepad1.rowLabels.includes(NOTEPAD_SINGLE_ROW)) gridCache.notepad1.rowLabels.push(NOTEPAD_SINGLE_ROW);
+            scheduleGridCellSave_('notepad1', NOTEPAD_SINGLE_ROW, NOTEPAD_CONTENT_KEY, value);
+        }
+
         function initAllGrids_() {
             fetchGrid_('buyList');
             fetchGrid_('stepLog');
             fetchGrid_('notepad');
+            fetchGrid_('notepad1');
             fetchGrid_('yieldData');
         }
 
