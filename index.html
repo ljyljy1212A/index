@@ -1303,14 +1303,24 @@
             return cachedParsedData[cachedParsedData.length - 1];
         }
 
+        function formatLocalDate_(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
         function addDaysToDateStr_(dateStr, n) {
             const d = new Date(dateStr + 'T00:00:00');
             d.setDate(d.getDate() + n);
-            return d.toISOString().slice(0, 10);
+            return formatLocalDate_(d);
         }
 
         function todayStr_() {
-            return new Date().toISOString().slice(0, 10);
+            // 주의: toISOString()은 UTC 기준이라 한국(UTC+9) 등에서는
+            // 자정~오전 9시 사이에 날짜가 하루 전으로 표시되는 버그가 있었음.
+            // 로컬 타임존 기준으로 날짜를 계산하도록 수정.
+            return formatLocalDate_(new Date());
         }
 
         let dailyEntryDateValue = '';
