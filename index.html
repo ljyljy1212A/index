@@ -494,8 +494,8 @@
                             <table class="w-full text-left text-[11px] border-collapse">
                                 <thead class="sticky top-0 bg-slate-900">
                                     <tr class="border-b border-slate-800 text-slate-500 font-semibold">
-                                        <th class="py-1.5 pr-2">월</th>
-                                        <th class="py-1.5 pr-2 text-right">누적 수익금</th>
+                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('combo','month')">월 <span id="tickerSortIcon_combo_month"></span></th>
+                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('combo','totalRevenue')">누적 수익금 <span id="tickerSortIcon_combo_totalRevenue"></span></th>
                                         <th class="py-1.5 text-right">일평균</th>
                                     </tr>
                                 </thead>
@@ -521,6 +521,25 @@
                             <canvas id="portfolioDonutChart"></canvas>
                         </div>
                         <div class="flex-1 w-full overflow-y-auto max-h-48 text-[11px] space-y-1.5" id="portfolioBreakdown"></div>
+                    </div>
+                </div>
+
+                <!-- 종목별 누적 수익금 비중 (종목별 매수 관리에서 확정한 buyMgmtRecordsCache 기준) -->
+                <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-slate-800/60 pb-2.5">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-emerald-400"></i> 종목별 누적 수익금 비중
+                        </h3>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px]">
+                            <button id="btnTickerProfitChartDonut" onclick="toggleTickerProfitChartType_('doughnut')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">도넛</button>
+                            <button id="btnTickerProfitChartBar" onclick="toggleTickerProfitChartType_('bar')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">막대</button>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center gap-4 flex-1">
+                        <div class="relative w-full sm:w-56 h-56 flex-shrink-0">
+                            <canvas id="tickerProfitChart"></canvas>
+                        </div>
+                        <div class="flex-1 w-full overflow-y-auto max-h-56 text-[11px] space-y-1.5" id="tickerProfitBreakdown"></div>
                     </div>
                 </div>
             </div>
@@ -652,8 +671,8 @@
                             <table class="w-full text-left text-[11px] border-collapse">
                                 <thead class="sticky top-0 bg-slate-900">
                                     <tr class="border-b border-slate-800 text-slate-500 font-semibold">
-                                        <th class="py-1.5 pr-2">월</th>
-                                        <th class="py-1.5 pr-2 text-right">누적 수익금</th>
+                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('yearly','month')">월 <span id="tickerSortIcon_yearly_month"></span></th>
+                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('yearly','totalRevenue')">누적 수익금 <span id="tickerSortIcon_yearly_totalRevenue"></span></th>
                                         <th class="py-1.5 text-right">일평균</th>
                                     </tr>
                                 </thead>
@@ -701,8 +720,8 @@
                             <table class="w-full text-left text-[11px] border-collapse">
                                 <thead class="sticky top-0 bg-slate-900">
                                     <tr class="border-b border-slate-800 text-slate-500 font-semibold">
-                                        <th class="py-1.5 pr-2">월</th>
-                                        <th class="py-1.5 pr-2 text-right">누적 수익금</th>
+                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('monthlyReturn','month')">월 <span id="tickerSortIcon_monthlyReturn_month"></span></th>
+                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('monthlyReturn','totalRevenue')">누적 수익금 <span id="tickerSortIcon_monthlyReturn_totalRevenue"></span></th>
                                         <th class="py-1.5 text-right">일평균</th>
                                     </tr>
                                 </thead>
@@ -749,9 +768,15 @@
                             </h3>
                             <span class="text-xs text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80" id="buyMgmtRecordsCount">총 0건</span>
                         </div>
-                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs self-start sm:self-auto">
-                            <button id="btnBuyMgmtRecordsRecent" onclick="toggleBuyMgmtRecordsMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 3일</button>
-                            <button id="btnBuyMgmtRecordsAll" onclick="toggleBuyMgmtRecordsMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <select id="buyMgmtRecordsTickerFilterSelect" onchange="onBuyMgmtRecordsTickerFilterChange_(this.value)"
+                                class="bg-slate-950 text-slate-300 text-[10px] px-2 py-1.5 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                                <option value="전체">전체 종목</option>
+                            </select>
+                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                                <button id="btnBuyMgmtRecordsRecent" onclick="toggleBuyMgmtRecordsMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 3일</button>
+                                <button id="btnBuyMgmtRecordsAll" onclick="toggleBuyMgmtRecordsMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                            </div>
                         </div>
                     </div>
                     <p class="text-[10px] text-slate-500 mb-3">
@@ -859,6 +884,8 @@
         let yearlyChartInstance = null;
         let donutChartInstance = null;
         let monthlyReturnChartInstance = null; 
+        let tickerProfitChartInstance = null;
+        let tickerProfitChartType_ = 'doughnut';
 
         let activeTableMode = 'recent'; 
         let activeAccChartFilter = 'ALL';
@@ -1465,6 +1492,8 @@
                 showNotification(`종목 삭제에 실패했습니다: ${err.message}`, 'error', '종목 삭제 실패');
                 console.error('종목 삭제 실패:', err);
             }
+            availableTickers = availableTickers.filter(t => t !== ticker);
+            populateTickerSelects_();
             renderGrid_(key);
         }
 
@@ -1673,10 +1702,9 @@
         }
 
         function getMergedTickerList_() {
-            const customTickers = JSON.parse(localStorage.getItem('customTickersList')) || [];
-            const deletedTickers = JSON.parse(localStorage.getItem('deletedTickersList')) || [];
-            let merged = Array.from(new Set([...availableTickers, ...customTickers]));
-            merged = merged.filter(t => !deletedTickers.includes(t));
+            // customTickersList/deletedTickersList(localStorage)는 어디서도 저장되지 않던 죽은 코드였다.
+            // 종목 추가/삭제는 이제 availableTickers 배열 자체에서 실시간으로 반영되므로 그대로 사용한다.
+            let merged = Array.from(new Set(availableTickers));
             if (merged.length === 0) merged = ["DEFAULT"];
             return merged;
         }
@@ -2092,6 +2120,12 @@
                 deleteTickerRemote(targetTicker);
                 deleteTickerColumnFromMainSheet_(targetTicker);
 
+                // 삭제 직후 같은 세션 안에서 다른 곳(종목별 필터 드롭다운 등)에 유령처럼 남지 않도록
+                // availableTickers에서도 즉시 제거한다. 이 종목이 메인 시트/차수 기록 등 다른 곳에서
+                // 여전히 쓰이고 있다면 다음 동기화 때 다시 자동으로 채워진다.
+                availableTickers = availableTickers.filter(t => t !== targetTicker);
+                populateTickerSelects_();
+
                 renderBuyManagement_();
 
                 showNotification(`'${targetTicker}' 종목이 삭제되었습니다.`, "info", "종목 삭제 완료");
@@ -2245,6 +2279,7 @@
             renderBuyMgmtRecordsTable_();
             updateDailyEntryConfirmedSum_();
             renderAllTickerBreakdownTables_();
+            renderTickerProfitChart_();
         }
 
         // 💰 토글 박스의 '기록 추가' 버튼: 지금 입력된 날짜/메모/수익금을 그 계좌·종목의
@@ -2280,11 +2315,32 @@
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
                 renderAllTickerBreakdownTables_();
+            renderTickerProfitChart_();
                 showNotification(`'${ticker}' ${accountLabel} 수익금이 확정되었습니다.`, 'success', '기록 추가 완료');
             } catch (err) {
                 showNotification(`기록 추가에 실패했습니다: ${err.message}`, 'error', '기록 추가 실패');
                 console.error('종목별 매수 관리 수익 확정 실패:', err);
             }
+        }
+
+        let buyMgmtRecordsTickerFilter = '전체';
+
+        function onBuyMgmtRecordsTickerFilterChange_(value) {
+            buyMgmtRecordsTickerFilter = value || '전체';
+            renderBuyMgmtRecordsTable_();
+        }
+
+        // 확정 기록에 실제로 존재하는 종목명만 옵션으로 보여준다 (전체 종목 목록과는 별개).
+        function populateBuyMgmtRecordsTickerFilterSelect_() {
+            const sel = document.getElementById('buyMgmtRecordsTickerFilterSelect');
+            if (!sel) return;
+            const tickers = Array.from(new Set(buyMgmtRecordsCache.map(r => r.ticker).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+            const options = ['전체', ...tickers];
+            sel.innerHTML = options.map(t =>
+                `<option value="${escapeHtml_(t)}">${t === '전체' ? '전체 종목' : escapeHtml_(t)}</option>`
+            ).join('');
+            sel.value = options.includes(buyMgmtRecordsTickerFilter) ? buyMgmtRecordsTickerFilter : '전체';
+            buyMgmtRecordsTickerFilter = sel.value;
         }
 
         function toggleBuyMgmtRecordsMode_(mode) {
@@ -2301,7 +2357,13 @@
             if (!tbody) return;
             const countEl = document.getElementById('buyMgmtRecordsCount');
 
-            const sorted = [...buyMgmtRecordsCache].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+            populateBuyMgmtRecordsTickerFilterSelect_();
+
+            const tickerFiltered = buyMgmtRecordsTickerFilter === '전체'
+                ? buyMgmtRecordsCache
+                : buyMgmtRecordsCache.filter(r => r.ticker === buyMgmtRecordsTickerFilter);
+
+            const sorted = [...tickerFiltered].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
 
             // '최근 3일' = 확정 기록에 존재하는 날짜 중 가장 최근 3개의 날짜에 해당하는 기록 전부
             let displayData;
@@ -2370,6 +2432,7 @@
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
                 renderAllTickerBreakdownTables_();
+            renderTickerProfitChart_();
                 showNotification('기록이 수정되었습니다.', 'success', '수정 완료');
             } catch (err) {
                 showNotification(`기록 수정에 실패했습니다: ${err.message}`, 'error', '수정 실패');
@@ -2392,6 +2455,7 @@
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
                 renderAllTickerBreakdownTables_();
+            renderTickerProfitChart_();
                 showNotification('확정 기록이 삭제되었습니다.', 'info', '삭제 완료');
             } catch (err) {
                 showNotification(`기록 삭제에 실패했습니다: ${err.message}`, 'error', '삭제 실패');
@@ -3017,7 +3081,11 @@
         const selectedTickerByChart_ = { combo: '전체', yearly: '전체', monthlyReturn: '전체' };
 
         function populateTickerSelects_() {
-            const tickerOptions = ['전체', ...getMergedTickerList_()];
+            // getMergedTickerList_()만 쓰면, 이번 세션 중 삭제된 종목이 재로딩 전까지 계속 남거나
+            // 반대로 이미 삭제된 종목의 "과거 확정 기록"이 있어도 목록에서 사라져 조회가 불가능해질 수 있다.
+            // → 현재 활성 종목 목록 + 확정 기록(buyMgmtRecordsCache)에 실제로 존재하는 종목명을 합쳐서 보여준다.
+            const recordedTickers = buyMgmtRecordsCache.map(r => r.ticker).filter(Boolean);
+            const tickerOptions = ['전체', ...Array.from(new Set([...getMergedTickerList_(), ...recordedTickers]))].sort((a, b) => a === '전체' ? -1 : b === '전체' ? 1 : a.localeCompare(b));
             ['combo', 'yearly', 'monthlyReturn'].forEach(key => {
                 const sel = document.getElementById(`tickerSelect_${key}`);
                 if (!sel) return;
@@ -3073,6 +3141,41 @@
             });
         }
 
+        // 종목별 브레이크다운 표(월/누적수익금/일평균)를 카드(combo/yearly/monthlyReturn)별로 독립적으로
+        // '월순' 또는 '수익금순'으로 정렬할 수 있게 한다. 기본값은 기존과 동일한 월 내림차순(최신월 우선).
+        const tickerBreakdownSort_ = {
+            combo: { field: 'month', dir: 'desc' },
+            yearly: { field: 'month', dir: 'desc' },
+            monthlyReturn: { field: 'month', dir: 'desc' }
+        };
+
+        function toggleTickerBreakdownSort_(key, field) {
+            const s = tickerBreakdownSort_[key];
+            if (!s) return;
+            if (s.field === field) {
+                s.dir = s.dir === 'desc' ? 'asc' : 'desc';
+            } else {
+                s.field = field;
+                s.dir = 'desc';
+            }
+            renderTickerBreakdownTable_(key);
+        }
+
+        function updateTickerBreakdownSortIcons_(key) {
+            const s = tickerBreakdownSort_[key];
+            ['month', 'totalRevenue'].forEach(field => {
+                const el = document.getElementById(`tickerSortIcon_${key}_${field}`);
+                if (!el) return;
+                if (!s || s.field !== field) {
+                    el.innerHTML = '<i class="fa-solid fa-sort text-slate-700"></i>';
+                } else {
+                    el.innerHTML = s.dir === 'desc'
+                        ? '<i class="fa-solid fa-sort-down text-sky-400"></i>'
+                        : '<i class="fa-solid fa-sort-up text-sky-400"></i>';
+                }
+            });
+        }
+
         function renderTickerBreakdownTable_(key) {
             const tbody = document.getElementById(`tickerMonthlyTableBody_${key}`);
             if (!tbody) return;
@@ -3089,15 +3192,26 @@
 
             if (breakdown.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="3" class="py-3 text-slate-600 text-center">표시할 데이터가 없습니다.</td></tr>`;
+                updateTickerBreakdownSortIcons_(key);
                 return;
             }
 
-            tbody.innerHTML = [...breakdown].reverse().map(d => `
+            const sortState = tickerBreakdownSort_[key] || { field: 'month', dir: 'desc' };
+            const sorted = [...breakdown].sort((a, b) => {
+                if (sortState.field === 'month') {
+                    return sortState.dir === 'asc' ? a.month.localeCompare(b.month) : b.month.localeCompare(a.month);
+                }
+                return sortState.dir === 'asc' ? a.totalRevenue - b.totalRevenue : b.totalRevenue - a.totalRevenue;
+            });
+
+            tbody.innerHTML = sorted.map(d => `
                 <tr class="hover:bg-slate-800/20">
                     <td class="py-1.5 pr-2 text-slate-400">${d.month}</td>
                     <td class="py-1.5 pr-2 text-right font-mono ${d.totalRevenue < 0 ? 'text-rose-400' : 'text-emerald-400'}">$${d.totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</td>
                     <td class="py-1.5 text-right font-mono text-sky-400">$${d.avgRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</td>
                 </tr>`).join('');
+
+            updateTickerBreakdownSortIcons_(key);
         }
 
         function renderAllTickerBreakdownTables_() {
@@ -3218,6 +3332,104 @@
                     `);
                 });
             }
+        }
+
+        // ===================================================================
+        // 📌 종목별 누적 수익금 비중 (도넛/막대) — buyMgmtRecordsCache(종목별 매수 관리에서
+        // 확정한 실현 수익금)를 종목별로 합산해 비중을 보여준다. 손실 종목은 빨간색 막대(또는
+        // 도넛에서는 절대값 크기로 표시하고 툴팁/범례에 실제 부호가 있는 금액을 표기)로 구분한다.
+        // ===================================================================
+        function computeTickerProfitTotals_() {
+            const totals = {};
+            buyMgmtRecordsCache.forEach(rec => {
+                if (!rec.ticker) return;
+                totals[rec.ticker] = (totals[rec.ticker] || 0) + (Number(rec.profit) || 0);
+            });
+            return Object.keys(totals)
+                .map(ticker => ({ ticker, total: totals[ticker] }))
+                .sort((a, b) => Math.abs(b.total) - Math.abs(a.total));
+        }
+
+        function toggleTickerProfitChartType_(type) {
+            tickerProfitChartType_ = type;
+            const btnDonut = document.getElementById('btnTickerProfitChartDonut');
+            const btnBar = document.getElementById('btnTickerProfitChartBar');
+            if (btnDonut) btnDonut.className = type === 'doughnut' ? "px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
+            if (btnBar) btnBar.className = type === 'bar' ? "px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm" : "px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200";
+            renderTickerProfitChart_();
+        }
+
+        function renderTickerProfitChart_() {
+            const canvas = document.getElementById('tickerProfitChart');
+            const breakdownContainer = document.getElementById('tickerProfitBreakdown');
+            if (!canvas || !breakdownContainer) return;
+            const ctx = canvas.getContext('2d');
+            if (tickerProfitChartInstance) tickerProfitChartInstance.destroy();
+            breakdownContainer.innerHTML = '';
+
+            const totals = computeTickerProfitTotals_();
+            if (totals.length === 0) {
+                breakdownContainer.innerHTML = '<div class="text-slate-600 text-center py-6">확정된 수익금 기록이 없습니다. 종목별 매수 관리에서 💰 버튼을 눌러 수익금을 확정해보세요.</div>';
+                return;
+            }
+
+            const colors = ['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#a855f7', '#f43f5e', '#eab308', '#10b981', '#f97316', '#64748b'];
+            const labels = totals.map(t => t.ticker);
+            const sumAbs = totals.reduce((s, t) => s + Math.abs(t.total), 0) || 1;
+
+            if (tickerProfitChartType_ === 'doughnut') {
+                tickerProfitChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels,
+                        datasets: [{ data: totals.map(t => Math.abs(t.total)), backgroundColor: colors.slice(0, labels.length), borderWidth: 1.5, borderColor: '#0f172a' }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '65%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (ctxItem) => {
+                                const t = totals[ctxItem.dataIndex];
+                                return `${t.ticker}: $${t.total.toLocaleString(undefined, { minimumFractionDigits: 1 })}`;
+                            } } }
+                        }
+                    }
+                });
+            } else {
+                tickerProfitChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            data: totals.map(t => t.total),
+                            backgroundColor: totals.map(t => t.total < 0 ? 'rgba(244, 63, 94, 0.65)' : 'rgba(16, 185, 129, 0.65)'),
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+                            y: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                        }
+                    }
+                });
+            }
+
+            totals.forEach((t, idx) => {
+                const pct = sumAbs > 0 ? (Math.abs(t.total) / sumAbs) * 100 : 0;
+                const color = colors[idx % colors.length];
+                breakdownContainer.insertAdjacentHTML('beforeend', `
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between text-slate-300 font-semibold text-[10px]">
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color:${color}"></span>${escapeHtml_(t.ticker)}</span>
+                            <span class="${t.total < 0 ? 'text-rose-400' : 'text-emerald-400'}">$${t.total.toLocaleString(undefined, { minimumFractionDigits: 1 })} (${pct.toFixed(1)}%)</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="h-full rounded-full" style="width:${pct}%; background-color:${color}"></div></div>
+                    </div>
+                `);
+            });
         }
 
         function renderAccountChart(dailyData) {
