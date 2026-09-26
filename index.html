@@ -709,11 +709,40 @@
                         </div>
                     </div>
                     <p class="text-[10px] text-slate-500 mb-3">
-                        "전체 합계"는 같은 날짜에 입력된 모든 종목의 <strong>수익금</strong> 칸을 더한 값이고,
-                        종목을 고르면 그 종목의 <strong>수익금</strong> 칸만 집계됩니다.
+                        "전체 합계"는 '기록 추가'로 확정된 모든 종목의 <strong>수익금</strong>을 날짜별로 더한 값이고,
+                        종목을 고르면 그 종목으로 확정된 <strong>수익금</strong>만 집계됩니다.
                     </p>
                     <div class="relative h-64 w-full">
                         <canvas id="stepLogComboChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 확정 기록 내역: '기록 추가' 버튼으로 확정한 날짜별 수익금 목록. 원본 차수 칸을 지워도 여기 남는다. -->
+                <div class="mt-5 pt-4 border-t border-slate-800">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-check text-emerald-400"></i> 확정 기록 내역
+                        </h3>
+                        <span class="text-xs text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80" id="stepLogRecordsCount">총 0건</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mb-3">
+                        '기록 추가' 버튼으로 확정된 날짜별 수익금 목록입니다. 위 차수 기록 표의 원본 칸을 지우거나 수정해도
+                        여기 남은 기록은 그대로 유지되며, 누적 매매 수익금과 월별 차트 집계에 계속 반영됩니다.
+                        편집/삭제 버튼으로 직접 고치거나 지울 수 있습니다.
+                    </p>
+                    <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead class="sticky top-0 bg-slate-900">
+                                <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
+                                    <th class="p-2">날짜</th>
+                                    <th class="p-2">종목</th>
+                                    <th class="p-2">수량/메모</th>
+                                    <th class="p-2 text-right">수익금</th>
+                                    <th class="p-2 text-right">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stepLogRecordsBody"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1134,13 +1163,23 @@
         const MEMO_TICKER_KEY = '메모';
         const NOTEPAD_CONTENT_KEY = '내용';
         const NOTEPAD_SINGLE_ROW = '메모';
-        const STEPLOG_DATE_KEY = '날짜';
+        const STEPLOG_DATE_KEY = '날짜'; // 예전 방식: 차수 전체가 공유하던 날짜 칸 (더 이상 만들지 않고, 화면에도 표시하지 않음)
         const STEPLOG_PROFIT_KEY = '수익금';
-        // 종목 칸(수량/메모 등 자유 입력)과 별도로, 그 종목의 그 차수 수익금만 따로 기록하기 위한
-        // 짝꿍 칸의 이름 규칙. 예: 종목명이 "SOXL"이면 수익금 짝꿍 칸은 "SOXL_수익".
+        // 종목 칸(수량/메모 등 자유 입력)과 별도로, 그 종목의 그 차수 수익금/날짜만 따로 기록하기 위한
+        // 짝꿍 칸의 이름 규칙. 예: 종목명이 "SOXL"이면 수익금 짝꿍 칸은 "SOXL_수익", 날짜 짝꿍 칸은 "SOXL_날짜".
         const STEPLOG_PROFIT_SUFFIX = '_수익';
+        const STEPLOG_DATE_SUFFIX = '_날짜';
         function stepLogProfitKeyFor_(ticker) { return `${ticker}${STEPLOG_PROFIT_SUFFIX}`; }
         function isStepLogProfitColumn_(colName) { return String(colName || '').endsWith(STEPLOG_PROFIT_SUFFIX); }
+        function stepLogDateKeyFor_(ticker) { return `${ticker}${STEPLOG_DATE_SUFFIX}`; }
+        function isStepLogDateColumn_(colName) { return String(colName || '').endsWith(STEPLOG_DATE_SUFFIX); }
+        // 종목 목록(baseTickers)을 뽑을 때 공통으로 걸러내야 하는, 종목명이 아닌 특수 칸들
+        function isStepLogSpecialColumn_(colName) {
+            return colName === STEPLOG_DATE_KEY || colName === STEPLOG_PROFIT_KEY
+                || isStepLogProfitColumn_(colName) || isStepLogDateColumn_(colName);
+        }
+        // '기록 추가'로 확정되어 원본 칸 삭제와 무관하게 영구히 남는 차수 기록 목록
+        let stepLogRecordsCache = [];
         const YIELD_FIELDS = ['일평균수익금', '월평균수익금', '월평균수익률', '연환산수익률'];
 
         const gridCache = {
@@ -1203,15 +1242,17 @@
         async function ensureStepLogSpecialColumns_() {
             if (!splitBuyApiUrl || !splitBuyApiToken) return;
             const cache = gridCache.stepLog;
-            // 예전엔 수동 입력 '수익금'/'메모' 칸도 자동 생성했지만, 두 칸은 삭제되었으므로
-            // 더 이상 만들지 않는다. (이미 시트에 남아있는 옛 '수익금' 칸은 무시하고 안 쓴다.)
-            const missingSpecial = [STEPLOG_DATE_KEY].filter(k => !cache.tickers.includes(k));
-            // 이 기능이 생기기 전에 이미 추가돼 있던 종목들에도, 짝꿍 수익금 칸이 없다면 만들어준다.
-            const baseTickers = cache.tickers.filter(t => t !== STEPLOG_DATE_KEY && t !== STEPLOG_PROFIT_KEY && !isStepLogProfitColumn_(t));
+            // 예전엔 차수 전체가 공유하는 '날짜' 칸 하나만 있었지만, 이제는 종목마다 '날짜' 칸을
+            // 따로 가지므로 공용 '날짜' 칸은 더 이상 만들지 않는다(화면에도 표시하지 않음).
+            // 이 기능이 생기기 전에 이미 추가돼 있던 종목들에도, 짝꿍 수익금/날짜 칸이 없다면 만들어준다.
+            const baseTickers = cache.tickers.filter(t => !isStepLogSpecialColumn_(t));
             const missingProfitCols = baseTickers
                 .map(t => stepLogProfitKeyFor_(t))
                 .filter(colName => !cache.tickers.includes(colName));
-            const toCreate = [...missingSpecial, ...missingProfitCols];
+            const missingDateCols = baseTickers
+                .map(t => stepLogDateKeyFor_(t))
+                .filter(colName => !cache.tickers.includes(colName));
+            const toCreate = [...missingDateCols, ...missingProfitCols];
             if (toCreate.length === 0) return;
             try {
                 for (const colName of toCreate) {
@@ -1295,7 +1336,7 @@
                 showNotification('종목명은 영문/숫자/한글/. _ - 만 20자 이내로 입력해주세요.', 'error', '종목명 오류');
                 return;
             }
-            if (key === 'stepLog' && (formatted === STEPLOG_DATE_KEY || formatted === STEPLOG_PROFIT_KEY || isStepLogProfitColumn_(formatted))) {
+            if (key === 'stepLog' && isStepLogSpecialColumn_(formatted)) {
                 showNotification(`"${formatted}"은(는) 차수 기록 전용 칸이라 종목명으로 사용할 수 없습니다.`, 'error', '추가 불가');
                 return;
             }
@@ -1311,15 +1352,18 @@
                 applyGridResponse_(key, json);
 
                 if (key === 'stepLog') {
-                    // 종목별 수익금을 따로 기록할 수 있도록, 종목 칸과 짝을 이루는 "수익금" 전용 칸을 함께 만든다.
-                    const profitCol = stepLogProfitKeyFor_(formatted);
-                    const res2 = await fetchWithRetry_(splitBuyApiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(withToken_({ action: 'addGridTicker', sheetName: cfg.sheetName, ticker: profitCol }))
-                    });
-                    const json2 = await res2.json();
-                    if (json2.success) applyGridResponse_(key, json2);
+                    // 종목별 날짜/수익금을 따로 기록할 수 있도록, 종목 칸과 짝을 이루는
+                    // "날짜"/"수익금" 전용 칸을 함께 만든다.
+                    const extraCols = [stepLogDateKeyFor_(formatted), stepLogProfitKeyFor_(formatted)];
+                    for (const colName of extraCols) {
+                        const res2 = await fetchWithRetry_(splitBuyApiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify(withToken_({ action: 'addGridTicker', sheetName: cfg.sheetName, ticker: colName }))
+                        });
+                        const json2 = await res2.json();
+                        if (json2.success) applyGridResponse_(key, json2);
+                    }
                 }
 
                 showNotification(`'${formatted}' 종목이 추가되었습니다.`, 'success', '종목 추가 완료');
@@ -1345,12 +1389,13 @@
                 applyGridResponse_(key, json);
 
                 if (key === 'stepLog') {
-                    const profitCol = stepLogProfitKeyFor_(ticker);
-                    if (gridCache.stepLog.tickers.includes(profitCol)) {
+                    const extraCols = [stepLogDateKeyFor_(ticker), stepLogProfitKeyFor_(ticker)];
+                    for (const colName of extraCols) {
+                        if (!gridCache.stepLog.tickers.includes(colName)) continue;
                         const res2 = await fetchWithRetry_(splitBuyApiUrl, {
                             method: 'POST',
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            body: JSON.stringify(withToken_({ action: 'deleteGridTicker', sheetName: cfg.sheetName, ticker: profitCol }))
+                            body: JSON.stringify(withToken_({ action: 'deleteGridTicker', sheetName: cfg.sheetName, ticker: colName }))
                         });
                         const json2 = await res2.json();
                         if (json2.success) applyGridResponse_(key, json2);
@@ -1416,67 +1461,44 @@
             if (!table) return;
 
             const cache = gridCache.stepLog;
-            const baseTickers = cache.tickers.filter(t => t !== STEPLOG_DATE_KEY && t !== STEPLOG_PROFIT_KEY && !isStepLogProfitColumn_(t));
+            const baseTickers = cache.tickers.filter(t => !isStepLogSpecialColumn_(t));
             const labels = getStepLogLabels_();
 
             updateGridTickerLabel_('stepLogTickerList', baseTickers);
             updateStepLogChartTickerOptions_(baseTickers);
 
-            // 상단 누적 배지 = 각 종목 수익금 칸을 날짜별로 합산한 값(getStepLogProfitSeries_).
-            // 날짜가 없는 행에 종목 수익금만 입력된 경우는 집계에서 빠지므로, 아래에서 경고로 표시한다.
-            const validProfitSeries = getStepLogProfitSeries_();
-            const cumProfit = validProfitSeries.reduce((sum, item) => sum + item.revenue, 0);
+            // 상단 누적 배지 & 월별 차트는 이제 그리드 원본 칸이 아니라, '기록 추가' 버튼으로
+            // 확정해둔 stepLogRecordsCache(차수기록_확정 시트)를 기준으로 계산한다.
+            // 그래야 원본 칸(날짜/수량·메모/수익금)을 나중에 지워도 이미 확정된 수익금은 그대로 남는다.
+            const cumProfit = stepLogRecordsCache.reduce((sum, rec) => sum + (Number(rec.profit) || 0), 0);
             const cumEl = document.getElementById('stepLogCumProfitValue');
             if (cumEl) cumEl.innerText = `$${cumProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-            const rowHasOrphanProfit_ = (rowLabel) => {
-                const row = cache.data[rowLabel] || {};
-                if (row[STEPLOG_DATE_KEY]) return false;
-                return baseTickers.some(t => {
-                    const raw = row[stepLogProfitKeyFor_(t)];
-                    return raw !== undefined && raw !== '' && !isNaN(parseFloat(String(raw).replace(/,/g, '')));
-                });
-            };
-            const orphanProfitCount = labels.filter(rowHasOrphanProfit_).length;
             const cumWarnEl = document.getElementById('stepLogCumProfitWarn');
-            if (cumWarnEl) {
-                cumWarnEl.classList.toggle('hidden', orphanProfitCount === 0);
-                cumWarnEl.title = `날짜가 비어있어 집계에서 제외된 종목 수익금이 ${orphanProfitCount}건 있습니다.`;
-            }
+            if (cumWarnEl) cumWarnEl.classList.add('hidden');
 
             const headerHtml = `
                 <thead>
                     <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
                         <th class="p-2 w-20" rowspan="2">차수</th>
-                        <th class="p-2 w-36" rowspan="2"><i class="fa-solid fa-calendar-days mr-1"></i>날짜</th>
-                        ${baseTickers.map(t => `<th class="p-2 min-w-[190px] text-center" colspan="2">${t} <button onclick="deleteTickerFromGrid_('stepLog','${t}')" class="text-slate-600 hover:text-rose-400 ml-1"><i class="fa-solid fa-xmark"></i></button></th>`).join('')}
+                        ${baseTickers.map(t => `<th class="p-2 min-w-[260px] text-center" colspan="3">${t} <button onclick="deleteTickerFromGrid_('stepLog','${t}')" class="text-slate-600 hover:text-rose-400 ml-1"><i class="fa-solid fa-xmark"></i></button></th>`).join('')}
                         ${baseTickers.length === 0 ? '<th class="p-2 text-slate-600 font-normal" rowspan="2">종목을 추가해주세요</th>' : ''}
                     </tr>
                     ${baseTickers.length > 0 ? `<tr class="border-b border-slate-800 text-slate-500 font-normal bg-slate-950/20 text-[10px]">
-                        ${baseTickers.map(() => `<th class="p-1 text-center font-normal">수량/메모</th><th class="p-1 text-center font-normal">수익금</th>`).join('')}
+                        ${baseTickers.map(() => `<th class="p-1 text-center font-normal">날짜</th><th class="p-1 text-center font-normal">수량/메모</th><th class="p-1 text-center font-normal">수익금</th>`).join('')}
                     </tr>` : ''}
                 </thead>`;
 
             const bodyRows = labels.map(rowLabel => {
                 const row = cache.data[rowLabel] || {};
-                const hasDate = !!row[STEPLOG_DATE_KEY];
-                const orphan = rowHasOrphanProfit_(rowLabel);
-                const rowWarnTitle = orphan ? 'title="날짜가 없어 상단 누적 배지/월별 차트 집계에서 제외됩니다."' : '';
-                const rowClass = orphan
-                    ? 'border-b border-slate-800/30 hover:bg-slate-800/20 bg-amber-500/5'
-                    : 'border-b border-slate-800/30 hover:bg-slate-800/20';
                 return `
-                <tr class="${rowClass}" ${rowWarnTitle}>
-                    <td class="p-2 font-semibold text-slate-300">${rowLabel}${orphan ? ' <i class="fa-solid fa-triangle-exclamation text-amber-400 text-[10px]"></i>' : ''}</td>
-                    <td class="p-2">
-                        <input type="date" value="${String(row[STEPLOG_DATE_KEY] || '').replace(/"/g, '&quot;')}"
-                            onchange="onGridCellInput_('stepLog','${rowLabel}','${STEPLOG_DATE_KEY}', this.value); renderStepLogTable_();"
-                            class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
-                    </td>
+                <tr class="border-b border-slate-800/30 hover:bg-slate-800/20">
+                    <td class="p-2 font-semibold text-slate-300">${rowLabel}</td>
                     ${baseTickers.map(t => {
-                        const val = (cache.data[rowLabel] && cache.data[rowLabel][t] !== undefined) ? cache.data[rowLabel][t] : '';
+                        const dateKey = stepLogDateKeyFor_(t);
+                        const dateVal = row[dateKey] !== undefined ? row[dateKey] : '';
+                        const val = row[t] !== undefined ? row[t] : '';
                         const profitKey = stepLogProfitKeyFor_(t);
-                        const tickerProfitRaw = (cache.data[rowLabel] && cache.data[rowLabel][profitKey] !== undefined) ? cache.data[rowLabel][profitKey] : '';
+                        const tickerProfitRaw = row[profitKey] !== undefined ? row[profitKey] : '';
                         const tickerProfitNum = parseFloat(String(tickerProfitRaw).replace(/,/g, ''));
                         const hasTickerProfit = tickerProfitRaw !== undefined && tickerProfitRaw !== '' && !isNaN(tickerProfitNum);
                         const tickerProfitColorClass = hasTickerProfit
@@ -1484,14 +1506,25 @@
                             : 'text-slate-400';
                         return `
                             <td class="p-2">
+                                <input type="date" value="${String(dateVal).replace(/"/g, '&quot;')}"
+                                    onchange="onGridCellInput_('stepLog','${rowLabel}','${dateKey}', this.value); renderStepLogTable_();"
+                                    class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                            </td>
+                            <td class="p-2">
                                 <input type="text" value="${String(val).replace(/"/g, '&quot;')}" placeholder="수량/메모"
                                     oninput="onGridCellInput_('stepLog','${rowLabel}','${t}', this.value)"
                                     class="w-full bg-slate-950 text-slate-300 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
                             </td>
                             <td class="p-2">
-                                <input type="number" step="0.01" value="${String(tickerProfitRaw || '').replace(/"/g, '&quot;')}" placeholder="0.00"
-                                    onchange="onGridCellInput_('stepLog','${rowLabel}','${profitKey}', this.value); renderStepLogTable_();"
-                                    class="w-full bg-slate-950 ${tickerProfitColorClass} text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
+                                <div class="flex items-center gap-1">
+                                    <input type="number" step="0.01" value="${String(tickerProfitRaw || '').replace(/"/g, '&quot;')}" placeholder="0.00"
+                                        onchange="onGridCellInput_('stepLog','${rowLabel}','${profitKey}', this.value); renderStepLogTable_();"
+                                        class="w-full bg-slate-950 ${tickerProfitColorClass} text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
+                                    <button onclick="commitStepLogRecord_('${rowLabel}','${t}')" title="이 수익금을 확정해서 누적 매매 수익금/월별 차트에 영구 반영합니다."
+                                        class="shrink-0 text-[10px] px-1.5 py-1.5 rounded-lg font-semibold text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 bg-emerald-500/10 whitespace-nowrap">
+                                        <i class="fa-solid fa-check"></i> 기록 추가
+                                    </button>
+                                </div>
                             </td>`;
                     }).join('')}
                     ${baseTickers.length === 0 ? '<td class="p-2"></td>' : ''}
@@ -1501,6 +1534,7 @@
             table.innerHTML = headerHtml + `<tbody>${bodyRows}</tbody>`;
 
             renderStepLogComboChart_();
+            renderStepLogRecordsTable_();
         }
 
         // 차수 기록 월별 차트 상단의 "종목 선택" 드롭다운을 지금 등록된 종목 목록으로 갱신한다.
@@ -1533,53 +1567,26 @@
             renderStepLogComboChart_();
         }
 
-        // 차수 기록에서 "전체 합계" 시리즈 = 같은 날짜(행)에 입력된 모든 종목의 수익금 칸을 더한 값.
-        // (예전엔 별도의 수동 입력 '수익금' 칸을 그대로 썼지만, 그 칸이 삭제되어
-        //  이제는 종목별 수익금 칸들의 합으로 계산한다. 날짜가 없거나 어떤 종목에도
-        //  값이 없는 행은 예전과 마찬가지로 집계에서 제외한다.)
+        // 차수 기록의 "전체 합계" 시리즈 = '기록 추가'로 확정된 모든 종목의 수익금을
+        // 날짜별로 합산한 값. 원본 그리드 칸이 아니라 stepLogRecordsCache(확정 내역)를 기준으로
+        // 계산하므로, 나중에 원본 칸을 지워도 이미 확정된 수익금은 계속 집계에 포함된다.
         function getStepLogProfitSeries_() {
-            const cache = gridCache.stepLog;
-            const baseTickers = cache.tickers.filter(t => t !== STEPLOG_DATE_KEY && t !== STEPLOG_PROFIT_KEY && !isStepLogProfitColumn_(t));
-            const profitKeys = baseTickers.map(t => stepLogProfitKeyFor_(t));
-            const series = [];
-            (cache.rowLabels || []).forEach(rowLabel => {
-                const row = cache.data[rowLabel];
-                if (!row) return;
-                const dateStr = row[STEPLOG_DATE_KEY];
-                if (!dateStr) return;
-
-                let sum = 0;
-                let hasAny = false;
-                profitKeys.forEach(pk => {
-                    const raw = row[pk];
-                    if (raw === undefined || raw === '') return;
-                    const num = parseFloat(String(raw).replace(/,/g, ''));
-                    if (isNaN(num)) return;
-                    hasAny = true;
-                    sum += num;
-                });
-                if (!hasAny) return;
-                series.push({ date: dateStr, revenue: sum });
+            const map = {};
+            stepLogRecordsCache.forEach(rec => {
+                if (!rec.date) return;
+                map[rec.date] = (map[rec.date] || 0) + (Number(rec.profit) || 0);
             });
-            return series.sort((a, b) => a.date.localeCompare(b.date));
+            return Object.keys(map).sort().map(date => ({ date, revenue: map[date] }));
         }
 
-        // 특정 종목의 "수익금" 짝꿍 칸만 뽑아서 {date, revenue} 배열로 변환 (날짜는 공용 날짜 칸을 사용)
+        // 특정 종목으로 확정된 기록만 뽑아서 날짜별로 합산한 {date, revenue} 배열로 변환
         function getStepLogTickerProfitSeries_(ticker) {
-            const cache = gridCache.stepLog;
-            const profitKey = stepLogProfitKeyFor_(ticker);
-            const series = [];
-            (cache.rowLabels || []).forEach(rowLabel => {
-                const row = cache.data[rowLabel];
-                if (!row) return;
-                const dateStr = row[STEPLOG_DATE_KEY];
-                const profitRaw = row[profitKey];
-                if (!dateStr || profitRaw === undefined || profitRaw === '') return;
-                const revenue = parseFloat(String(profitRaw).replace(/,/g, ''));
-                if (isNaN(revenue)) return;
-                series.push({ date: dateStr, revenue });
+            const map = {};
+            stepLogRecordsCache.filter(rec => rec.ticker === ticker).forEach(rec => {
+                if (!rec.date) return;
+                map[rec.date] = (map[rec.date] || 0) + (Number(rec.profit) || 0);
             });
-            return series.sort((a, b) => a.date.localeCompare(b.date));
+            return Object.keys(map).sort().map(date => ({ date, revenue: map[date] }));
         }
 
         // 종목별 월별 합계를 같은 월 라벨 축 위에 정렬해, Chart.js 누적 막대용 데이터셋으로 만든다.
@@ -1622,7 +1629,7 @@
             const canvas = document.getElementById('stepLogComboChart');
             if (!canvas) return;
 
-            const baseTickers = gridCache.stepLog.tickers.filter(t => t !== STEPLOG_DATE_KEY && t !== STEPLOG_PROFIT_KEY && !isStepLogProfitColumn_(t));
+            const baseTickers = gridCache.stepLog.tickers.filter(t => !isStepLogSpecialColumn_(t));
 
             if (stepLogComboChartInstance) stepLogComboChartInstance.destroy();
 
@@ -1669,6 +1676,137 @@
                     }
                 }
             });
+        }
+
+        // ===================================================================
+        // 📌 차수 기록 "확정 내역" (기록 추가 / 조회 / 편집 / 삭제)
+        // ===================================================================
+
+        async function fetchStepLogRecords_() {
+            if (!splitBuyApiUrl || !splitBuyApiToken) return;
+            try {
+                const res = await fetchWithRetry_(`${splitBuyApiUrl}?action=getStepLogRecords&token=${encodeURIComponent(splitBuyApiToken)}`);
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || '조회 실패');
+                stepLogRecordsCache = json.records || [];
+            } catch (err) {
+                console.error('차수 기록 확정 내역 조회 실패:', err);
+            }
+            renderStepLogTable_();
+        }
+
+        // '기록 추가' 버튼: 지금 화면에 입력된 해당 차수·종목의 날짜/수량·메모/수익금을
+        // 확정 내역으로 영구 저장한다. 이후 원본 칸을 지워도 이 값은 그대로 남는다.
+        async function commitStepLogRecord_(rowLabel, ticker) {
+            if (!splitBuyApiUrl || !splitBuyApiToken) { showNotification('먼저 "Apps Script 동기화 설정" 카드에서 웹앱 URL을 저장해주세요.', 'error', '동기화 주소 미설정'); return; }
+
+            const row = (gridCache.stepLog.data[rowLabel]) || {};
+            const dateVal = row[stepLogDateKeyFor_(ticker)] || '';
+            const memoVal = row[ticker] || '';
+            const profitRaw = row[stepLogProfitKeyFor_(ticker)];
+            const profitNum = parseFloat(String(profitRaw || '').replace(/,/g, ''));
+
+            if (!dateVal) { showNotification('먼저 날짜를 입력해주세요.', 'error', '기록 추가 불가'); return; }
+            if (profitRaw === undefined || profitRaw === '' || isNaN(profitNum)) { showNotification('먼저 수익금을 입력해주세요.', 'error', '기록 추가 불가'); return; }
+            if (!confirm(`${rowLabel} ${ticker}의 수익금 $${profitNum.toFixed(2)}을(를) 확정합니다.\n확정 후에는 원본 칸을 지워도 누적 매매 수익금에는 계속 남습니다. 계속할까요?`)) return;
+
+            try {
+                const res = await fetchWithRetry_(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(withToken_({ action: 'addStepLogRecord', date: dateVal, ticker, memo: memoVal, profit: profitNum, step: rowLabel }))
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || '기록 추가 실패');
+                stepLogRecordsCache = json.records || stepLogRecordsCache;
+                renderStepLogTable_();
+                showNotification(`'${ticker}' ${rowLabel} 수익금이 확정되었습니다.`, 'success', '기록 추가 완료');
+            } catch (err) {
+                showNotification(`기록 추가에 실패했습니다: ${err.message}`, 'error', '기록 추가 실패');
+                console.error('차수 기록 확정 실패:', err);
+            }
+        }
+
+        function renderStepLogRecordsTable_() {
+            const tbody = document.getElementById('stepLogRecordsBody');
+            if (!tbody) return;
+            const countEl = document.getElementById('stepLogRecordsCount');
+
+            const sorted = [...stepLogRecordsCache].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+            if (countEl) countEl.innerText = `총 ${sorted.length}건`;
+
+            if (sorted.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-600">확정된 기록이 없습니다. 차수 기록에서 '기록 추가' 버튼을 눌러 수익금을 확정해보세요.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = sorted.map(rec => {
+                const profitNum = Number(rec.profit) || 0;
+                return `
+                <tr class="border-b border-slate-800/30 hover:bg-slate-800/20 text-slate-300">
+                    <td class="p-2 text-slate-400 whitespace-nowrap">${escapeHtml_(rec.date)}${rec.step ? ` <span class="text-slate-600">(${escapeHtml_(rec.step)})</span>` : ''}</td>
+                    <td class="p-2 font-semibold text-violet-300">${escapeHtml_(rec.ticker)}</td>
+                    <td class="p-2 text-left max-w-[200px] truncate text-slate-400">${escapeHtml_(rec.memo) || '-'}</td>
+                    <td class="p-2 text-right font-semibold ${profitNum < 0 ? 'text-rose-400' : 'text-emerald-400'}">$${profitNum.toFixed(2)}</td>
+                    <td class="p-2 text-right whitespace-nowrap">
+                        <button onclick="editStepLogRecordPrompt_('${rec.id}')" title="편집" class="text-slate-500 hover:text-sky-400 mr-2"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteStepLogRecordConfirm_('${rec.id}')" title="삭제" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function editStepLogRecordPrompt_(id) {
+            const rec = stepLogRecordsCache.find(r => r.id === id);
+            if (!rec) return;
+
+            const newDate = prompt('날짜 (YYYY-MM-DD):', rec.date || '');
+            if (newDate === null) return;
+            const newTicker = prompt('종목:', rec.ticker || '');
+            if (newTicker === null) return;
+            const newMemo = prompt('수량/메모:', rec.memo || '');
+            if (newMemo === null) return;
+            const newProfitStr = prompt('수익금:', rec.profit);
+            if (newProfitStr === null) return;
+            const newProfit = parseFloat(String(newProfitStr).replace(/,/g, ''));
+            if (!newDate || isNaN(newProfit)) { showNotification('날짜와 수익금을 올바르게 입력해주세요.', 'error', '수정 불가'); return; }
+
+            if (!splitBuyApiUrl || !splitBuyApiToken) return;
+            try {
+                const res = await fetchWithRetry_(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(withToken_({ action: 'updateStepLogRecord', id, date: newDate, ticker: newTicker.trim() || rec.ticker, memo: newMemo, profit: newProfit }))
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || '수정 실패');
+                stepLogRecordsCache = json.records || stepLogRecordsCache;
+                renderStepLogTable_();
+                showNotification('기록이 수정되었습니다.', 'success', '수정 완료');
+            } catch (err) {
+                showNotification(`기록 수정에 실패했습니다: ${err.message}`, 'error', '수정 실패');
+                console.error('차수 기록 확정 내역 수정 실패:', err);
+            }
+        }
+
+        async function deleteStepLogRecordConfirm_(id) {
+            if (!confirm('이 확정 기록을 삭제하시겠습니까?\n누적 매매 수익금 및 월별 차트 집계에서도 제외됩니다.')) return;
+            if (!splitBuyApiUrl || !splitBuyApiToken) return;
+            try {
+                const res = await fetchWithRetry_(splitBuyApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(withToken_({ action: 'deleteStepLogRecord', id }))
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || '삭제 실패');
+                stepLogRecordsCache = json.records || stepLogRecordsCache;
+                renderStepLogTable_();
+                showNotification('확정 기록이 삭제되었습니다.', 'info', '삭제 완료');
+            } catch (err) {
+                showNotification(`기록 삭제에 실패했습니다: ${err.message}`, 'error', '삭제 실패');
+                console.error('차수 기록 확정 내역 삭제 실패:', err);
+            }
         }
 
         function renderNotepadArea_() {
@@ -1725,6 +1863,7 @@
             runSequentially_([
                 () => fetchGrid_('buyList'),
                 () => fetchGrid_('stepLog'),
+                () => fetchStepLogRecords_(),
                 () => fetchGrid_('notepad'),
                 () => fetchGrid_('notepad1'),
                 () => fetchGrid_('yieldData')
