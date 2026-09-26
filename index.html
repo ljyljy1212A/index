@@ -709,8 +709,8 @@
                         </div>
                     </div>
                     <p class="text-[10px] text-slate-500 mb-3">
-                        "전체 합계"는 위 표의 <strong>수익금</strong> 칸 기준, 종목을 고르면 각 종목의 <strong>수익금</strong> 하위 칸 기준으로 집계됩니다.
-                        두 값은 서로 자동으로 맞춰지지 않으니, 종목별로 나눠 기록할 계획이면 상단 수익금 칸은 참고용으로만 쓰거나 비워두세요.
+                        "전체 합계"는 같은 날짜에 입력된 모든 종목의 <strong>수익금</strong> 칸을 더한 값이고,
+                        종목을 고르면 그 종목의 <strong>수익금</strong> 칸만 집계됩니다.
                     </p>
                     <div class="relative h-64 w-full">
                         <canvas id="stepLogComboChart"></canvas>
@@ -1203,7 +1203,9 @@
         async function ensureStepLogSpecialColumns_() {
             if (!splitBuyApiUrl || !splitBuyApiToken) return;
             const cache = gridCache.stepLog;
-            const missingSpecial = [STEPLOG_DATE_KEY, STEPLOG_PROFIT_KEY].filter(k => !cache.tickers.includes(k));
+            // 예전엔 수동 입력 '수익금'/'메모' 칸도 자동 생성했지만, 두 칸은 삭제되었으므로
+            // 더 이상 만들지 않는다. (이미 시트에 남아있는 옛 '수익금' 칸은 무시하고 안 쓴다.)
+            const missingSpecial = [STEPLOG_DATE_KEY].filter(k => !cache.tickers.includes(k));
             // 이 기능이 생기기 전에 이미 추가돼 있던 종목들에도, 짝꿍 수익금 칸이 없다면 만들어준다.
             const baseTickers = cache.tickers.filter(t => t !== STEPLOG_DATE_KEY && t !== STEPLOG_PROFIT_KEY && !isStepLogProfitColumn_(t));
             const missingProfitCols = baseTickers
@@ -1420,25 +1422,26 @@
             updateGridTickerLabel_('stepLogTickerList', baseTickers);
             updateStepLogChartTickerOptions_(baseTickers);
 
-            // 상단 배지도 아래 월별 차트(getStepLogProfitSeries_)와 동일하게
-            // "날짜 + 수익금"이 둘 다 입력된 행만 집계한다. (날짜 없이 수익금만 입력된 행은
-            // 월별 차트에 잡히지 않으므로, 배지 합계도 여기서 제외해 둘을 일치시킴)
+            // 상단 누적 배지 = 각 종목 수익금 칸을 날짜별로 합산한 값(getStepLogProfitSeries_).
+            // 날짜가 없는 행에 종목 수익금만 입력된 경우는 집계에서 빠지므로, 아래에서 경고로 표시한다.
             const validProfitSeries = getStepLogProfitSeries_();
             const cumProfit = validProfitSeries.reduce((sum, item) => sum + item.revenue, 0);
             const cumEl = document.getElementById('stepLogCumProfitValue');
             if (cumEl) cumEl.innerText = `$${cumProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-            const orphanProfitCount = labels.filter(rowLabel => {
+            const rowHasOrphanProfit_ = (rowLabel) => {
                 const row = cache.data[rowLabel] || {};
-                const profitRaw = row[STEPLOG_PROFIT_KEY];
-                const hasProfit = profitRaw !== undefined && profitRaw !== '' && !isNaN(parseFloat(String(profitRaw).replace(/,/g, '')));
-                const hasDate = !!row[STEPLOG_DATE_KEY];
-                return hasProfit && !hasDate;
-            }).length;
+                if (row[STEPLOG_DATE_KEY]) return false;
+                return baseTickers.some(t => {
+                    const raw = row[stepLogProfitKeyFor_(t)];
+                    return raw !== undefined && raw !== '' && !isNaN(parseFloat(String(raw).replace(/,/g, '')));
+                });
+            };
+            const orphanProfitCount = labels.filter(rowHasOrphanProfit_).length;
             const cumWarnEl = document.getElementById('stepLogCumProfitWarn');
             if (cumWarnEl) {
                 cumWarnEl.classList.toggle('hidden', orphanProfitCount === 0);
-                cumWarnEl.title = `날짜가 비어있어 집계에서 제외된 수익금이 ${orphanProfitCount}건 있습니다.`;
+                cumWarnEl.title = `날짜가 비어있어 집계에서 제외된 종목 수익금이 ${orphanProfitCount}건 있습니다.`;
             }
 
             const headerHtml = `
@@ -1446,8 +1449,6 @@
                     <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
                         <th class="p-2 w-20" rowspan="2">차수</th>
                         <th class="p-2 w-36" rowspan="2"><i class="fa-solid fa-calendar-days mr-1"></i>날짜</th>
-                        <th class="p-2 w-32" rowspan="2"><i class="fa-solid fa-sack-dollar mr-1"></i>수익금</th>
-                        <th class="p-2 min-w-[140px]" rowspan="2">메모</th>
                         ${baseTickers.map(t => `<th class="p-2 min-w-[190px] text-center" colspan="2">${t} <button onclick="deleteTickerFromGrid_('stepLog','${t}')" class="text-slate-600 hover:text-rose-400 ml-1"><i class="fa-solid fa-xmark"></i></button></th>`).join('')}
                         ${baseTickers.length === 0 ? '<th class="p-2 text-slate-600 font-normal" rowspan="2">종목을 추가해주세요</th>' : ''}
                     </tr>
@@ -1458,40 +1459,29 @@
 
             const bodyRows = labels.map(rowLabel => {
                 const row = cache.data[rowLabel] || {};
-                const profitRaw = row[STEPLOG_PROFIT_KEY];
-                const profitNum = parseFloat(String(profitRaw).replace(/,/g, ''));
-                const hasProfit = profitRaw !== undefined && profitRaw !== '' && !isNaN(profitNum);
                 const hasDate = !!row[STEPLOG_DATE_KEY];
-                // 손익 부호에 따라 색상 구분: 손실은 빨강, 이익은 초록, 값 없음은 회색
-                const profitColorClass = hasProfit
-                    ? (profitNum < 0 ? 'text-rose-400' : (profitNum > 0 ? 'text-emerald-300' : 'text-slate-400'))
-                    : 'text-slate-400';
-                const rowWarnTitle = hasProfit && !hasDate ? 'title="날짜가 없어 상단 누적 배지/월별 차트 집계에서 제외됩니다."' : '';
-                const rowClass = hasProfit && !hasDate
+                const orphan = rowHasOrphanProfit_(rowLabel);
+                const rowWarnTitle = orphan ? 'title="날짜가 없어 상단 누적 배지/월별 차트 집계에서 제외됩니다."' : '';
+                const rowClass = orphan
                     ? 'border-b border-slate-800/30 hover:bg-slate-800/20 bg-amber-500/5'
                     : 'border-b border-slate-800/30 hover:bg-slate-800/20';
                 return `
                 <tr class="${rowClass}" ${rowWarnTitle}>
-                    <td class="p-2 font-semibold text-slate-300">${rowLabel}${hasProfit && !hasDate ? ' <i class="fa-solid fa-triangle-exclamation text-amber-400 text-[10px]"></i>' : ''}</td>
+                    <td class="p-2 font-semibold text-slate-300">${rowLabel}${orphan ? ' <i class="fa-solid fa-triangle-exclamation text-amber-400 text-[10px]"></i>' : ''}</td>
                     <td class="p-2">
                         <input type="date" value="${String(row[STEPLOG_DATE_KEY] || '').replace(/"/g, '&quot;')}"
                             onchange="onGridCellInput_('stepLog','${rowLabel}','${STEPLOG_DATE_KEY}', this.value); renderStepLogTable_();"
                             class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
                     </td>
-                    <td class="p-2">
-                        <input type="number" step="0.01" value="${String(profitRaw || '').replace(/"/g, '&quot;')}" placeholder="0.00"
-                            onchange="onGridCellInput_('stepLog','${rowLabel}','${STEPLOG_PROFIT_KEY}', this.value); renderStepLogTable_();"
-                            class="w-full bg-slate-950 ${profitColorClass} text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
-                    </td>
-                    <td class="p-2">
-                        <input type="text" value="${String((cache.memos && cache.memos[rowLabel]) || '').replace(/"/g, '&quot;')}" placeholder="-"
-                            oninput="onGridMemoInput_('stepLog','${rowLabel}', this.value)"
-                            class="w-full bg-slate-950 text-violet-200 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
-                    </td>
                     ${baseTickers.map(t => {
                         const val = (cache.data[rowLabel] && cache.data[rowLabel][t] !== undefined) ? cache.data[rowLabel][t] : '';
                         const profitKey = stepLogProfitKeyFor_(t);
-                        const tickerProfitVal = (cache.data[rowLabel] && cache.data[rowLabel][profitKey] !== undefined) ? cache.data[rowLabel][profitKey] : '';
+                        const tickerProfitRaw = (cache.data[rowLabel] && cache.data[rowLabel][profitKey] !== undefined) ? cache.data[rowLabel][profitKey] : '';
+                        const tickerProfitNum = parseFloat(String(tickerProfitRaw).replace(/,/g, ''));
+                        const hasTickerProfit = tickerProfitRaw !== undefined && tickerProfitRaw !== '' && !isNaN(tickerProfitNum);
+                        const tickerProfitColorClass = hasTickerProfit
+                            ? (tickerProfitNum < 0 ? 'text-rose-400' : (tickerProfitNum > 0 ? 'text-emerald-300' : 'text-slate-400'))
+                            : 'text-slate-400';
                         return `
                             <td class="p-2">
                                 <input type="text" value="${String(val).replace(/"/g, '&quot;')}" placeholder="수량/메모"
@@ -1499,9 +1489,9 @@
                                     class="w-full bg-slate-950 text-slate-300 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
                             </td>
                             <td class="p-2">
-                                <input type="number" step="0.01" value="${String(tickerProfitVal).replace(/"/g, '&quot;')}" placeholder="0.00"
+                                <input type="number" step="0.01" value="${String(tickerProfitRaw || '').replace(/"/g, '&quot;')}" placeholder="0.00"
                                     onchange="onGridCellInput_('stepLog','${rowLabel}','${profitKey}', this.value); renderStepLogTable_();"
-                                    class="w-full bg-slate-950 text-emerald-300 text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
+                                    class="w-full bg-slate-950 ${tickerProfitColorClass} text-[11px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-emerald-500">
                             </td>`;
                     }).join('')}
                     ${baseTickers.length === 0 ? '<td class="p-2"></td>' : ''}
@@ -1543,20 +1533,33 @@
             renderStepLogComboChart_();
         }
 
-        // 차수 기록에 입력된 (날짜, 수익금) 쌍만 뽑아서 날짜순으로 정렬한 배열로 변환
-        // (기존 groupDataByMonth()가 기대하는 {date, revenue} 형태로 맞춰 재사용)
+        // 차수 기록에서 "전체 합계" 시리즈 = 같은 날짜(행)에 입력된 모든 종목의 수익금 칸을 더한 값.
+        // (예전엔 별도의 수동 입력 '수익금' 칸을 그대로 썼지만, 그 칸이 삭제되어
+        //  이제는 종목별 수익금 칸들의 합으로 계산한다. 날짜가 없거나 어떤 종목에도
+        //  값이 없는 행은 예전과 마찬가지로 집계에서 제외한다.)
         function getStepLogProfitSeries_() {
             const cache = gridCache.stepLog;
+            const baseTickers = cache.tickers.filter(t => t !== STEPLOG_DATE_KEY && t !== STEPLOG_PROFIT_KEY && !isStepLogProfitColumn_(t));
+            const profitKeys = baseTickers.map(t => stepLogProfitKeyFor_(t));
             const series = [];
             (cache.rowLabels || []).forEach(rowLabel => {
                 const row = cache.data[rowLabel];
                 if (!row) return;
                 const dateStr = row[STEPLOG_DATE_KEY];
-                const profitRaw = row[STEPLOG_PROFIT_KEY];
-                if (!dateStr || profitRaw === undefined || profitRaw === '') return;
-                const revenue = parseFloat(String(profitRaw).replace(/,/g, ''));
-                if (isNaN(revenue)) return;
-                series.push({ date: dateStr, revenue });
+                if (!dateStr) return;
+
+                let sum = 0;
+                let hasAny = false;
+                profitKeys.forEach(pk => {
+                    const raw = row[pk];
+                    if (raw === undefined || raw === '') return;
+                    const num = parseFloat(String(raw).replace(/,/g, ''));
+                    if (isNaN(num)) return;
+                    hasAny = true;
+                    sum += num;
+                });
+                if (!hasAny) return;
+                series.push({ date: dateStr, revenue: sum });
             });
             return series.sort((a, b) => a.date.localeCompare(b.date));
         }
