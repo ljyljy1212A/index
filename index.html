@@ -480,6 +480,29 @@
                     <div class="relative h-64 w-full">
                         <canvas id="monthlyComboChart"></canvas>
                     </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60">
+                        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                            <h4 class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-layer-group text-cyan-400"></i> 종목별 누적 월별 수익금 & 일평균
+                            </h4>
+                            <select id="tickerSelect_combo" onchange="onTickerSelectChange_('combo', this.value)"
+                                class="bg-slate-950 text-slate-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-cyan-500">
+                                <option value="전체">전체 종목</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto max-h-40 overflow-y-auto">
+                            <table class="w-full text-left text-[11px] border-collapse">
+                                <thead class="sticky top-0 bg-slate-900">
+                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                        <th class="py-1.5 pr-2">월</th>
+                                        <th class="py-1.5 pr-2 text-right">누적 수익금</th>
+                                        <th class="py-1.5 text-right">일평균</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickerMonthlyTableBody_combo" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
@@ -615,6 +638,29 @@
                     <div class="relative h-56 w-full">
                         <canvas id="yearlyBarChart"></canvas>
                     </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60">
+                        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                            <h4 class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-layer-group text-amber-400"></i> 종목별 누적 월별 수익금 & 일평균
+                            </h4>
+                            <select id="tickerSelect_yearly" onchange="onTickerSelectChange_('yearly', this.value)"
+                                class="bg-slate-950 text-slate-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-amber-500">
+                                <option value="전체">전체 종목</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto max-h-40 overflow-y-auto">
+                            <table class="w-full text-left text-[11px] border-collapse">
+                                <thead class="sticky top-0 bg-slate-900">
+                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                        <th class="py-1.5 pr-2">월</th>
+                                        <th class="py-1.5 pr-2 text-right">누적 수익금</th>
+                                        <th class="py-1.5 text-right">일평균</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickerMonthlyTableBody_yearly" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
@@ -640,6 +686,29 @@
                     </div>
                     <div class="relative h-56 w-full">
                         <canvas id="monthlyReturnChart"></canvas>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60">
+                        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                            <h4 class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-layer-group text-emerald-400"></i> 종목별 누적 월별 수익금 & 일평균
+                            </h4>
+                            <select id="tickerSelect_monthlyReturn" onchange="onTickerSelectChange_('monthlyReturn', this.value)"
+                                class="bg-slate-950 text-slate-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                                <option value="전체">전체 종목</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto max-h-40 overflow-y-auto">
+                            <table class="w-full text-left text-[11px] border-collapse">
+                                <thead class="sticky top-0 bg-slate-900">
+                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                        <th class="py-1.5 pr-2">월</th>
+                                        <th class="py-1.5 pr-2 text-right">누적 수익금</th>
+                                        <th class="py-1.5 text-right">일평균</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickerMonthlyTableBody_monthlyReturn" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2039,6 +2108,7 @@
             const memos = (gridCache.buyList && gridCache.buyList.memos) || {};
 
             updateGridTickerLabel_('buyManagementTickerList', tickers);
+            populateTickerSelects_();
 
             const headerHtml = `
                 <thead>
@@ -2174,6 +2244,7 @@
             }
             renderBuyMgmtRecordsTable_();
             updateDailyEntryConfirmedSum_();
+            renderAllTickerBreakdownTables_();
         }
 
         // 💰 토글 박스의 '기록 추가' 버튼: 지금 입력된 날짜/메모/수익금을 그 계좌·종목의
@@ -2208,6 +2279,7 @@
                 renderBuyManagement_();
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
+                renderAllTickerBreakdownTables_();
                 showNotification(`'${ticker}' ${accountLabel} 수익금이 확정되었습니다.`, 'success', '기록 추가 완료');
             } catch (err) {
                 showNotification(`기록 추가에 실패했습니다: ${err.message}`, 'error', '기록 추가 실패');
@@ -2297,6 +2369,7 @@
                 buyMgmtRecordsCache = json.records || buyMgmtRecordsCache;
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
+                renderAllTickerBreakdownTables_();
                 showNotification('기록이 수정되었습니다.', 'success', '수정 완료');
             } catch (err) {
                 showNotification(`기록 수정에 실패했습니다: ${err.message}`, 'error', '수정 실패');
@@ -2318,6 +2391,7 @@
                 buyMgmtRecordsCache = json.records || buyMgmtRecordsCache;
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
+                renderAllTickerBreakdownTables_();
                 showNotification('확정 기록이 삭제되었습니다.', 'info', '삭제 완료');
             } catch (err) {
                 showNotification(`기록 삭제에 실패했습니다: ${err.message}`, 'error', '삭제 실패');
@@ -2559,6 +2633,7 @@
         function rebuildChartsAndTable_() {
             if (!cachedParsedData || cachedParsedData.length === 0) return;
             renderPortfolioDonutChart(buildPortfolioFromBuyManagement_());
+            populateTickerSelects_();
             rerenderCombo_();
             rerenderAcc_();
             rerenderMdd_();
@@ -2574,11 +2649,11 @@
             return filtered.length > 0 ? filtered : cachedParsedData;
         }
 
-        function rerenderCombo_() { renderMonthlyComboChart(groupDataByMonth(getFilteredDailyData_('combo'))); }
+        function rerenderCombo_() { renderMonthlyComboChart(groupDataByMonth(getFilteredDailyData_('combo'))); renderTickerBreakdownTable_('combo'); }
         function rerenderAcc_() { renderAccountChart(getFilteredDailyData_('acc')); }
         function rerenderMdd_() { renderMddChart(getFilteredDailyData_('mdd')); }
-        function rerenderYearly_() { renderYearlyBarChart(groupDataByYear(getFilteredDailyData_('yearly'))); }
-        function rerenderMonthlyReturn_() { renderMonthlyReturnChart(calculateMonthlyStats(getFilteredDailyData_('monthlyReturn')).monthlyDetails); }
+        function rerenderYearly_() { renderYearlyBarChart(groupDataByYear(getFilteredDailyData_('yearly'))); renderTickerBreakdownTable_('yearly'); }
+        function rerenderMonthlyReturn_() { renderMonthlyReturnChart(calculateMonthlyStats(getFilteredDailyData_('monthlyReturn')).monthlyDetails); renderTickerBreakdownTable_('monthlyReturn'); }
         function rerenderTable_() { cachedChartData = getFilteredDailyData_('table'); renderDetailTable(cachedChartData); }
 
         const CALENDAR_APPLY_CALLBACKS = {
@@ -2931,6 +3006,102 @@
                 year: key,
                 totalRevenue: groups[key]
             })).sort((a, b) => a.year.localeCompare(b.year));
+        }
+
+        // ===================================================================
+        // 📌 종목별 누적 월별 수익금 & 일평균 (월별 수익 합계 & 일평균 / 연도별 수익금 합계 /
+        // 월별 수익률 추이 3개 카드에 공통으로 표시되는 종목별 브레이크다운 테이블)
+        // '종목별 매수 관리'에서 💰로 확정한 buyMgmtRecordsCache(날짜/종목/수익금)를 소스로 쓰고,
+        // 일평균의 분모(그 달의 기록일수)는 각 카드가 이미 쓰고 있는 전체 일일 데이터를 그대로 재사용한다.
+        // ===================================================================
+        const selectedTickerByChart_ = { combo: '전체', yearly: '전체', monthlyReturn: '전체' };
+
+        function populateTickerSelects_() {
+            const tickerOptions = ['전체', ...getMergedTickerList_()];
+            ['combo', 'yearly', 'monthlyReturn'].forEach(key => {
+                const sel = document.getElementById(`tickerSelect_${key}`);
+                if (!sel) return;
+                const current = selectedTickerByChart_[key] || '전체';
+                sel.innerHTML = tickerOptions.map(t =>
+                    `<option value="${escapeHtml_(t)}">${t === '전체' ? '전체 종목' : escapeHtml_(t)}</option>`
+                ).join('');
+                sel.value = tickerOptions.includes(current) ? current : '전체';
+                selectedTickerByChart_[key] = sel.value;
+            });
+        }
+
+        function onTickerSelectChange_(key, value) {
+            selectedTickerByChart_[key] = value;
+            renderTickerBreakdownTable_(key);
+        }
+
+        function monthsForFilter_(filterMode) {
+            if (filterMode === '3M') return 3;
+            if (filterMode === '6M') return 6;
+            if (filterMode === '1Y') return 12;
+            if (filterMode === '3Y') return 36;
+            if (filterMode === '5Y') return 60;
+            return 0; // ALL
+        }
+
+        // ticker가 '전체'면 모든 확정 기록 합산, 특정 종목이면 그 종목만 필터링.
+        // 일평균의 분모는 해당 카드에 표시 중인 일일 데이터의 '월별 기록일수'를 그대로 사용해
+        // 기존 전체 지표(월별 수익 합계 & 일평균)와 같은 방식으로 계산한다.
+        function computeTickerMonthlyBreakdown_(ticker, dailyData) {
+            if (!dailyData || dailyData.length === 0) return [];
+            const startDate = dailyData[0].date;
+            const endDate = dailyData[dailyData.length - 1].date;
+
+            const dayCounts = {};
+            dailyData.forEach(item => {
+                const mKey = item.date.substring(0, 7);
+                dayCounts[mKey] = (dayCounts[mKey] || 0) + 1;
+            });
+
+            const revenueByMonth = {};
+            buyMgmtRecordsCache.forEach(rec => {
+                if (!rec.date || rec.date < startDate || rec.date > endDate) return;
+                if (ticker !== '전체' && rec.ticker !== ticker) return;
+                const mKey = rec.date.substring(0, 7);
+                revenueByMonth[mKey] = (revenueByMonth[mKey] || 0) + (Number(rec.profit) || 0);
+            });
+
+            return Object.keys(dayCounts).sort().map(month => {
+                const total = revenueByMonth[month] || 0;
+                const days = dayCounts[month];
+                return { month, totalRevenue: total, avgRevenue: days > 0 ? total / days : 0 };
+            });
+        }
+
+        function renderTickerBreakdownTable_(key) {
+            const tbody = document.getElementById(`tickerMonthlyTableBody_${key}`);
+            if (!tbody) return;
+
+            const ticker = selectedTickerByChart_[key] || '전체';
+            const dailyData = getFilteredDailyData_(key);
+            let breakdown = computeTickerMonthlyBreakdown_(ticker, dailyData);
+
+            const filterMode = key === 'combo' ? activeComboChartFilter
+                : key === 'yearly' ? activeYearlyChartFilter
+                : activeMonthlyReturnChartFilter;
+            const count = monthsForFilter_(filterMode);
+            if (count > 0) breakdown = breakdown.slice(-count);
+
+            if (breakdown.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="py-3 text-slate-600 text-center">표시할 데이터가 없습니다.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = [...breakdown].reverse().map(d => `
+                <tr class="hover:bg-slate-800/20">
+                    <td class="py-1.5 pr-2 text-slate-400">${d.month}</td>
+                    <td class="py-1.5 pr-2 text-right font-mono ${d.totalRevenue < 0 ? 'text-rose-400' : 'text-emerald-400'}">$${d.totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</td>
+                    <td class="py-1.5 text-right font-mono text-sky-400">$${d.avgRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</td>
+                </tr>`).join('');
+        }
+
+        function renderAllTickerBreakdownTables_() {
+            ['combo', 'yearly', 'monthlyReturn'].forEach(key => renderTickerBreakdownTable_(key));
         }
 
         function sliceDailyData(dailyData, filterMode) {
