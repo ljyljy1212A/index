@@ -415,6 +415,9 @@
                     <button onclick="resetTableSort()" title="날짜순으로 정렬 초기화" class="text-slate-400 hover:text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-950 whitespace-nowrap">
                         <i class="fa-solid fa-arrow-rotate-left"></i> 정렬 초기화
                     </button>
+                    <button onclick="exportTableToCsv_()" title="전체 기록을 CSV 파일로 내보내기" class="text-slate-400 hover:text-emerald-400 text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-950 whitespace-nowrap">
+                        <i class="fa-solid fa-file-csv"></i> CSV 내보내기
+                    </button>
                 </div>
                 
                 <div class="overflow-x-auto">
@@ -2416,8 +2419,10 @@
                 localStorage.removeItem('dateCheckedFor');
                 if (checkboxEl) checkboxEl.checked = false;
 
-                setTimeout(() => fetchMainDataViaApi_({ silent: true }), 800);
-                setTimeout(() => fetchMainDataViaApi_({ silent: true }), 2500);
+                // 🩹 [정밀검사 개선] 예전에는 Apps Script 전파 지연을 대비해 800ms/2500ms
+                // 두 번 재동기화했다. 저장 응답이 이미 성공(success)했다면 시트 반영은 끝난
+                // 상태이므로 두 번째 호출은 대부분 불필요한 중복 요청이었다. 1회로 정리.
+                setTimeout(() => fetchMainDataViaApi_({ silent: true }), 1000);
             } catch (err) {
                 setDailyEntrySyncStatus('error', '저장 실패');
                 showNotification(`저장 중 오류가 발생했습니다: ${err.message}`, 'error', '저장 실패');
@@ -2975,6 +2980,10 @@
         // 계산식을 바꿀 때는 Code.gs의 recalcDerivedFrom_()도 반드시 같이 바꿔야 한다.
         function parseAndRenderData(rawMatrix, sourceName) {
             if (!rawMatrix || rawMatrix.length < 2) return;
+            // 🩹 [정밀검사 개선] 예전에는 sourceName이 로그 등에 쓰이지 않는 죽은 매개변수였다.
+            // 어디서 온 데이터로 화면이 갱신됐는지(캐시/API/일괄로딩 등) 콘솔에서 바로
+            // 확인할 수 있도록 디버그 로그에 사용한다.
+            if (sourceName) console.debug(`[데이터 반영] 출처: ${sourceName} (${rawMatrix.length - 1}건)`);
 
             const headers = rawMatrix[0].map(h => h.trim());
             const parsedData = [];
@@ -2982,11 +2991,23 @@
             let prevAccountVal = null;
 
             // 수정: 인덱스를 헤더명을 통해 동적으로 탐색하여 오류 예방
-            let memoIndex = headers.findIndex(h => h.includes("특이사항"));
-            if (memoIndex === -1) memoIndex = 6;
+            // 🩹 [정밀검사 개선] 정확히 일치하는 헤더명을 우선 찾고, 그다음 부분 일치로
+            // 탐색한다. 둘 다 실패해 위치 기반 기본값(fallback)을 쓰게 되면, 시트 헤더가
+            // 예상과 달라졌다는 신호이므로 콘솔에 경고를 남겨 조용히 잘못된 열을 읽는
+            // 사고를 눈치챌 수 있게 한다.
+            let memoIndex = headers.findIndex(h => h === "특이사항");
+            if (memoIndex === -1) memoIndex = headers.findIndex(h => h.includes("특이사항"));
+            if (memoIndex === -1) {
+                console.warn('[parseAndRenderData] "특이사항" 헤더를 찾지 못해 기본 위치(7번째 열)를 사용합니다. 시트 헤더명을 확인하세요.');
+                memoIndex = 6;
+            }
 
-            let stockSumAggIndex = headers.findIndex(h => h.includes("종목") || h.includes("합산"));
-            if (stockSumAggIndex === -1) stockSumAggIndex = 7;
+            let stockSumAggIndex = headers.findIndex(h => h === "종목합산평가금액");
+            if (stockSumAggIndex === -1) stockSumAggIndex = headers.findIndex(h => h.includes("종목") || h.includes("합산"));
+            if (stockSumAggIndex === -1) {
+                console.warn('[parseAndRenderData] "종목합산평가금액" 헤더를 찾지 못해 기본 위치(8번째 열)를 사용합니다. 시트 헤더명을 확인하세요.');
+                stockSumAggIndex = 7;
+            }
 
             const stockStartIndex = stockSumAggIndex + 1;
 
@@ -3382,6 +3403,21 @@
             };
         }
 
+        // 🆕 [색맹 접근성] 상단 KPI 카드도 색상(초록/빨강)만으로 손익 방향을 나타내던 것을,
+        // "+/-" 부호와 방향 아이콘(▲/▼)을 함께 표시하도록 통일한다. 값이 0이면 중립(회색)으로 표시.
+        function setSignedKpi_(id, value, { isPercent = false } = {}) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const cls = value < 0 ? 'text-rose-400' : (value > 0 ? 'text-emerald-400' : 'text-slate-300');
+            const sign = value > 0 ? '+' : '';
+            const arrow = directionArrow_(value);
+            const body = isPercent
+                ? `${value.toFixed(2)}%`
+                : `$${value.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+            el.className = `text-base lg:text-lg font-extrabold ${cls}`;
+            el.innerHTML = `${arrow ? arrow + ' ' : ''}${sign}${body}`;
+        }
+
         function updateKpiCards(data) {
             if (!data || data.length === 0) return;
 
@@ -3413,9 +3449,9 @@
             const avgDaySpan = avgRecordedDays; // (기존 avgDaySpan명은 그대로 두되 의미를 "기록일수"로 통일)
             const avgRevenue = avgDaySpan > 0 ? (avgRevenueTotal / avgDaySpan) : 0;
 
-            document.getElementById('kpiTotalRevenue').innerText = `$${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
+            setSignedKpi_('kpiTotalRevenue', totalRevenue);
             document.getElementById('kpiCurrentAccount').innerText = `$${currentAccount.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
-            document.getElementById('kpiAvgRevenue').innerText = `$${avgRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
+            setSignedKpi_('kpiAvgRevenue', avgRevenue);
             document.getElementById('kpiAvgRevenueRange').innerText = avgRangeLabel;
             document.getElementById('kpiMaxMDD').innerText = `${(minMDD * 100).toFixed(2)}%`;
             document.getElementById('kpiMaxMDDAmount').innerText = worstItem.mddAmount > 0
@@ -3423,8 +3459,8 @@
                 : '';
 
             const mStats = calculateMonthlyStats(data);
-            document.getElementById('kpiMonthlyAvgRevenue').innerText = `$${mStats.avgMonthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
-            document.getElementById('kpiMonthlyAvgReturn').innerText = `${(mStats.avgMonthlyReturn * 100).toFixed(2)}%`;
+            setSignedKpi_('kpiMonthlyAvgRevenue', mStats.avgMonthlyRevenue);
+            setSignedKpi_('kpiMonthlyAvgReturn', mStats.avgMonthlyReturn * 100, { isPercent: true });
 
             const startVal = data[0].accountVal - data[0].revenue;
             const initialVal = startVal > 0 ? startVal : data[0].accountVal;
@@ -3436,7 +3472,7 @@
             if (totalReturn > -1) {
                 annualizedReturn = diffDays >= 15 ? Math.pow(1 + totalReturn, 365 / diffDays) - 1 : totalReturn * (365 / diffDays);
             }
-            document.getElementById('kpiAnnualReturn').innerText = `${(annualizedReturn * 100).toFixed(2)}%`;
+            setSignedKpi_('kpiAnnualReturn', annualizedReturn * 100, { isPercent: true });
 
             maybeSaveYieldSnapshot_(data[data.length - 1].date, {
                 avgRevenue: avgRevenue,
@@ -3783,10 +3819,20 @@
             tickerMonthly: () => rerenderTickerMonthly_()
         };
 
+        // 🆕 [색맹 접근성] 빨강/초록 색상만으로 손익 방향을 구분하면 적록색맹 사용자는
+        // 값을 읽을 수 없다. 색상에 더해 "+/-" 부호와 방향 아이콘(▲/▼)을 항상 함께 표시해서,
+        // 색상 정보 없이 텍스트만으로도 방향을 알 수 있게 한다.
+        function directionArrow_(v) {
+            if (v > 0) return '▲';
+            if (v < 0) return '▼';
+            return '';
+        }
         function fmtSignedCurrency_(val) {
             const v = Number(val) || 0;
             const cls = v < 0 ? 'text-rose-400' : 'text-emerald-400';
-            return `<span class="${cls}">$${v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>`;
+            const sign = v > 0 ? '+' : '';
+            const arrow = directionArrow_(v);
+            return `<span class="${cls}">${arrow ? arrow + ' ' : ''}${sign}$${v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>`;
         }
         function fmtNeutralCurrency_(val) {
             const v = Number(val) || 0;
@@ -3796,12 +3842,15 @@
             const v = Number(val) || 0;
             const sign = v > 0 ? '+' : '';
             const cls = v < 0 ? 'text-rose-400' : (v > 0 ? 'text-emerald-400' : 'text-slate-500');
-            return `<span class="${cls}">${sign}$${v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>`;
+            const arrow = directionArrow_(v);
+            return `<span class="${cls}">${arrow ? arrow + ' ' : ''}${sign}$${v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>`;
         }
         function fmtSignedPercent_(val) {
             const v = Number(val) || 0;
             const cls = v < 0 ? 'text-rose-400' : 'text-emerald-400';
-            return `<span class="${cls}">${v.toFixed(2)}%</span>`;
+            const sign = v > 0 ? '+' : '';
+            const arrow = directionArrow_(v);
+            return `<span class="${cls}">${arrow ? arrow + ' ' : ''}${sign}${v.toFixed(2)}%</span>`;
         }
         const BREAKDOWN_FORMATTERS_ = {
             signedCurrency: fmtSignedCurrency_,
@@ -4449,12 +4498,21 @@
 
             displayData.forEach((item) => {
                 const cashVal = item.cash || 0;
+                // 🆕 [색맹 접근성] 수익금/일별 수익률도 색상만으로 방향을 나타내지 않도록
+                // "+/-" 부호와 방향 아이콘(▲/▼)을 함께 표시한다.
+                const revCls = item.revenue < 0 ? 'text-rose-400' : (item.revenue > 0 ? 'text-emerald-400' : 'text-slate-500');
+                const revSign = item.revenue > 0 ? '+' : '';
+                const revArrow = directionArrow_(item.revenue);
+                const drVal = item.dailyReturn * 100;
+                const drCls = drVal < 0 ? 'text-rose-400' : (drVal > 0 ? 'text-emerald-400' : 'text-slate-400');
+                const drSign = drVal > 0 ? '+' : '';
+                const drArrow = directionArrow_(drVal);
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-date', item.date);
                 tr.className = "hover:bg-slate-800/30 transition text-slate-300 border-b border-slate-800/30";
                 tr.innerHTML = `
                     <td class="p-3 text-slate-400">${item.date}</td>
-                    <td class="p-3 text-right font-semibold text-emerald-400">$${item.revenue.toFixed(2)}</td>
+                    <td class="p-3 text-right font-semibold ${revCls}">${revArrow ? revArrow + ' ' : ''}${revSign}$${item.revenue.toFixed(2)}</td>
                     <td class="p-3 text-right text-slate-400">$${item.cumRevenue.toFixed(2)}</td>
                     <td class="p-3 text-right font-mono">$${item.accountVal.toLocaleString(undefined, {minimumFractionDigits: 1})}</td>
                     <td class="p-3 text-right font-mono ${cashVal < 0 ? 'text-rose-400' : 'text-cyan-400'}">$${cashVal.toLocaleString(undefined, {minimumFractionDigits: 1})}</td>
@@ -4462,7 +4520,7 @@
                         ${(item.mdd * 100).toFixed(2)}%
                         ${item.mddAmount > 0 ? `<div class="text-[9px] text-slate-600">-$${item.mddAmount.toLocaleString(undefined, {maximumFractionDigits: 0})}</div>` : ''}
                     </td>
-                    <td class="p-3 text-right font-mono">${(item.dailyReturn * 100).toFixed(2)}%</td>
+                    <td class="p-3 text-right font-mono ${drCls}">${drArrow ? drArrow + ' ' : ''}${drSign}${drVal.toFixed(2)}%</td>
                     <td class="p-3 text-left max-w-[150px] truncate text-slate-400">${escapeHtml_(item.memo) || '-'}</td>
                     <td class="p-3 text-center whitespace-nowrap">
                         <button onclick="editDailyRecordFromTable_('${item.date}')" title="편집" class="text-slate-500 hover:text-sky-400 mr-2"><i class="fa-solid fa-pen"></i></button>
@@ -4474,6 +4532,42 @@
 
             updateSortIcons_();
             reapplySearchHighlight_();
+        }
+
+        // 🆕 [기능 추가] 전체 기록(날짜/수익금/누적수익금/계좌평가액/현금/MDD/일별수익률/특이사항)을
+        // CSV 파일로 내려받는다. 백업 목적뿐 아니라 엑셀 등 외부 분석 도구에서 활용하기 쉽도록.
+        function exportTableToCsv_() {
+            if (!cachedParsedData || cachedParsedData.length === 0) {
+                showNotification('내보낼 데이터가 없습니다.', 'error', '내보내기 실패');
+                return;
+            }
+
+            const headers = ['날짜', '당일수익금', '누적수익금', '계좌평가액', '현금', 'MDD(%)', '일별수익률(%)', '특이사항'];
+            const sorted = [...cachedParsedData].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const rows = sorted.map(item => ([
+                item.date,
+                item.revenue.toFixed(2),
+                item.cumRevenue.toFixed(2),
+                item.accountVal.toFixed(2),
+                (item.cash || 0).toFixed(2),
+                (item.mdd * 100).toFixed(2),
+                (item.dailyReturn * 100).toFixed(2),
+                `"${String(item.memo || '').replace(/"/g, '""')}"`
+            ]));
+
+            const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+            // 엑셀에서 한글이 깨지지 않도록 UTF-8 BOM을 앞에 붙인다.
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `투자기록_${todayStr_()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification(`${sorted.length}건의 기록을 CSV로 내보냈습니다.`, 'success', '내보내기 완료');
         }
 
         function searchMemo() {
