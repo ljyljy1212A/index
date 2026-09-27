@@ -465,7 +465,12 @@
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-chart-column text-emerald-400"></i> 월별 수익 합계 & 일평균
                         </h3>
-                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                            <select id="yearSelect_combo" onchange="onYearSelectChange_('combo', this.value)"
+                                title="연도별로 보기 (목록이 길어지는 것을 방지)"
+                                class="bg-slate-950 text-emerald-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                                <option value="전체">전체 연도</option>
+                            </select>
                             <div class="relative">
                                 <button type="button" id="calBtn_combo" onclick="toggleCalendarG_('combo')" title="시작일 필터"
                                     class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
@@ -473,7 +478,7 @@
                                 </button>
                                 <div id="calPopup_combo" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
                             </div>
-                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                            <div id="periodGroup_combo" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
                                 <button id="btnComboFilter3M" onclick="toggleComboChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
                                 <button id="btnComboFilter6M" onclick="toggleComboChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
                                 <button id="btnComboFilter1Y" onclick="toggleComboChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
@@ -483,6 +488,21 @@
                     </div>
                     <div class="relative h-64 w-full">
                         <canvas id="monthlyComboChart"></canvas>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60">
+                        <p id="yearHint_combo" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
+                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
+                            <table class="w-full text-left text-[11px] border-collapse">
+                                <thead class="sticky top-0 bg-slate-900">
+                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('combo','month')">월 <span id="tickerSortIcon_combo_month"></span></th>
+                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('combo','totalRevenue')">월 수익합계 <span id="tickerSortIcon_combo_totalRevenue"></span></th>
+                                        <th class="py-1.5 text-right">일평균</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickerMonthlyTableBody_combo" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -533,7 +553,12 @@
                             <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                                 <i class="fa-solid fa-chart-line text-sky-400"></i> 계좌 평가액 추이
                             </h3>
-                            <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                                <select id="yearSelect_acc" onchange="onYearSelectChange_('acc', this.value)"
+                                    title="연도별로 보기 (목록이 길어지는 것을 방지)"
+                                    class="bg-slate-950 text-sky-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-sky-500">
+                                    <option value="전체">전체 연도</option>
+                                </select>
                                 <div class="relative">
                                     <button type="button" id="calBtn_acc" onclick="toggleCalendarG_('acc')" title="시작일 필터"
                                         class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
@@ -541,7 +566,7 @@
                                     </button>
                                     <div id="calPopup_acc" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
                                 </div>
-                                <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                                <div id="periodGroup_acc" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
                                     <button id="btnAccFilter3M" onclick="toggleAccChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
                                     <button id="btnAccFilter6M" onclick="toggleAccChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
                                     <button id="btnAccFilter1Y" onclick="toggleAccChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
@@ -551,6 +576,21 @@
                         </div>
                         <div class="relative h-64 w-full">
                             <canvas id="accountValueChart"></canvas>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800/60">
+                            <p id="yearHint_acc" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
+                            <div class="overflow-x-auto max-h-72 overflow-y-auto">
+                                <table class="w-full text-left text-[11px] border-collapse">
+                                    <thead class="sticky top-0 bg-slate-900">
+                                        <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                            <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('acc','month')">월 <span id="tickerSortIcon_acc_month"></span></th>
+                                            <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('acc','endValue')">월말 평가액 <span id="tickerSortIcon_acc_endValue"></span></th>
+                                            <th class="py-1.5 text-right">전월 대비</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tickerMonthlyTableBody_acc" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -638,6 +678,20 @@
                     <div class="relative h-56 w-full">
                         <canvas id="yearlyBarChart"></canvas>
                     </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60">
+                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
+                            <table class="w-full text-left text-[11px] border-collapse">
+                                <thead class="sticky top-0 bg-slate-900">
+                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('yearly','year')">연도 <span id="tickerSortIcon_yearly_year"></span></th>
+                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('yearly','totalRevenue')">연간 수익합계 <span id="tickerSortIcon_yearly_totalRevenue"></span></th>
+                                        <th class="py-1.5 text-right">연 일평균</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickerMonthlyTableBody_yearly" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
@@ -645,7 +699,12 @@
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-chart-line text-emerald-400"></i> 월별 수익률 추이
                         </h3>
-                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                            <select id="yearSelect_monthlyReturn" onchange="onYearSelectChange_('monthlyReturn', this.value)"
+                                title="연도별로 보기 (목록이 길어지는 것을 방지)"
+                                class="bg-slate-950 text-emerald-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                                <option value="전체">전체 연도</option>
+                            </select>
                             <div class="relative">
                                 <button type="button" id="calBtn_monthlyReturn" onclick="toggleCalendarG_('monthlyReturn')" title="시작일 필터"
                                     class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
@@ -653,7 +712,7 @@
                                 </button>
                                 <div id="calPopup_monthlyReturn" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
                             </div>
-                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                            <div id="periodGroup_monthlyReturn" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
                                 <button id="btnMonRetFilter3M" onclick="toggleMonthlyReturnChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
                                 <button id="btnMonRetFilter6M" onclick="toggleMonthlyReturnChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
                                 <button id="btnMonRetFilter1Y" onclick="toggleMonthlyReturnChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
@@ -663,6 +722,20 @@
                     </div>
                     <div class="relative h-56 w-full">
                         <canvas id="monthlyReturnChart"></canvas>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60">
+                        <p id="yearHint_monthlyReturn" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
+                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
+                            <table class="w-full text-left text-[11px] border-collapse">
+                                <thead class="sticky top-0 bg-slate-900">
+                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('monthlyReturn','month')">월 <span id="tickerSortIcon_monthlyReturn_month"></span></th>
+                                        <th class="py-1.5 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('monthlyReturn','rate')">수익률 <span id="tickerSortIcon_monthlyReturn_rate"></span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickerMonthlyTableBody_monthlyReturn" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2912,11 +2985,34 @@
             return filtered.length > 0 ? filtered : cachedParsedData;
         }
 
-        function rerenderCombo_() { renderMonthlyComboChart(groupDataByMonth(getFilteredDailyData_('combo'))); }
-        function rerenderAcc_() { renderAccountChart(getFilteredDailyData_('acc')); }
+        // 🩹 [수정안 반영] combo/acc/monthlyReturn은 이제 연도 선택을 지원하므로, 특정 연도가 선택돼
+        // 있으면 차트에 그 연도(최대 12개월)만 반영하고, 그 아래 브레이크다운 표도 함께 다시 그린다.
+        function rerenderCombo_() {
+            let monthlyData = groupDataByMonth(getFilteredDailyData_('combo'));
+            const year = selectedYearByChart_['combo'] || '전체';
+            if (year !== '전체') monthlyData = monthlyData.filter(d => d.month.startsWith(year));
+            renderMonthlyComboChart(monthlyData, year);
+            renderTickerBreakdownTable_('combo');
+        }
+        function rerenderAcc_() {
+            let dailyData = getFilteredDailyData_('acc');
+            const year = selectedYearByChart_['acc'] || '전체';
+            if (year !== '전체') dailyData = dailyData.filter(d => d.date.startsWith(year));
+            renderAccountChart(dailyData, year);
+            renderTickerBreakdownTable_('acc');
+        }
         function rerenderMdd_() { renderMddChart(getFilteredDailyData_('mdd')); }
-        function rerenderYearly_() { renderYearlyBarChart(groupDataByYear(getFilteredDailyData_('yearly'))); }
-        function rerenderMonthlyReturn_() { renderMonthlyReturnChart(calculateMonthlyStats(getFilteredDailyData_('monthlyReturn')).monthlyDetails); }
+        function rerenderYearly_() {
+            renderYearlyBarChart(groupDataByYear(getFilteredDailyData_('yearly')));
+            renderTickerBreakdownTable_('yearly');
+        }
+        function rerenderMonthlyReturn_() {
+            let monthlyDetails = calculateMonthlyStats(getFilteredDailyData_('monthlyReturn')).monthlyDetails;
+            const year = selectedYearByChart_['monthlyReturn'] || '전체';
+            if (year !== '전체') monthlyDetails = monthlyDetails.filter(d => d.month.startsWith(year));
+            renderMonthlyReturnChart(monthlyDetails, year);
+            renderTickerBreakdownTable_('monthlyReturn');
+        }
         function rerenderTable_() { cachedChartData = getFilteredDailyData_('table'); renderDetailTable(cachedChartData); }
 
         function rerenderTickerMonthly_() {
@@ -3294,6 +3390,47 @@
             })).sort((a, b) => a.year.localeCompare(b.year));
         }
 
+        // 🩹 [수정안 반영: 계좌 평가액 추이 표] 계좌 평가액은 "합산"이 의미가 없으므로(누적 잔고이기 때문에)
+        // 월별로 "그 달의 마지막 기록일 평가액(월말 평가액)"과, 전월 마지막 평가액 대비 증감액을 계산한다.
+        function groupAccountByMonth_(dailyData) {
+            if (!dailyData || dailyData.length === 0) return [];
+            const sorted = [...dailyData].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const monthlyMap = {};
+            sorted.forEach(item => {
+                const mKey = item.date.substring(0, 7);
+                // 같은 달 안에서는 계속 덮어써서 결과적으로 "그 달의 마지막 기록값(월말 평가액)"만 남긴다.
+                monthlyMap[mKey] = item.accountVal;
+            });
+
+            const monthKeys = Object.keys(monthlyMap).sort();
+            return monthKeys.map((mKey, idx) => {
+                const endValue = monthlyMap[mKey];
+                const prevValue = idx > 0 ? monthlyMap[monthKeys[idx - 1]] : null;
+                const diffAmount = prevValue !== null ? endValue - prevValue : 0;
+                return { month: mKey, endValue, diffAmount };
+            });
+        }
+
+        // 🩹 [수정안 반영: 연도별 수익금 합계 표] 기존 groupDataByYear()에 "연 일평균"(그 해 실제
+        // 기록일수 기준, 자동채움일 제외)을 추가한 버전. 표에서만 쓰고 차트는 기존 groupDataByYear 그대로 사용.
+        function groupDataByYearWithAvg_(data) {
+            if (!data || data.length === 0) return [];
+            const dayCounts = {};
+            const revenueByYear = {};
+            data.forEach(item => {
+                const yKey = item.date.substring(0, 4);
+                // 🩹 자동 채움된 미기록일은 다른 일평균 지표와 동일하게 분모에서 제외
+                if (!item.isAutoFilled) dayCounts[yKey] = (dayCounts[yKey] || 0) + 1;
+                revenueByYear[yKey] = (revenueByYear[yKey] || 0) + item.revenue;
+            });
+
+            return Object.keys(revenueByYear).sort().map(year => {
+                const total = revenueByYear[year];
+                const days = dayCounts[year] || 0;
+                return { year, totalRevenue: total, avgRevenue: days > 0 ? total / days : 0 };
+            });
+        }
+
         // ===================================================================
         // 📌 종목별 누적 월별 수익금 & 일평균 (독립 카드: '월별 수익 합계 & 일평균'과 동일한
         // 헤더/달력 필터/기간 버튼/차트 구조를 그대로 사용하되, 종목 선택(select)에 따라
@@ -3305,7 +3442,10 @@
         // 📌 연도별 보기: 데이터(월)가 쌓일수록 표/그래프가 한없이 길어지는 것을 막기 위해
         // 기본값으로 "가장 최근 연도"만 보여주고, 필요하면 드롭다운에서 다른 연도나 '전체 연도'를 선택하게 한다.
         // null이면 아직 초기화 전(populateYearSelects_에서 최신 연도로 자동 설정)을 의미한다.
-        const selectedYearByChart_ = { tickerMonthly: null };
+        // 🩹 [수정안 반영] 월별 수익 합계(combo) / 계좌 평가액 추이(acc) / 월별 수익률 추이(monthlyReturn)도
+        // '종목별 누적 월별 수익금 & 일평균'과 동일하게 연도 선택을 지원한다.
+        // (연도별 수익금 합계=yearly는 이미 연 단위 집계라 연도선택을 쓰지 않는다.)
+        const selectedYearByChart_ = { tickerMonthly: null, combo: null, acc: null, monthlyReturn: null };
 
         function populateTickerSelects_() {
             // getMergedTickerList_()만 쓰면, 이번 세션 중 삭제된 종목이 재로딩 전까지 계속 남거나
@@ -3331,11 +3471,14 @@
         // 사용자가 아직 연도를 고른 적이 없으면(selectedYearByChart_[key] === null)
         // 목록이 계속 길어지는 문제를 막기 위해 자동으로 "가장 최근 연도"를 기본 선택한다.
         function populateYearSelects_() {
-            const allMonths = computeTickerMonthlyBreakdown_('전체', cachedParsedData).map(d => d.month);
+            // 🩹 [수정안 반영] 예전엔 종목별 확정기록(computeTickerMonthlyBreakdown_) 기준으로만 연도를
+            // 뽑았지만, 이제 combo/acc/monthlyReturn도 같은 연도 목록을 써야 하므로 전체 일일 기록
+            // (cachedParsedData)의 월 목록에서 바로 연도를 뽑는다. (종목 확정 기록 유무와 무관하게 동일)
+            const allMonths = groupDataByMonth(cachedParsedData).map(d => d.month);
             const years = Array.from(new Set(allMonths.map(m => m.substring(0, 4)))).sort((a, b) => b.localeCompare(a));
             const yearOptions = ['전체', ...years];
 
-            ['tickerMonthly'].forEach(key => {
+            Object.keys(selectedYearByChart_).forEach(key => {
                 const sel = document.getElementById(`yearSelect_${key}`);
                 if (!sel) return;
                 const wasUninitialized = selectedYearByChart_[key] === null || selectedYearByChart_[key] === undefined;
@@ -3350,24 +3493,22 @@
                 updateTickerMonthlyYearUi_(key);
                 // 처음 자동으로 "최신 연도"가 선택된 경우, 이미 그려진 차트/표가
                 // 그 선택값과 어긋나지 않도록 다시 그려서 맞춰준다.
-                if (wasUninitialized && key === 'tickerMonthly') rerenderTickerMonthly_();
+                if (wasUninitialized) (RERENDER_FUNCS_[key] || (() => renderTickerBreakdownTable_(key)))();
             });
         }
 
         function onYearSelectChange_(key, value) {
             selectedYearByChart_[key] = value;
             updateTickerMonthlyYearUi_(key);
-            if (key === 'tickerMonthly') {
-                rerenderTickerMonthly_();
-            } else {
-                renderTickerBreakdownTable_(key);
-            }
+            // 🩹 [수정안 반영] tickerMonthly 전용 분기를 없애고, 카드별 rerender 함수를 매핑에서 찾아 호출.
+            // (연도가 바뀌면 표뿐 아니라 그 카드의 차트도 그 연도에 맞게 다시 그려야 하므로 rerender*_를 쓴다.)
+            (RERENDER_FUNCS_[key] || (() => renderTickerBreakdownTable_(key)))();
         }
 
         // 특정 연도가 선택된 동안에는 3M/6M/1Y/ALL 기간 버튼은 의미가 없으므로(연도 필터가 우선 적용)
         // 흐리게 표시하고, 안내 문구로 왜 목록이 그 연도만 보이는지 알려준다.
+        // 🩹 [수정안 반영] tickerMonthly 전용이었던 가드를 제거해 연도선택을 쓰는 모든 카드에서 동작하게 한다.
         function updateTickerMonthlyYearUi_(key) {
-            if (key !== 'tickerMonthly') return;
             const year = selectedYearByChart_[key] || '전체';
             const isYearMode = year !== '전체';
 
@@ -3428,9 +3569,108 @@
             });
         }
 
-        // 종목별 브레이크다운 표(월/누적수익금/일평균)를 카드(combo/yearly/monthlyReturn)별로 독립적으로
-        // '월순' 또는 '수익금순'으로 정렬할 수 있게 한다. 기본값은 기존과 동일한 월 내림차순(최신월 우선).
+        // ===================================================================
+        // 📌 [수정안 반영] '월별 수익 합계 & 일평균(combo)' / '계좌 평가액 추이(acc)' /
+        // '연도별 수익금 합계(yearly)' / '월별 수익률 추이(monthlyReturn)' 4개 카드를
+        // '종목별 누적 월별 수익금 & 일평균(tickerMonthly)'과 동일한 패턴(연도 선택 + 정렬 가능한
+        // 브레이크다운 표)으로 확장한다. 카드마다 컬럼 구성과 연도선택 사용 여부가 달라, 아래
+        // 설정 테이블 하나로 관리하고 렌더/정렬 함수들은 이 설정을 보고 동작하는 범용 함수로 만든다.
+        // ===================================================================
+        const BREAKDOWN_CARD_CONFIG_ = {
+            combo: {
+                primaryKey: 'month', useYearSelect: true,
+                columns: [
+                    { key: 'totalRevenue', format: 'signedCurrency', sortable: true },
+                    { key: 'avgRevenue', format: 'neutralCurrency', sortable: false }
+                ],
+                dataFn: (dailyData) => groupDataByMonth(dailyData)
+            },
+            acc: {
+                primaryKey: 'month', useYearSelect: true,
+                columns: [
+                    { key: 'endValue', format: 'neutralCurrency', sortable: true },
+                    { key: 'diffAmount', format: 'diffCurrency', sortable: false }
+                ],
+                dataFn: (dailyData) => groupAccountByMonth_(dailyData)
+            },
+            yearly: {
+                primaryKey: 'year', useYearSelect: false,
+                columns: [
+                    { key: 'totalRevenue', format: 'signedCurrency', sortable: true },
+                    { key: 'avgRevenue', format: 'neutralCurrency', sortable: false }
+                ],
+                dataFn: (dailyData) => groupDataByYearWithAvg_(dailyData)
+            },
+            monthlyReturn: {
+                primaryKey: 'month', useYearSelect: true,
+                columns: [
+                    { key: 'rate', format: 'signedPercent', sortable: true }
+                ],
+                dataFn: (dailyData) => calculateMonthlyStats(dailyData).monthlyDetails
+            },
+            tickerMonthly: {
+                primaryKey: 'month', useYearSelect: true,
+                columns: [
+                    { key: 'totalRevenue', format: 'signedCurrency', sortable: true },
+                    { key: 'avgRevenue', format: 'neutralCurrency', sortable: false }
+                ],
+                dataFn: (dailyData) => computeTickerMonthlyBreakdown_(selectedTickerByChart_['tickerMonthly'] || '전체', dailyData)
+            }
+        };
+
+        // yearly처럼 연도선택 없이 자체 기간버튼(3Y/5Y/ALL)을 쓰는 카드까지 포함해, 카드별 "현재 활성
+        // 기간 모드"를 한 곳에서 읽어올 수 있게 매핑해둔다.
+        const ACTIVE_FILTER_GETTERS_ = {
+            combo: () => activeComboChartFilter,
+            acc: () => activeAccChartFilter,
+            yearly: () => activeYearlyChartFilter,
+            monthlyReturn: () => activeMonthlyReturnChartFilter,
+            tickerMonthly: () => activeTickerMonthlyChartFilter
+        };
+
+        // 연도 선택이 바뀌었을 때(혹은 최초 자동 선택 시) 그 카드의 차트+표를 함께 다시 그려야 하므로,
+        // 카드별 "다시 그리기" 함수를 매핑해둔다.
+        const RERENDER_FUNCS_ = {
+            combo: () => rerenderCombo_(),
+            acc: () => rerenderAcc_(),
+            monthlyReturn: () => rerenderMonthlyReturn_(),
+            tickerMonthly: () => rerenderTickerMonthly_()
+        };
+
+        function fmtSignedCurrency_(val) {
+            const v = Number(val) || 0;
+            const cls = v < 0 ? 'text-rose-400' : 'text-emerald-400';
+            return `<span class="${cls}">$${v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>`;
+        }
+        function fmtNeutralCurrency_(val) {
+            const v = Number(val) || 0;
+            return `<span class="text-sky-400">$${v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>`;
+        }
+        function fmtDiffCurrency_(val) {
+            const v = Number(val) || 0;
+            const sign = v > 0 ? '+' : '';
+            const cls = v < 0 ? 'text-rose-400' : (v > 0 ? 'text-emerald-400' : 'text-slate-500');
+            return `<span class="${cls}">${sign}$${v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>`;
+        }
+        function fmtSignedPercent_(val) {
+            const v = Number(val) || 0;
+            const cls = v < 0 ? 'text-rose-400' : 'text-emerald-400';
+            return `<span class="${cls}">${v.toFixed(2)}%</span>`;
+        }
+        const BREAKDOWN_FORMATTERS_ = {
+            signedCurrency: fmtSignedCurrency_,
+            neutralCurrency: fmtNeutralCurrency_,
+            diffCurrency: fmtDiffCurrency_,
+            signedPercent: fmtSignedPercent_
+        };
+
+        // 브레이크다운 표(월 또는 연도 / 지표들)를 카드별로 독립적으로 정렬할 수 있게 한다.
+        // 기본값은 기존과 동일한 월(연도) 내림차순(최신 우선).
         const tickerBreakdownSort_ = {
+            combo: { field: 'month', dir: 'desc' },
+            acc: { field: 'month', dir: 'desc' },
+            yearly: { field: 'year', dir: 'desc' },
+            monthlyReturn: { field: 'month', dir: 'desc' },
             tickerMonthly: { field: 'month', dir: 'desc' }
         };
 
@@ -3448,7 +3688,10 @@
 
         function updateTickerBreakdownSortIcons_(key) {
             const s = tickerBreakdownSort_[key];
-            ['month', 'totalRevenue'].forEach(field => {
+            const config = BREAKDOWN_CARD_CONFIG_[key];
+            if (!config) return;
+            const sortableFields = [config.primaryKey, ...config.columns.filter(c => c.sortable).map(c => c.key)];
+            sortableFields.forEach(field => {
                 const el = document.getElementById(`tickerSortIcon_${key}_${field}`);
                 if (!el) return;
                 if (!s || s.field !== field) {
@@ -3461,51 +3704,70 @@
             });
         }
 
+        // 🩹 [수정안 반영] tickerMonthly 전용이던 구현을 BREAKDOWN_CARD_CONFIG_ 설정 기반의 범용
+        // 함수로 교체. 카드마다 컬럼 개수/포맷(통화·증감·퍼센트)이 달라도 이 함수 하나로 처리한다.
         function renderTickerBreakdownTable_(key) {
             const tbody = document.getElementById(`tickerMonthlyTableBody_${key}`);
-            if (!tbody) return;
+            const config = BREAKDOWN_CARD_CONFIG_[key];
+            if (!tbody || !config) return;
 
-            const ticker = selectedTickerByChart_[key] || '전체';
             const dailyData = getFilteredDailyData_(key);
-            let breakdown = computeTickerMonthlyBreakdown_(ticker, dailyData);
+            let breakdown = config.dataFn(dailyData);
 
-            // 📌 연도가 특정 연도로 선택돼 있으면 그 연도만 남기고(최대 12개월),
-            // '전체 연도'일 때만 기존처럼 3M/6M/1Y/ALL 기간 버튼으로 자른다.
-            const year = selectedYearByChart_[key] || '전체';
-            if (year !== '전체') {
-                breakdown = breakdown.filter(d => d.month.startsWith(year));
+            if (config.useYearSelect) {
+                // 📌 연도가 특정 연도로 선택돼 있으면 그 연도만 남기고(최대 12개월),
+                // '전체 연도'일 때만 기존처럼 3M/6M/1Y/ALL 기간 버튼으로 자른다.
+                const year = selectedYearByChart_[key] || '전체';
+                if (year !== '전체') {
+                    breakdown = breakdown.filter(d => String(d[config.primaryKey]).startsWith(year));
+                } else {
+                    const filterMode = ACTIVE_FILTER_GETTERS_[key] ? ACTIVE_FILTER_GETTERS_[key]() : 'ALL';
+                    const count = monthsForFilter_(filterMode);
+                    if (count > 0) breakdown = breakdown.slice(-count);
+                }
             } else {
-                const filterMode = key === 'tickerMonthly' ? activeTickerMonthlyChartFilter : 'ALL';
-                const count = monthsForFilter_(filterMode);
+                // yearly처럼 이미 연 단위로 집계된 카드는 연도선택 대신 자체 기간버튼(3Y/5Y/ALL)의
+                // 개수만큼만 자른다 (차트에서 쓰는 sliceYearlyData와 동일한 개수 규칙).
+                const filterMode = ACTIVE_FILTER_GETTERS_[key] ? ACTIVE_FILTER_GETTERS_[key]() : 'ALL';
+                const count = filterMode === '3Y' ? 3 : filterMode === '5Y' ? 5 : 0;
                 if (count > 0) breakdown = breakdown.slice(-count);
             }
 
+            const colspan = 1 + config.columns.length;
             if (breakdown.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="py-3 text-slate-600 text-center">표시할 데이터가 없습니다.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${colspan}" class="py-3 text-slate-600 text-center">표시할 데이터가 없습니다.</td></tr>`;
                 updateTickerBreakdownSortIcons_(key);
                 return;
             }
 
-            const sortState = tickerBreakdownSort_[key] || { field: 'month', dir: 'desc' };
+            const sortState = tickerBreakdownSort_[key] || { field: config.primaryKey, dir: 'desc' };
             const sorted = [...breakdown].sort((a, b) => {
-                if (sortState.field === 'month') {
-                    return sortState.dir === 'asc' ? a.month.localeCompare(b.month) : b.month.localeCompare(a.month);
+                if (sortState.field === config.primaryKey) {
+                    const av = String(a[config.primaryKey]), bv = String(b[config.primaryKey]);
+                    return sortState.dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
                 }
-                return sortState.dir === 'asc' ? a.totalRevenue - b.totalRevenue : b.totalRevenue - a.totalRevenue;
+                const av = Number(a[sortState.field]) || 0, bv = Number(b[sortState.field]) || 0;
+                return sortState.dir === 'asc' ? av - bv : bv - av;
             });
 
-            tbody.innerHTML = sorted.map(d => `
+            tbody.innerHTML = sorted.map(d => {
+                const cells = config.columns.map((col, idx) => {
+                    const formatter = BREAKDOWN_FORMATTERS_[col.format] || ((v) => v);
+                    const isLast = idx === config.columns.length - 1;
+                    return `<td class="py-1.5 ${isLast ? '' : 'pr-2'} text-right font-mono">${formatter(d[col.key])}</td>`;
+                }).join('');
+                return `
                 <tr class="hover:bg-slate-800/20">
-                    <td class="py-1.5 pr-2 text-slate-400">${d.month}</td>
-                    <td class="py-1.5 pr-2 text-right font-mono ${d.totalRevenue < 0 ? 'text-rose-400' : 'text-emerald-400'}">$${d.totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</td>
-                    <td class="py-1.5 text-right font-mono text-sky-400">$${d.avgRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</td>
-                </tr>`).join('');
+                    <td class="py-1.5 pr-2 text-slate-400">${d[config.primaryKey]}</td>
+                    ${cells}
+                </tr>`;
+            }).join('');
 
             updateTickerBreakdownSortIcons_(key);
         }
 
         function renderAllTickerBreakdownTables_() {
-            ['tickerMonthly'].forEach(key => renderTickerBreakdownTable_(key));
+            Object.keys(BREAKDOWN_CARD_CONFIG_).forEach(key => renderTickerBreakdownTable_(key));
         }
 
         function sliceDailyData(dailyData, filterMode) {
@@ -3556,10 +3818,12 @@
             if (activeBtn) activeBtn.className = "px-2 py-1 rounded-lg font-semibold transition-all duration-200 bg-sky-600 text-white shadow-sm";
         }
 
-        function renderMonthlyComboChart(monthlyData) {
+        function renderMonthlyComboChart(monthlyData, year = '전체') {
             const comboCtx = document.getElementById('monthlyComboChart').getContext('2d');
             if (comboChartInstance) comboChartInstance.destroy();
-            const filtered = sliceMonthlyData(monthlyData, activeComboChartFilter);
+            // 연도가 특정 값으로 선택된 경우 이미 그 연도만 남아있으므로(최대 12개월) 그대로 그리고,
+            // '전체 연도'일 때만 기존 3M/6M/1Y/ALL 기간 버튼으로 자른다.
+            const filtered = year !== '전체' ? monthlyData : sliceMonthlyData(monthlyData, activeComboChartFilter);
 
             comboChartInstance = new Chart(comboCtx, {
                 type: 'bar',
@@ -3750,10 +4014,12 @@
             });
         }
 
-        function renderAccountChart(dailyData) {
+        function renderAccountChart(dailyData, year = '전체') {
             const accCtx = document.getElementById('accountValueChart').getContext('2d');
             if (accountChartInstance) accountChartInstance.destroy();
-            const filtered = sliceDailyData(dailyData, activeAccChartFilter);
+            // 연도가 특정 값으로 선택된 경우 그 연도의 일일 데이터가 이미 넘어오므로 그대로 그리고,
+            // '전체 연도'일 때만 기존 3M/6M/1Y/ALL 기간 버튼으로 자른다.
+            const filtered = year !== '전체' ? dailyData : sliceDailyData(dailyData, activeAccChartFilter);
 
             accountChartInstance = new Chart(accCtx, {
                 type: 'line',
@@ -3903,10 +4169,12 @@
             });
         }
 
-        function renderMonthlyReturnChart(monthlyStatsDetails) {
+        function renderMonthlyReturnChart(monthlyStatsDetails, year = '전체') {
             const returnCtx = document.getElementById('monthlyReturnChart').getContext('2d');
             if (monthlyReturnChartInstance) monthlyReturnChartInstance.destroy();
-            const filtered = sliceMonthlyData(monthlyStatsDetails, activeMonthlyReturnChartFilter);
+            // 연도가 특정 값으로 선택된 경우 이미 그 연도만 남아있으므로(최대 12개월) 그대로 그리고,
+            // '전체 연도'일 때만 기존 3M/6M/1Y/ALL 기간 버튼으로 자른다.
+            const filtered = year !== '전체' ? monthlyStatsDetails : sliceMonthlyData(monthlyStatsDetails, activeMonthlyReturnChartFilter);
 
             monthlyReturnChartInstance = new Chart(returnCtx, {
                 type: 'line',
