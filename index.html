@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>투자 성과 & 자산배분 실시간 대시보드</title>
+
+    <!-- 🆕 PWA: 홈 화면에 추가했을 때 아이콘/이름/테마색이 제대로 뜨도록, 그리고
+         오프라인에서도 앱 껍데기가 열리도록 manifest + 서비스 워커를 등록한다. -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" type="image/png" href="./favicon.png">
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="투자대시보드">
+    <meta name="mobile-web-app-capable" content="yes">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
@@ -34,9 +46,69 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
+
+        /* 🆕 초기 로딩 오버레이: 구글시트 연동이 끝나기 전까지 지표가 "$0.00"으로
+           잠깐 보였다가 채워지는 깜빡임을 가리기 위한 전체 화면 스켈레톤/스피너.
+           fetchBootstrap_()이 끝나면(성공/실패 모두) hideLoadingOverlay_()가 이 레이어를 지운다. */
+        #appLoadingOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            background: #0f172a;
+            transition: opacity 0.35s ease;
+        }
+        #appLoadingOverlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #appLoadingOverlay .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border-radius: 9999px;
+            border: 3px solid rgba(52, 211, 153, 0.2);
+            border-top-color: #34d399;
+            animation: appLoadingSpin 0.8s linear infinite;
+        }
+        #appLoadingOverlay .loading-skel-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(60px, 90px));
+            gap: 10px;
+            margin-top: 6px;
+        }
+        #appLoadingOverlay .loading-skel-card {
+            height: 46px;
+            border-radius: 14px;
+            background: linear-gradient(90deg, #1e293b 25%, #334155 37%, #1e293b 63%);
+            background-size: 400% 100%;
+            animation: appLoadingShimmer 1.4s ease infinite;
+        }
+        @keyframes appLoadingSpin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes appLoadingShimmer {
+            0% { background-position: 100% 0; }
+            100% { background-position: 0 0; }
+        }
     </style>
 </head>
 <body class="min-h-screen pb-12">
+
+    <!-- 🆕 초기 로딩 오버레이 -->
+    <div id="appLoadingOverlay">
+        <div class="loading-spinner"></div>
+        <p class="text-xs text-slate-400 font-semibold">구글 시트와 동기화하는 중...</p>
+        <div class="loading-skel-row">
+            <div class="loading-skel-card"></div>
+            <div class="loading-skel-card"></div>
+            <div class="loading-skel-card"></div>
+            <div class="loading-skel-card"></div>
+        </div>
+    </div>
 
     <!-- 상단 헤더 네비게이션 -->
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
@@ -1009,6 +1081,25 @@
             return formatted;
         }
 
+        // 🔒 [보안 강화] 종목 목록은 이 앱의 UI(addNewTickerPrompt 등)로 추가할 때는
+        // 항상 sanitizeTickerInput_을 통과하지만, 구글시트의 헤더 행을 사람이 직접
+        // 편집해서 넣은 값은 이 검증을 거치지 않은 채로 서버에서 그대로 내려온다.
+        // 종목명은 이후 여러 화면에서 <th>종목명 <button onclick="deleteXxx('종목명')">
+        // 형태로 그대로 문자열 삽입되므로, 만약 시트에 따옴표/꺾쇠 등이 섞인 값이
+        // 들어있으면 그 칸을 렌더링할 때 HTML/JS 구조가 깨질 수 있다(저장된 자기 자신의
+        // 시트 편집으로만 촉발되는 리스크라 위험도는 낮지만, 방어적으로 걸러낸다).
+        // 원격에서 받은 종목/헤더 배열은 항상 이 함수로 한 번 걸러서 쓴다.
+        function sanitizeTickerList_(list) {
+            if (!Array.isArray(list)) return [];
+            const seen = new Set();
+            const result = [];
+            list.forEach(raw => {
+                const safe = sanitizeTickerInput_(String(raw ?? ''));
+                if (safe && !seen.has(safe)) { seen.add(safe); result.push(safe); }
+            });
+            return result;
+        }
+
         // 동기화 안정화용 공통 fetch 래퍼: 타임아웃 + 자동 재시도
         // (모바일 네트워크 지연/일시 오류로 인한 "불규칙한 메뉴별 동기화 실패"를 줄이기 위함)
         async function fetchWithRetry_(url, options = {}, { retries = 2, timeoutMs = 12000, retryDelayMs = 700 } = {}) {
@@ -1102,6 +1193,20 @@
             }
         }
 
+        // ⚡ [성능/확장성] 배경 자동 새로고침(90초 주기)이 매번 전체를 다시 그리는 것을 막기 위한
+        // "변경 여부" 서명. 메인 시트가 몇 년치 쌓여 수천 행이 되면, 실제로는 아무 것도
+        // 안 바뀌었는데도 매번 parseAndRenderData(파싱) + 차트 7개 destroy/recreate + 테이블
+        // 재렌더링을 반복하는 건 모바일에서 배터리/CPU 낭비가 크다. 받아온 matrix를 이전과
+        // 비교해 완전히 동일하면(=다른 기기/자동화가 시트를 바꾸지 않았으면) 파싱/렌더링 단계를
+        // 건너뛰고 동기화 배지만 갱신한다. 사용자가 직접 저장한 직후(silent=false 경로)나
+        // 최초 로딩에는 항상 전체를 다시 그린다.
+        let lastMainMatrixSignature_ = null;
+        function computeMatrixSignature_(matrix) {
+            // 전체를 JSON.stringify하는 비용은 파싱+차트 재생성 비용보다 훨씬 저렴하다
+            // (문자열 배열 그대로이므로 순수 문자열 결합/비교 수준의 비용).
+            try { return JSON.stringify(matrix); } catch (e) { return null; }
+        }
+
         // 구글시트를 "링크가 있는 모든 사용자에게 공개"로 열어두고 gviz(/gviz/tq)로 직접 읽던
         // 예전 방식 대신, 인증 토큰이 걸린 Apps Script 엔드포인트(action=getMainData)를 통해서만
         // 메인 시트 데이터를 읽는다. 시트를 공개로 바꿀 필요가 없어진다.
@@ -1121,7 +1226,13 @@
                     throw new Error('가용 데이터 행이 비어있습니다.');
                 }
 
-                parseAndRenderData(json.matrix, "Apps Script API 연동");
+                const signature = computeMatrixSignature_(json.matrix);
+                const unchanged = silent && signature !== null && signature === lastMainMatrixSignature_;
+
+                if (!unchanged) {
+                    parseAndRenderData(json.matrix, "Apps Script API 연동");
+                    lastMainMatrixSignature_ = signature;
+                }
                 cacheMainDataSnapshot_(json.matrix);
 
                 setMainSyncBadge_('ok', '구글 시트 연동 완료');
@@ -1162,7 +1273,7 @@
                 if (!json.success) throw new Error(json.error || '알 수 없는 오류');
 
                 // 1) 분할매수데이터
-                splitBuyRemoteData = { tickers: json.tickers || [], data: json.data || {} };
+                splitBuyRemoteData = { tickers: sanitizeTickerList_(json.tickers), data: json.data || {} };
                 if (splitBuyRemoteData.tickers.length > 0) {
                     availableTickers = Array.from(new Set([...availableTickers, ...splitBuyRemoteData.tickers]));
                 }
@@ -1171,6 +1282,7 @@
                 // 2) 메인 시트(일일 기록)
                 if (Array.isArray(json.matrix) && json.matrix.length >= 2) {
                     parseAndRenderData(json.matrix, "Apps Script API 연동(일괄 로딩)");
+                    lastMainMatrixSignature_ = computeMatrixSignature_(json.matrix);
                     cacheMainDataSnapshot_(json.matrix);
                     setMainSyncBadge_('ok', '구글 시트 연동 완료');
                 } else {
@@ -1208,6 +1320,20 @@
             }
         }
 
+        // 🆕 초기 로딩 오버레이를 부드럽게 걷어낸다. 연동 성공/실패/데모데이터 여부와 관계없이
+        // "화면에 뭔가 보여줄 수 있는 상태"가 되면 항상 호출해서, 오버레이가 영원히 남아있는
+        // 사고를 방지한다(안전장치로 최대 8초 뒤에는 무조건 강제로 제거).
+        let loadingOverlayHidden_ = false;
+        function hideLoadingOverlay_() {
+            if (loadingOverlayHidden_) return;
+            loadingOverlayHidden_ = true;
+            const overlay = document.getElementById('appLoadingOverlay');
+            if (!overlay) return;
+            overlay.classList.add('fade-out');
+            setTimeout(() => overlay.remove(), 400);
+        }
+        setTimeout(hideLoadingOverlay_, 8000); // 안전장치: 네트워크가 완전히 멈춰도 화면은 결국 보이게
+
         window.onload = function() {
             renderBuyManagement_();
             restoreCalendarFiltersFromStorage_();
@@ -1217,14 +1343,26 @@
             if (tokenInputEl) tokenInputEl.value = splitBuyApiToken;
 
             if (splitBuyApiUrl && splitBuyApiToken) {
-                fetchBootstrap_();
+                fetchBootstrap_().finally(hideLoadingOverlay_);
             } else {
                 initAllGrids_();
                 loadDemoData_();
+                hideLoadingOverlay_();
             }
 
             startAutoRefresh_();
         };
+
+        // 🆕 [PWA] 서비스 워커 등록: 페이지 자체(HTML/CDN 자산)를 캐싱해서
+        // 오프라인이거나 네트워크가 불안정한 순간에도 앱 화면이 열리게 한다.
+        // 구글 시트로의 실제 저장/조회(fetch POST)는 sw.js에서 절대 가로채지 않는다.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch((err) => {
+                    console.warn('서비스 워커 등록 실패(오프라인 캐싱 기능만 비활성화되며, 앱 동작에는 영향 없음):', err);
+                });
+            });
+        }
 
         // 실시간성 확보: 탭을 계속 열어두면 주기적으로, 그리고 다시 탭을 보게 되거나
         // 창에 포커스가 돌아올 때마다 최신 데이터를 자동으로 다시 불러온다.
@@ -1336,7 +1474,7 @@
 
                 if (!json.success) throw new Error(json.error || '알 수 없는 오류');
 
-                splitBuyRemoteData = { tickers: json.tickers || [], data: json.data || {} };
+                splitBuyRemoteData = { tickers: sanitizeTickerList_(json.tickers), data: json.data || {} };
 
                 if (splitBuyRemoteData.tickers.length > 0) {
                     availableTickers = Array.from(new Set([...availableTickers, ...splitBuyRemoteData.tickers]));
@@ -1389,7 +1527,7 @@
                 });
                 const json = await res.json();
                 if (json.success) {
-                    splitBuyRemoteData.tickers = json.tickers || splitBuyRemoteData.tickers;
+                    splitBuyRemoteData.tickers = json.tickers ? sanitizeTickerList_(json.tickers) : splitBuyRemoteData.tickers;
                     splitBuyRemoteData.data = json.data || splitBuyRemoteData.data;
                     renderBuyManagement_();
                 }
@@ -1490,7 +1628,15 @@
         }
 
         function applyGridResponse_(key, json) {
-            gridCache[key] = { rowLabels: json.rowLabels || [], tickers: json.tickers || [], data: json.data || {}, memos: json.memos || {} };
+            // 🔒 stepLog(차수기록)은 "SOXL_날짜"처럼 종목명 + STEPLOG_DATE_SUFFIX로 만든
+            // 짝꿍 컬럼명을 row[dateKey] 형태로 대소문자 그대로 조회한다(stepLogDateKeyFor_).
+            // sanitizeTickerList_는 값을 대문자로 정규화하므로, 시트에 어쩌다 혼용 대소문자로
+            // 저장된 값이 있으면 이 정규화 때문에 날짜 짝꿍 칸 조회 키가 어긋날 위험이 있다.
+            // 그래서 stepLog는 원래 값을 그대로 쓰고, 대소문자 구분이 필요 없는 나머지
+            // 그리드(매수목록/수익률데이터 등)만 방어적으로 안전 문자 필터를 적용한다.
+            const rawTickers = json.tickers || [];
+            const tickers = (key === 'stepLog') ? rawTickers : sanitizeTickerList_(rawTickers);
+            gridCache[key] = { rowLabels: json.rowLabels || [], tickers: tickers, data: json.data || {}, memos: json.memos || {} };
         }
 
         function updateGridTickerLabel_(elementId, tickers) {
