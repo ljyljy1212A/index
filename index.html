@@ -618,6 +618,19 @@
                         <div class="flex-1 w-full overflow-y-auto max-h-56 text-[11px] space-y-1.5" id="tickerProfitBreakdown"></div>
                     </div>
                 </div>
+
+                <!-- 🆕 [기능 추가] 계좌별 누적 확정 수익금 비교 (buyMgmtRecordsCache 기준) -->
+                <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-800/60 pb-2.5">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-building-columns text-sky-400"></i> 계좌별 누적 확정 수익금
+                        </h3>
+                    </div>
+                    <div class="relative w-full h-56">
+                        <canvas id="accountProfitChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-[11px] space-y-1.5" id="accountProfitBreakdown"></div>
+                </div>
             </div>
 
             <!-- 차트 영역 2단 -->
@@ -913,6 +926,10 @@
                                 <button id="btnBuyMgmtRecordsRecent" onclick="toggleBuyMgmtRecordsMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 3일</button>
                                 <button id="btnBuyMgmtRecordsAll" onclick="toggleBuyMgmtRecordsMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
                             </div>
+                            <button type="button" onclick="exportBuyMgmtRecordsToCsv_()" title="확정 수익금 내역을 CSV로 내려받기"
+                                class="px-3 py-1.5 rounded-lg font-semibold text-xs bg-slate-950 border border-slate-800 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50 transition">
+                                <i class="fa-solid fa-file-csv"></i> CSV
+                            </button>
                         </div>
                     </div>
                     <p class="text-[10px] text-slate-500 mb-3">
@@ -1172,9 +1189,21 @@
 
         // 네트워크 장애 대비 폴백: 마지막으로 성공한 메인 데이터를 로컬에 캐싱해두고,
         // 다음 연동이 실패했을 때 화면을 비우는 대신 "마지막으로 성공한 데이터"를 계속 보여준다.
+        // 🩹 [정밀검사 개선] 예전에는 시트 전체 matrix를 그대로 localStorage에 저장했다.
+        // 기록이 수년치 쌓이면(수천 행 × 수십 컬럼) localStorage 용량 한도(브라우저별로
+        // 보통 5~10MB)에 언젠가 부딪히고, setItem이 조용히 실패해 오프라인 폴백 자체가
+        // 무력화될 수 있었다. 오프라인 폴백은 "최근 상태를 대략 보여주는 것"이 목적이므로
+        // 최근 N행 + 헤더행만 잘라서 저장해 용량을 안정적으로 관리한다.
+        const MAIN_DATA_CACHE_MAX_ROWS = 400; // 헤더 제외 최근 약 13개월분(일 단위 기준)
         function cacheMainDataSnapshot_(matrix) {
             try {
-                localStorage.setItem('mainDataCache', JSON.stringify({ matrix, savedAt: Date.now() }));
+                let toStore = matrix;
+                let truncated = false;
+                if (Array.isArray(matrix) && matrix.length > MAIN_DATA_CACHE_MAX_ROWS + 1) {
+                    toStore = [matrix[0], ...matrix.slice(matrix.length - MAIN_DATA_CACHE_MAX_ROWS)];
+                    truncated = true;
+                }
+                localStorage.setItem('mainDataCache', JSON.stringify({ matrix: toStore, savedAt: Date.now(), truncated }));
             } catch (e) {
                 console.warn('메인 데이터 캐시 저장 실패(용량 초과 등):', e);
             }
@@ -1189,7 +1218,8 @@
 
                 parseAndRenderData(cached.matrix, "캐시된 데이터(오프라인 폴백)");
                 const minutesAgo = Math.max(0, Math.round((Date.now() - cached.savedAt) / 60000));
-                setMainSyncBadge_('error', `동기화 실패 - ${minutesAgo}분 전 데이터 표시 중`);
+                const rangeNote = cached.truncated ? ` (최근 ${MAIN_DATA_CACHE_MAX_ROWS}일분만)` : '';
+                setMainSyncBadge_('error', `동기화 실패 - ${minutesAgo}분 전 데이터 표시 중${rangeNote}`);
                 return true;
             } catch (e) {
                 return false;
@@ -1204,10 +1234,29 @@
         // 건너뛰고 동기화 배지만 갱신한다. 사용자가 직접 저장한 직후(silent=false 경로)나
         // 최초 로딩에는 항상 전체를 다시 그린다.
         let lastMainMatrixSignature_ = null;
+        // 🩹 [정밀검사 개선] 예전에는 matrix 전체를 JSON.stringify해서 서명으로 썼다.
+        // 기록이 몇 년치(수천 행 × 수십 종목 컬럼) 쌓이면 90초마다 이 문자열화 비용 자체가
+        // 계속 커진다(JSON 이스케이프 처리 + 거대한 문자열 새로 할당). 실제로 필요한 건
+        // "완전히 동일한지" 판별뿐이므로, 문자열을 새로 만들지 않고 한 번의 순회로
+        // 행/열 개수 + 총 글자수 + 체크섬(문자 코드 누적)을 계산해 훨씬 가볍게 대체한다.
+        // 체크섬까지 포함하므로 길이가 같은 값끼리 바뀌는 경우(예: "100"→"200")도 잡아낸다.
         function computeMatrixSignature_(matrix) {
-            // 전체를 JSON.stringify하는 비용은 파싱+차트 재생성 비용보다 훨씬 저렴하다
-            // (문자열 배열 그대로이므로 순수 문자열 결합/비교 수준의 비용).
-            try { return JSON.stringify(matrix); } catch (e) { return null; }
+            try {
+                if (!Array.isArray(matrix)) return null;
+                let totalLen = 0;
+                let checksum = 0;
+                for (let i = 0; i < matrix.length; i++) {
+                    const row = matrix[i];
+                    for (let j = 0; j < row.length; j++) {
+                        const cell = row[j] || '';
+                        totalLen += cell.length;
+                        for (let k = 0; k < cell.length; k++) {
+                            checksum = (checksum * 31 + cell.charCodeAt(k) + i * 7 + j) | 0;
+                        }
+                    }
+                }
+                return `${matrix.length}|${totalLen}|${checksum}`;
+            } catch (e) { return null; }
         }
 
         // 구글시트를 "링크가 있는 모든 사용자에게 공개"로 열어두고 gviz(/gviz/tq)로 직접 읽던
@@ -1314,6 +1363,7 @@
                 updateDailyEntryConfirmedSum_();
                 renderAllTickerBreakdownTables_();
                 renderTickerProfitChart_();
+                renderAccountProfitChart_();
                 populateTickerSelects_();
             } catch (err) {
                 console.error('초기 일괄 로딩(getBootstrap) 실패, 개별 호출 방식으로 재시도합니다:', err);
@@ -1706,7 +1756,11 @@
                 });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '저장 실패');
-                if (value !== '') applyGridResponse_(key, json);
+                // 🩹 [정밀검사 개선] 예전에는 값이 빈 문자열(칸 지우기)일 때만 서버 응답 반영을
+                // 건너뛰었다. 로컬 상태는 onGridCellInput_에서 이미 갱신돼 화면상 문제는 없었지만,
+                // 서버가 실제로 저장한 값(예: 트리밍/포맷 적용 결과)과 로컬 캐시가 미묘하게
+                // 어긋난 채로 남을 수 있어, 값과 무관하게 항상 서버 응답으로 동기화한다.
+                applyGridResponse_(key, json);
                 setGridSyncStatus_(key, 'ok', '저장 완료');
             } catch (err) {
                 setGridSyncStatus_(key, 'error', '저장 실패');
@@ -2389,6 +2443,18 @@
                     const proceed = confirm(`직전 기록보다 50% 이상 차이나는 값이 있습니다.\n\n${warnings.join('\n')}\n\n이대로 저장하시겠습니까?`);
                     if (!proceed) return;
                 }
+
+                // 🆕 [정밀검사 개선] 마지막 기록보다 미래 날짜를 저장하면 그 사이 빈 날짜가
+                // 전부 "자동채움(미기록일)"로 채워진다(saveDailyRecord_ 참고). 건너뛴 날짜가
+                // 아주 많으면(예: 수개월) Apps Script 쪽에서 그 수만큼 행을 하나씩 삽입/기록하느라
+                // 실행시간 제한에 걸려 저장이 실패할 수 있어, 저장 전에 미리 알려준다.
+                if (latest.date && date > latest.date) {
+                    const gapDays = daysBetween_(latest.date, date) - 1;
+                    if (gapDays >= 30) {
+                        const proceedGap = confirm(`마지막 기록(${latest.date})과 이 날짜(${date}) 사이에 ${gapDays}일의 빈 날짜가 있습니다.\n이 빈 날짜들은 모두 직전 값으로 자동 채워지며, 날짜 수가 많으면 저장이 느려지거나 실패할 수 있습니다.\n계속 진행하시겠습니까?`);
+                        if (!proceedGap) return;
+                    }
+                }
             }
 
             setDailyEntrySyncStatus('loading', '저장 중...');
@@ -2668,6 +2734,7 @@
             updateDailyEntryConfirmedSum_();
             renderAllTickerBreakdownTables_();
             renderTickerProfitChart_();
+            renderAccountProfitChart_();
             // 🩹 [수정 2] 확정 기록에만 존재하는(지금은 삭제된) 종목도 드롭다운에 바로 뜨도록 갱신
             populateTickerSelects_();
         }
@@ -2705,7 +2772,8 @@
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
                 renderAllTickerBreakdownTables_();
-            renderTickerProfitChart_();
+                renderTickerProfitChart_();
+                renderAccountProfitChart_();
                 populateTickerSelects_(); // 🩹 [수정 2]
                 showNotification(`'${ticker}' ${accountLabel} 수익금이 확정되었습니다.`, 'success', '기록 추가 완료');
             } catch (err) {
@@ -2715,6 +2783,10 @@
         }
 
         let buyMgmtRecordsTickerFilter = '전체';
+        // 🩹 [정밀검사 개선] 브라우저 prompt() 5연타 대신, 나머지 화면과 통일된 인라인 편집
+        // 행으로 대체한다. 이 값이 set돼 있으면 renderBuyMgmtRecordsTable_가 해당 행을
+        // 입력 필드가 있는 편집 모드로 그린다.
+        let buyMgmtRecordsEditingId = null;
 
         function onBuyMgmtRecordsTickerFilterChange_(value) {
             buyMgmtRecordsTickerFilter = value || '전체';
@@ -2778,6 +2850,45 @@
 
             tbody.innerHTML = displayData.map(rec => {
                 const profitNum = Number(rec.profit) || 0;
+                const id = rec.id;
+                const safeId = escapeHtml_(id);
+
+                // 🩹 [정밀검사 개선] 편집 중인 행이면 prompt() 대신 입력칸이 있는 행을 그린다.
+                if (id === buyMgmtRecordsEditingId) {
+                    const tickerOptions = Array.from(new Set([rec.ticker, ...availableTickers])).filter(Boolean);
+                    return `
+                    <tr class="border-b border-slate-800/30 bg-slate-800/50">
+                        <td class="p-2">
+                            <input type="date" id="buyMgmtRecEditDate_${safeId}" value="${escapeHtml_(rec.date)}"
+                                class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-sky-500">
+                        </td>
+                        <td class="p-2">
+                            <select id="buyMgmtRecEditTicker_${safeId}"
+                                class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-sky-500">
+                                ${tickerOptions.map(t => `<option value="${escapeHtml_(t)}" ${t === rec.ticker ? 'selected' : ''}>${escapeHtml_(t)}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="p-2">
+                            <select id="buyMgmtRecEditAccount_${safeId}"
+                                class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-sky-500">
+                                ${BUY_MGMT_ACCOUNTS.map(a => `<option value="${escapeHtml_(a)}" ${a === rec.account ? 'selected' : ''}>${escapeHtml_(a)}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="p-2">
+                            <input type="text" id="buyMgmtRecEditMemo_${safeId}" value="${escapeHtml_(rec.memo || '')}" placeholder="메모"
+                                class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-sky-500">
+                        </td>
+                        <td class="p-2">
+                            <input type="number" step="0.01" id="buyMgmtRecEditProfit_${safeId}" value="${profitNum}"
+                                class="w-full bg-slate-950 text-slate-200 text-[11px] p-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-sky-500 text-right">
+                        </td>
+                        <td class="p-2 text-right whitespace-nowrap">
+                            <button onclick="saveEditBuyMgmtRecord_('${safeId}')" title="저장" class="text-emerald-400 hover:text-emerald-300 mr-2"><i class="fa-solid fa-check"></i></button>
+                            <button onclick="cancelEditBuyMgmtRecord_()" title="취소" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+                        </td>
+                    </tr>`;
+                }
+
                 return `
                 <tr class="border-b border-slate-800/30 hover:bg-slate-800/20 text-slate-300">
                     <td class="p-2 text-slate-400 whitespace-nowrap">${escapeHtml_(rec.date)}</td>
@@ -2786,45 +2897,62 @@
                     <td class="p-2 text-left max-w-[200px] truncate text-slate-400">${escapeHtml_(rec.memo) || '-'}</td>
                     <td class="p-2 text-right font-semibold ${profitNum < 0 ? 'text-rose-400' : 'text-emerald-400'}">$${profitNum.toFixed(2)}</td>
                     <td class="p-2 text-right whitespace-nowrap">
-                        <button onclick="editBuyMgmtRecordPrompt_('${escapeHtml_(rec.id)}')" title="편집" class="text-slate-500 hover:text-sky-400 mr-2"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteBuyMgmtRecordConfirm_('${escapeHtml_(rec.id)}')" title="삭제" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="startEditBuyMgmtRecord_('${safeId}')" title="편집" class="text-slate-500 hover:text-sky-400 mr-2"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteBuyMgmtRecordConfirm_('${safeId}')" title="삭제" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>`;
             }).join('');
         }
 
-        async function editBuyMgmtRecordPrompt_(id) {
-            const rec = buyMgmtRecordsCache.find(r => r.id === id);
-            if (!rec) return;
+        // 편집 모드 진입/취소: 상태만 바꾸고 다시 그린다(별도 API 호출 없음).
+        function startEditBuyMgmtRecord_(id) {
+            buyMgmtRecordsEditingId = id;
+            renderBuyMgmtRecordsTable_();
+        }
 
-            const newDate = prompt('날짜 (YYYY-MM-DD):', rec.date || '');
-            if (newDate === null) return;
-            const newTicker = prompt('종목:', rec.ticker || '');
-            if (newTicker === null) return;
-            const newAccount = prompt('계좌:', rec.account || '');
-            if (newAccount === null) return;
-            const newMemo = prompt('메모:', rec.memo || '');
-            if (newMemo === null) return;
-            const newProfitStr = prompt('수익금:', rec.profit);
-            if (newProfitStr === null) return;
-            const newProfit = parseFloat(String(newProfitStr).replace(/,/g, ''));
-            if (!newDate || isNaN(newProfit)) { showNotification('날짜와 수익금을 올바르게 입력해주세요.', 'error', '수정 불가'); return; }
+        function cancelEditBuyMgmtRecord_() {
+            buyMgmtRecordsEditingId = null;
+            renderBuyMgmtRecordsTable_();
+        }
 
+        // 인라인 편집 행의 '저장'(✓) 버튼: 입력칸 값을 모아 updateBuyMgmtRecord로 전송한다.
+        async function saveEditBuyMgmtRecord_(id) {
+            const dateEl = document.getElementById(`buyMgmtRecEditDate_${id}`);
+            const tickerEl = document.getElementById(`buyMgmtRecEditTicker_${id}`);
+            const accountEl = document.getElementById(`buyMgmtRecEditAccount_${id}`);
+            const memoEl = document.getElementById(`buyMgmtRecEditMemo_${id}`);
+            const profitEl = document.getElementById(`buyMgmtRecEditProfit_${id}`);
+            if (!dateEl || !tickerEl || !accountEl || !profitEl) return;
+
+            const newDate = dateEl.value;
+            const newTicker = tickerEl.value.trim();
+            const newAccount = accountEl.value;
+            const newMemo = memoEl ? memoEl.value : '';
+            const newProfitRaw = profitEl.value;
+            const newProfit = parseFloat(String(newProfitRaw || '').replace(/,/g, ''));
+
+            if (!newDate || !newTicker || newProfitRaw === '' || isNaN(newProfit)) {
+                showNotification('날짜 / 종목 / 수익금을 올바르게 입력해주세요.', 'error', '수정 불가');
+                return;
+            }
             if (!splitBuyApiUrl || !splitBuyApiToken) return;
+
             try {
                 const res = await fetchWithRetry_(splitBuyApiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(withToken_({ action: 'updateBuyMgmtRecord', id, date: newDate, ticker: newTicker.trim() || rec.ticker, account: newAccount.trim() || rec.account, memo: newMemo, profit: newProfit }))
+                    body: JSON.stringify(withToken_({ action: 'updateBuyMgmtRecord', id, date: newDate, ticker: newTicker, account: newAccount, memo: newMemo, profit: newProfit }))
                 });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '수정 실패');
                 buyMgmtRecordsCache = json.records || buyMgmtRecordsCache;
+                buyMgmtRecordsEditingId = null;
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
                 renderAllTickerBreakdownTables_();
-            renderTickerProfitChart_();
-                populateTickerSelects_(); // 🩹 [수정 2]
+                renderTickerProfitChart_();
+                renderAccountProfitChart_();
+                populateTickerSelects_();
                 showNotification('기록이 수정되었습니다.', 'success', '수정 완료');
             } catch (err) {
                 showNotification(`기록 수정에 실패했습니다: ${err.message}`, 'error', '수정 실패');
@@ -2847,7 +2975,8 @@
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
                 renderAllTickerBreakdownTables_();
-            renderTickerProfitChart_();
+                renderTickerProfitChart_();
+                renderAccountProfitChart_();
                 populateTickerSelects_(); // 🩹 [수정 2]
                 showNotification('확정 기록이 삭제되었습니다.', 'info', '삭제 완료');
             } catch (err) {
@@ -4209,6 +4338,77 @@
             });
         }
 
+        // 🆕 [기능 추가] 계좌별 누적 확정 수익금 비교
+        // 종목별 누적 수익금 비중(computeTickerProfitTotals_)과 동일한 buyMgmtRecordsCache를
+        // 계좌(1~7번 계좌) 기준으로 다시 집계한다. 어느 계좌가 실제로 수익을 견인하는지
+        // 종목 단위로는 보이지 않던 관점을 보여준다.
+        function computeAccountProfitTotals_() {
+            const totals = {};
+            buyMgmtRecordsCache.forEach(rec => {
+                if (!rec.account) return;
+                totals[rec.account] = (totals[rec.account] || 0) + (Number(rec.profit) || 0);
+            });
+            // 계좌 표시 순서는 항상 1~7번 계좌 순서를 우선하고, 그 외 값이 있으면 뒤에 붙인다.
+            const known = BUY_MGMT_ACCOUNTS.filter(a => totals[a] !== undefined);
+            const extra = Object.keys(totals).filter(a => !BUY_MGMT_ACCOUNTS.includes(a));
+            return [...known, ...extra].map(account => ({ account, total: totals[account] }));
+        }
+
+        let accountProfitChartInstance = null;
+
+        function renderAccountProfitChart_() {
+            const canvas = document.getElementById('accountProfitChart');
+            const breakdownContainer = document.getElementById('accountProfitBreakdown');
+            if (!canvas || !breakdownContainer) return;
+            const ctx = canvas.getContext('2d');
+            if (accountProfitChartInstance) accountProfitChartInstance.destroy();
+            breakdownContainer.innerHTML = '';
+
+            const totals = computeAccountProfitTotals_();
+            if (totals.length === 0) {
+                breakdownContainer.innerHTML = '<div class="text-slate-600 text-center py-6">확정된 수익금 기록이 없습니다. 종목별 매수 관리에서 💰 버튼을 눌러 수익금을 확정해보세요.</div>';
+                return;
+            }
+
+            const sumAbs = totals.reduce((s, t) => s + Math.abs(t.total), 0) || 1;
+
+            accountProfitChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: totals.map(t => t.account),
+                    datasets: [{
+                        data: totals.map(t => t.total),
+                        backgroundColor: totals.map(t => t.total < 0 ? 'rgba(244, 63, 94, 0.65)' : 'rgba(56, 189, 248, 0.65)'),
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (ctxItem) => `$${ctxItem.raw.toLocaleString(undefined, { minimumFractionDigits: 1 })}` } }
+                    },
+                    scales: {
+                        x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            totals.forEach(t => {
+                const pct = sumAbs > 0 ? (Math.abs(t.total) / sumAbs) * 100 : 0;
+                breakdownContainer.insertAdjacentHTML('beforeend', `
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between text-slate-300 font-semibold text-[10px]">
+                            <span>${escapeHtml_(t.account)}</span>
+                            <span class="${t.total < 0 ? 'text-rose-400' : 'text-sky-400'}">$${t.total.toLocaleString(undefined, { minimumFractionDigits: 1 })} (${pct.toFixed(1)}%)</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="h-full rounded-full ${t.total < 0 ? 'bg-rose-400' : 'bg-sky-400'}" style="width:${pct}%"></div></div>
+                    </div>
+                `);
+            });
+        }
+
         function renderAccountChart(dailyData, year = '전체') {
             const accCtx = document.getElementById('accountValueChart').getContext('2d');
             if (accountChartInstance) accountChartInstance.destroy();
@@ -4568,6 +4768,42 @@
             URL.revokeObjectURL(url);
 
             showNotification(`${sorted.length}건의 기록을 CSV로 내보냈습니다.`, 'success', '내보내기 완료');
+        }
+
+        // 🆕 [기능 추가] 확정 수익금 내역(매수관리_확정 시트)도 상세 테이블과 동일한 패턴으로
+        // CSV 내보내기를 지원한다. 현재 화면의 종목 필터가 적용된 상태 그대로 내보낸다.
+        function exportBuyMgmtRecordsToCsv_() {
+            const tickerFiltered = buyMgmtRecordsTickerFilter === '전체'
+                ? buyMgmtRecordsCache
+                : buyMgmtRecordsCache.filter(r => r.ticker === buyMgmtRecordsTickerFilter);
+
+            if (!tickerFiltered || tickerFiltered.length === 0) {
+                showNotification('내보낼 확정 기록이 없습니다.', 'error', '내보내기 실패');
+                return;
+            }
+
+            const headers = ['날짜', '종목', '계좌', '메모', '수익금'];
+            const sorted = [...tickerFiltered].sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+            const rows = sorted.map(rec => ([
+                rec.date || '',
+                rec.ticker || '',
+                rec.account || '',
+                `"${String(rec.memo || '').replace(/"/g, '""')}"`,
+                (Number(rec.profit) || 0).toFixed(2)
+            ]));
+
+            const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `확정수익금내역_${todayStr_()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification(`${sorted.length}건의 확정 기록을 CSV로 내보냈습니다.`, 'success', '내보내기 완료');
         }
 
         function searchMemo() {
