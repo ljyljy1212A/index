@@ -356,6 +356,10 @@
                         <i class="fa-solid fa-circle-notch mr-1"></i>미설정
                     </span>
                 </div>
+                <section id="dailyQueuePanel" class="hidden mb-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3" aria-live="polite">
+                    <h3 id="dailyQueueHeading" class="text-xs font-bold text-amber-300"></h3>
+                    <div id="dailyQueueItems" class="mt-2 max-h-56 space-y-2 overflow-y-auto"></div>
+                </section>
 
                 <div class="grid grid-cols-2 gap-2 mb-3">
                     <div>
@@ -1329,6 +1333,7 @@
         // 🩹 [정밀검사 개선] 예전에는 저장 실패한 매수관리 칸(splitBuyDirty_)이 메모리에만 있어 새로고침하면
         // 사라졌다. localStorage에 함께 보관하고, 온라인 복귀/주기 새로고침 때 다시 전송한다.
         const SPLIT_BUY_DIRTY_KEY_ = 'splitBuyDirty_v1';
+        const splitBuySaveVersions_ = new Map();
         const splitBuyDirty_ = (() => {
             try {
                 const p = JSON.parse(localStorage.getItem(SPLIT_BUY_DIRTY_KEY_) || '{}');
@@ -2344,14 +2349,17 @@
         function scheduleSplitBuyRemoteSave(ticker, step, alloc, bought) {
             if (!splitBuyApiUrl || !splitBuyApiToken) return;
             const key = `${ticker}__${step}`;
+            const version = (splitBuySaveVersions_.get(key) || 0) + 1;
+            splitBuySaveVersions_.set(key, version);
             clearTimeout(splitBuySaveTimers[key]);
             setSplitBuySyncStatus('loading', '저장 중...');
             splitBuySaveTimers[key] = setTimeout(() => {
-                saveSplitBuyStepRemote(ticker, step, alloc, bought);
+                saveSplitBuyStepRemote(ticker, step, alloc, bought, version);
             }, 500);
         }
 
-        async function saveSplitBuyStepRemote(ticker, step, alloc, bought) {
+        async function saveSplitBuyStepRemote(ticker, step, alloc, bought, version) {
+            const key = `${ticker}__${step}`;
             try {
                 const res = await fetchWithRetry_(splitBuyApiUrl, {
                     method: 'POST',
@@ -2360,12 +2368,14 @@
                 });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '저장 실패');
+                if (splitBuySaveVersions_.get(key) !== version) return;
                 if (!splitBuyRemoteData.data[ticker]) splitBuyRemoteData.data[ticker] = {};
                 splitBuyRemoteData.data[ticker][step] = { alloc, bought };
                 delete splitBuyDirty_[`${ticker}__${step}`];
                 persistSplitBuyDirty_();
                 setSplitBuySyncStatus('ok', '구글시트 저장 완료');
             } catch (err) {
+                if (splitBuySaveVersions_.get(key) !== version) return;
                 splitBuyDirty_[`${ticker}__${step}`] = { ticker, step, alloc, bought };
                 persistSplitBuyDirty_();
                 setSplitBuySyncStatus('error', '저장 실패 - 온라인 복귀/다음 동기화 때 자동 재시도');
@@ -2463,6 +2473,7 @@
         // 서버 값 대신 로컬 값을 유지하도록 한다. 키 형식은 `${key}__${rowLabel}__${ticker}`
         // (메모 칸은 ticker 자리에 MEMO_TICKER_KEY 사용) - gridSaveTimers의 셀 키와 동일한 규칙.
         const gridPendingCellKeys_ = new Set();
+        const gridCellRequestVersions_ = new Map();
         function gridCellPendingKey_(key, rowLabel, ticker) { return `${key}__${rowLabel}__${ticker}`; }
 
         // '종목별 매수 관리'에서 💰 토글로 확정한 (계좌×종목) 수익금 기록. 원본 할당/매수 칸과 무관하게 영구히 남는다.
@@ -2583,9 +2594,10 @@
             }
         }
 
-        async function saveGridCellRemote_(key, rowLabel, ticker, value) {
+        async function saveGridCellRemote_(key, rowLabel, ticker, value, version) {
             if (!splitBuyApiUrl || !splitBuyApiToken) return;
             const cfg = GRID_CONFIGS[key];
+            const cellKey = gridCellPendingKey_(key, rowLabel, ticker);
             setGridSyncStatus_(key, 'loading', '저장 중...');
             try {
                 const res = await fetchWithRetry_(splitBuyApiUrl, {
@@ -2595,19 +2607,21 @@
                 });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '저장 실패');
+                if (gridCellRequestVersions_.get(cellKey) !== version) return;
                 // 🩹 [정밀검사 개선] 예전에는 값이 빈 문자열(칸 지우기)일 때만 서버 응답 반영을
                 // 건너뛰었다. 로컬 상태는 onGridCellInput_에서 이미 갱신돼 화면상 문제는 없었지만,
                 // 서버가 실제로 저장한 값(예: 트리밍/포맷 적용 결과)과 로컬 캐시가 미묘하게
                 // 어긋난 채로 남을 수 있어, 값과 무관하게 항상 서버 응답으로 동기화한다.
                 // (🩹 [정밀검사 개선] 이 칸의 저장이 이제 막 끝났으므로 pending 표시를 먼저
                 // 지운 뒤 applyGridResponse_를 호출해, 이 칸도 정상적으로 서버 값을 받는다.)
-                gridPendingCellKeys_.delete(gridCellPendingKey_(key, rowLabel, ticker));
+                gridPendingCellKeys_.delete(cellKey);
                 applyGridResponse_(key, json);
                 setGridSyncStatus_(key, 'ok', '저장 완료');
             } catch (err) {
+                if (gridCellRequestVersions_.get(cellKey) !== version) return;
                 // 🩹 [정밀검사 개선] 저장이 실패해도 이 칸에 대한 시도는 일단 끝난 것이므로
                 // pending 표시를 지운다(로컬 값은 이미 gridCache에 남아있어 화면상 문제없음).
-                gridPendingCellKeys_.delete(gridCellPendingKey_(key, rowLabel, ticker));
+                gridPendingCellKeys_.delete(cellKey);
                 setGridSyncStatus_(key, 'error', '저장 실패');
                 showNotification(`저장에 실패했습니다: ${err.message}`, 'error', '저장 실패');
                 console.error(`${key} 저장 실패:`, err);
@@ -2616,8 +2630,12 @@
 
         function scheduleGridCellSave_(key, rowLabel, ticker, value) {
             const timerKey = `${key}__${rowLabel}__${ticker}`;
+            const cellKey = gridCellPendingKey_(key, rowLabel, ticker);
+            const version = (gridCellRequestVersions_.get(cellKey) || 0) + 1;
+            gridCellRequestVersions_.set(cellKey, version);
+            gridPendingCellKeys_.add(cellKey);
             clearTimeout(gridSaveTimers[timerKey]);
-            gridSaveTimers[timerKey] = setTimeout(() => saveGridCellRemote_(key, rowLabel, ticker, value), 500);
+            gridSaveTimers[timerKey] = setTimeout(() => saveGridCellRemote_(key, rowLabel, ticker, value, version), 500);
         }
 
         // 한 행의 여러 칸(예: 일평균수익금/월평균수익금/월평균수익률/연환산수익률)을
@@ -2629,7 +2647,17 @@
             setGridSyncStatus_(key, 'loading', '저장 중...');
             // 🩹 [정밀검사 개선] 셀 저장(saveGridCellRemote_)과 동일하게, 이 행의 이번 저장
             // 시도가 끝나면(성공/실패 무관) valuesMap에 포함된 모든 칸의 pending 표시를 지운다.
-            const clearPending_ = () => Object.keys(valuesMap || {}).forEach(ticker => gridPendingCellKeys_.delete(gridCellPendingKey_(key, rowLabel, ticker)));
+            const versions = {};
+            Object.keys(valuesMap || {}).forEach(ticker => {
+                const cellKey = gridCellPendingKey_(key, rowLabel, ticker);
+                versions[ticker] = gridCellRequestVersions_.get(cellKey);
+            });
+            const clearCurrentPending_ = () => Object.keys(versions).forEach(ticker => {
+                const cellKey = gridCellPendingKey_(key, rowLabel, ticker);
+                if (gridCellRequestVersions_.get(cellKey) === versions[ticker]) gridPendingCellKeys_.delete(cellKey);
+            });
+            const isCurrent_ = () => Object.keys(versions).every(ticker =>
+                gridCellRequestVersions_.get(gridCellPendingKey_(key, rowLabel, ticker)) === versions[ticker]);
             try {
                 const res = await fetchWithRetry_(splitBuyApiUrl, {
                     method: 'POST',
@@ -2638,11 +2666,13 @@
                 });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '저장 실패');
-                clearPending_();
+                clearCurrentPending_();
                 applyGridResponse_(key, json);
-                setGridSyncStatus_(key, 'ok', '저장 완료');
+                if (isCurrent_()) setGridSyncStatus_(key, 'ok', '저장 완료');
             } catch (err) {
-                clearPending_();
+                const current = isCurrent_();
+                clearCurrentPending_();
+                if (!current) return;
                 setGridSyncStatus_(key, 'error', '저장 실패');
                 showNotification(`저장에 실패했습니다: ${err.message}`, 'error', '저장 실패');
                 console.error(`${key} 행 저장 실패:`, err);
@@ -2654,7 +2684,11 @@
             clearTimeout(gridSaveTimers[timerKey]);
             // 🩹 [정밀검사 개선] 디바운스 대기가 시작되는 시점부터 이 행의 각 칸을 pending으로
             // 표시해, 그 사이 같은 그리드의 다른 칸 저장 응답이 이 값을 덮어쓰지 않게 한다.
-            Object.keys(valuesMap || {}).forEach(ticker => gridPendingCellKeys_.add(gridCellPendingKey_(key, rowLabel, ticker)));
+            Object.keys(valuesMap || {}).forEach(ticker => {
+                const cellKey = gridCellPendingKey_(key, rowLabel, ticker);
+                gridCellRequestVersions_.set(cellKey, (gridCellRequestVersions_.get(cellKey) || 0) + 1);
+                gridPendingCellKeys_.add(cellKey);
+            });
             gridSaveTimers[timerKey] = setTimeout(() => saveGridRowRemote_(key, rowLabel, valuesMap), 500);
         }
 
@@ -3297,10 +3331,11 @@
         // 🆕 [기능 추가] 일일 기록 오프라인 전송 대기 큐
         // ===================================================================
         // 저장 요청이 네트워크 문제로 실패하면 payload를 날짜별로 localStorage에 보관하고,
-        // 온라인 복귀 / 90초 주기 새로고침 / 앱 시작 시 날짜 오름차순으로 자동 재전송한다.
-        // 서버가 검증 오류로 거부한 항목은 재시도해도 소용없으므로 큐에서 빼고 값을 알려준다.
+        // 온라인 복귀 / 주기 새로고침 / 앱 시작 시 날짜 오름차순으로 재전송한다.
         const DAILY_QUEUE_KEY_ = 'dailyRecordQueue_v1';
         let dailyQueueFlushing_ = false;
+        const dailyRecordInFlightDates_ = new Set();
+        let editingQueuedDailyDate_ = null;
 
         function resetDailyEntryFormAfterSave_(checkboxEl) {
             dailyEntryDateTouched = false;
@@ -3337,7 +3372,13 @@
         }
         function enqueueDailyRecord_(payload) {
             const q = readDailyQueue_();
-            q[payload.date] = payload;
+            q[payload.date] = {
+                ...payload,
+                _queueId: generateRequestId_(),
+                _status: 'pending',
+                _error: '',
+                _queuedAt: new Date().toISOString()
+            };
             writeDailyQueue_(q);
         }
         function dequeueDailyRecord_(date) {
@@ -3345,24 +3386,72 @@
             if (q[date]) { delete q[date]; writeDailyQueue_(q); }
         }
         function updateDailyQueueBadge_() {
-            const statusEl = document.getElementById('dailyEntrySyncStatus');
-            if (!statusEl || !statusEl.parentNode) return;
-            let badge = document.getElementById('dailyQueueBadge');
-            if (!badge) {
-                badge = document.createElement('p');
-                badge.id = 'dailyQueueBadge';
-                badge.className = 'hidden text-[10px] text-amber-400 mb-2';
-                statusEl.parentNode.insertAdjacentElement('afterend', badge);
-            }
-            const dates = Object.keys(readDailyQueue_()).sort();
-            if (dates.length > 0) {
-                badge.textContent = `전송 대기 중인 일일 기록 ${dates.length}건 (${dates.join(', ')}) - 연결되면 자동 전송됩니다.`;
-                badge.classList.remove('hidden');
-            } else {
-                badge.textContent = '';
-                badge.classList.add('hidden');
-            }
+            const panel = document.getElementById('dailyQueuePanel');
+            const heading = document.getElementById('dailyQueueHeading');
+            const list = document.getElementById('dailyQueueItems');
+            if (!panel || !heading || !list) return;
+            const queue = readDailyQueue_();
+            const dates = Object.keys(queue).sort();
+            panel.classList.toggle('hidden', dates.length === 0);
+            heading.textContent = dates.length ? `전송 대기 기록 ${dates.length}건` : '';
+            list.innerHTML = dates.map(date => {
+                const item = queue[date];
+                const rejected = item._status === 'rejected';
+                const inFlight = dailyRecordInFlightDates_.has(date);
+                const status = rejected ? '서버 거부' : (item._status === 'sending' ? '전송 중' : '전송 대기');
+                const statusClass = rejected ? 'text-rose-300' : 'text-amber-200';
+                const error = item._error ? `<p class="mt-1 text-[10px] text-rose-300">${escapeHtml_(item._error)}</p>` : '';
+                return `<article class="rounded-lg border border-slate-700/70 bg-slate-900/70 p-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="min-w-0"><p class="text-xs font-semibold text-slate-100">${escapeHtml_(date)} <span class="ml-1 ${statusClass}">${status}</span></p>
+                            <p class="mt-0.5 text-[10px] text-slate-400">수익금 $${Number(item.revenue || 0).toLocaleString()} · 계좌 $${Number(item.accountVal || 0).toLocaleString()}</p>${error}</div>
+                        <div class="flex shrink-0 gap-1.5">
+                            <button type="button" class="js-daily-queue-edit rounded border border-slate-600 px-2 py-1 text-[10px] text-slate-200 hover:border-sky-400 disabled:opacity-40" data-date="${escapeHtml_(date)}" ${inFlight ? 'disabled' : ''}>수정</button>
+                            <button type="button" class="js-daily-queue-retry rounded border border-amber-500/40 px-2 py-1 text-[10px] text-amber-200 hover:border-amber-300 disabled:opacity-40" data-date="${escapeHtml_(date)}" ${inFlight ? 'disabled' : ''}>재시도</button>
+                            <button type="button" class="js-daily-queue-remove rounded border border-rose-500/40 px-2 py-1 text-[10px] text-rose-200 hover:border-rose-300 disabled:opacity-40" data-date="${escapeHtml_(date)}" ${inFlight ? 'disabled' : ''}>삭제</button>
+                        </div>
+                    </div>
+                </article>`;
+            }).join('');
         }
+
+        function editQueuedDailyRecord_(date) {
+            const item = readDailyQueue_()[date];
+            if (!item) return;
+            editingQueuedDailyDate_ = date;
+            selectDailyEntryDate_(date);
+            document.getElementById('dailyEntryRevenue').value = item.revenue ?? '';
+            document.getElementById('dailyEntryAccountVal').value = item.accountVal ?? '';
+            document.getElementById('dailyEntryStockSumInput').value = item.stockSumVal ?? '';
+            document.getElementById('dailyEntryMemo').value = item.memo || '';
+            const checkbox = document.getElementById('dateCheckedInput');
+            if (checkbox) checkbox.checked = true;
+            localStorage.setItem('dateCheckedFor', date);
+            updateDailyEntrySummary();
+            document.getElementById('dailyEntryCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            showNotification(`${date} 전송 대기 기록을 불러왔습니다. 저장하면 수정한 값으로 다시 전송합니다.`, 'info', '대기 기록 수정');
+        }
+
+        document.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.js-daily-queue-edit');
+            const retryBtn = e.target.closest('.js-daily-queue-retry');
+            const removeBtn = e.target.closest('.js-daily-queue-remove');
+            if (editBtn) editQueuedDailyRecord_(editBtn.dataset.date);
+            if (retryBtn) {
+                const queue = readDailyQueue_();
+                const item = queue[retryBtn.dataset.date];
+                if (!item || dailyRecordInFlightDates_.has(retryBtn.dataset.date)) return;
+                item._status = 'pending';
+                item._error = '';
+                writeDailyQueue_(queue);
+                flushDailyRecordQueue_();
+            }
+            if (removeBtn) {
+                const date = removeBtn.dataset.date;
+                if (!confirm(`${date} 전송 대기 기록을 이 기기에서 삭제할까요?`)) return;
+                dequeueDailyRecord_(date);
+            }
+        });
 
         async function flushDailyRecordQueue_() {
             if (dailyQueueFlushing_ || !splitBuyApiUrl || !splitBuyApiToken) return;
@@ -3372,10 +3461,18 @@
 
             dailyQueueFlushing_ = true;
             let sentCount = 0;
+            let retryLatest = false;
+            const queueLocksOwned_ = new Set();
             try {
                 for (const date of dates) {
-                    const item = readDailyQueue_()[date];
+                    const queueAtSend = readDailyQueue_();
+                    let item = queueAtSend[date];
                     if (!item) continue;
+                    if (dailyRecordInFlightDates_.has(date)) continue;
+                    dailyRecordInFlightDates_.add(date);
+                    queueLocksOwned_.add(date);
+                    queueAtSend[date]._status = 'sending';
+                    writeDailyQueue_(queueAtSend);
                     let json;
                     try {
                         const res = await fetchWithRetry_(splitBuyApiUrl, {
@@ -3385,18 +3482,40 @@
                         });
                         json = await res.json();
                     } catch (netErr) {
+                        const current = readDailyQueue_();
+                        if (current[date] && current[date]._queueId === item._queueId) {
+                            current[date]._status = 'pending';
+                            current[date]._error = `연결 오류: ${netErr.message}`;
+                            writeDailyQueue_(current);
+                        }
+                        dailyRecordInFlightDates_.delete(date);
+                        queueLocksOwned_.delete(date);
                         break; // 아직 연결이 불안정 → 나머지는 다음 기회에
                     }
                     const cur = readDailyQueue_();
-                    delete cur[date];
-                    writeDailyQueue_(cur);
                     if (json && json.success) {
                         sentCount++;
+                        if (cur[date] && cur[date]._queueId === item._queueId) {
+                            delete cur[date];
+                        } else if (cur[date]) {
+                            cur[date]._status = 'pending';
+                            cur[date]._error = '';
+                            retryLatest = true;
+                        }
+                        writeDailyQueue_(cur);
                     } else {
-                        showNotification(`전송 대기 중이던 ${escapeHtml_(date)} 기록이 서버에서 거부되어 대기열에서 제외했습니다(${escapeHtml_((json && json.error) || '알 수 없는 오류')}). 값(수익금 ${item.revenue}, 계좌평가액 ${item.accountVal})을 확인해 다시 입력해주세요.`, 'error', '전송 실패');
+                        if (cur[date] && cur[date]._queueId === item._queueId) {
+                            cur[date]._status = 'rejected';
+                            cur[date]._error = (json && json.error) || '서버가 요청을 거부했습니다.';
+                        }
+                        writeDailyQueue_(cur);
+                        showNotification(`${date} 기록이 서버에서 거부됐습니다. 대기 기록 패널에서 내용을 확인하고 수정해주세요.`, 'error', '전송 실패');
                     }
+                    dailyRecordInFlightDates_.delete(date);
+                    queueLocksOwned_.delete(date);
                 }
             } finally {
+                queueLocksOwned_.forEach(date => dailyRecordInFlightDates_.delete(date));
                 dailyQueueFlushing_ = false;
                 updateDailyQueueBadge_();
             }
@@ -3404,6 +3523,7 @@
                 showNotification(`전송 대기 중이던 일일 기록 ${sentCount}건을 구글시트에 저장했습니다.`, 'success', '전송 완료');
                 fetchMainDataViaApi_({ silent: true });
             }
+            if (retryLatest) setTimeout(flushDailyRecordQueue_, 0);
         }
 
         async function saveDailyRecordToSheet() {
@@ -3490,11 +3610,25 @@
 
             setDailyEntrySyncStatus('loading', '저장 중...');
 
+            let ownsDailyRecordLock = false;
             try {
                 const payload = {
                     date, revenue, accountVal, stockSumVal, memo,
-                    tickerValues: (latest && date < latest.date) ? {} : buildTickerSnapshotFromBuyManagement_()
+                    tickerValues: editingQueuedDailyDate_ === date
+                        ? ((readDailyQueue_()[date] || {}).tickerValues || {})
+                        : ((latest && date < latest.date) ? {} : buildTickerSnapshotFromBuyManagement_())
                 };
+                if (dailyRecordInFlightDates_.has(date)) {
+                    enqueueDailyRecord_(payload);
+                    editingQueuedDailyDate_ = null;
+                    resetDailyEntryFormAfterSave_(checkboxEl);
+                    setDailyEntrySyncStatus('loading', '최신 값 전송 대기 중');
+                    showNotification(`${date} 기록 전송이 진행 중입니다. 새 입력값을 대기 기록에 보관했습니다.`, 'info', '전송 대기');
+                    return;
+                }
+                dailyRecordInFlightDates_.add(date);
+                ownsDailyRecordLock = true;
+                updateDailyQueueBadge_();
                 let json;
                 try {
                     const res = await fetchWithRetry_(splitBuyApiUrl, {
@@ -3507,6 +3641,7 @@
                     // 🆕 [기능 추가] 네트워크/서버 응답 불가(오프라인 등)면 폼에 값을 남겨 재시도하게 하는 대신,
                     // 이 기기(localStorage)에 보관하고 연결이 돌아오면 자동 전송한다(같은 날짜는 upsert라 중복되지 않음).
                     enqueueDailyRecord_(payload);
+                    editingQueuedDailyDate_ = null;
                     resetDailyEntryFormAfterSave_(checkboxEl);
                     setDailyEntrySyncStatus('error', '전송 대기 중');
                     showNotification(`${date} 기록을 이 기기에 보관했습니다. 연결이 복구되면 자동으로 구글시트에 전송합니다. (${escapeHtml_(netErr.message)})`, 'info', '전송 대기');
@@ -3514,6 +3649,7 @@
                 }
                 if (!json.success) throw new Error(json.error || '저장 실패');
                 dequeueDailyRecord_(date); // 같은 날짜로 대기 중이던 옛 값이 나중에 덮어쓰지 않도록 제거
+                editingQueuedDailyDate_ = null;
 
                 setDailyEntrySyncStatus('ok', '구글시트 반영 완료');
                 // 🩹 [정밀검사 개선] 과거 기록을 수정해서 파생값(누적수익금/MDD/일별수익률)을
@@ -3536,6 +3672,9 @@
                 setDailyEntrySyncStatus('error', '저장 실패');
                 showNotification(`저장 중 오류가 발생했습니다: ${err.message}`, 'error', '저장 실패');
                 console.error('일일 기록 저장 실패:', err);
+            } finally {
+                if (ownsDailyRecordLock) dailyRecordInFlightDates_.delete(date);
+                updateDailyQueueBadge_();
             }
         }
 
@@ -4528,6 +4667,7 @@
         // (2) 숫자는 괄호 음수/지수 표기/통화기호/천단위 쉼표를 정확히 해석하며, (3) 제외되거나
         // 보정된 행은 "데이터 점검" 카드와 알림으로 알려준다.
         let dataQualityIssues_ = { excluded: [], coerced: [], duplicates: 0 };
+        let dataSnapshotTrustedForYieldWrite_ = false;
         let lastDataQualityNotifiedSig_ = '';
 
         function isStrictDateStr_(str) {
@@ -4564,6 +4704,7 @@
         }
 
         function parseAndRenderData(rawMatrix, sourceName) {
+            dataSnapshotTrustedForYieldWrite_ = false;
             if (!rawMatrix) return;
             if (rawMatrix.length < 2) {
                 dataQualityIssues_ = { excluded: [], coerced: [], duplicates: 0 };
@@ -4797,6 +4938,7 @@
 
             cachedParsedData = parsedData;
 
+            dataSnapshotTrustedForYieldWrite_ = /^Apps Script API 연동/.test(String(sourceName || ''));
             updateKpiCards(parsedData);
             rebuildChartsAndTable_();
             renderDailyEntryForm();
@@ -5675,6 +5817,7 @@
         }
 
         function maybeSaveYieldSnapshot_(dateLabel, metrics) {
+            if (!dataSnapshotTrustedForYieldWrite_) { renderYieldTable_(); return; }
             const sig = `${dateLabel}|${metrics.avgRevenue.toFixed(2)}|${metrics.avgMonthlyRevenue.toFixed(2)}|${metrics.avgMonthlyReturn.toFixed(4)}|${metrics.annualizedReturn.toFixed(4)}`;
             if (sig === lastYieldSnapshotSig) { renderYieldTable_(); return; }
             lastYieldSnapshotSig = sig;
