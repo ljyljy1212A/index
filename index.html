@@ -885,9 +885,14 @@
                             <i class="fa-solid fa-floppy-disk"></i>
                         </button>
                     </div>
+                    <label for="rememberSplitBuyApiToken" class="mt-2.5 flex items-center gap-2 text-[11px] text-slate-400">
+                        <input type="checkbox" id="rememberSplitBuyApiToken" class="accent-amber-500">
+                        이 기기에서 인증 토큰 기억
+                    </label>
+                    <p class="text-[10px] text-slate-600 mt-1">선택하면 이 브라우저에 저장됩니다. 공용 기기에서는 선택하지 마세요.</p>
                     <p class="text-[10px] text-slate-500 leading-relaxed mt-2">
                         일일 기록 입력 / 매수 목록 / 차수 기록 / 메모장 / 메모장1 / 자산 현황 그래프가 모두 이 주소+토큰으로
-                        토큰은 페이지 메모리에만 보관되므로 새로고침 후 다시 입력해야 합니다. Apps Script 프로젝트 설정의
+                        동기화됩니다. Apps Script 프로젝트 설정의
                         스크립트 속성에 같은 API_TOKEN을 등록하고 새 버전을 배포해야 조회/저장이 동작합니다.
                     </p>
                 </div>
@@ -942,7 +947,8 @@
         const splitBuySaveTimers = {};
 
         let splitBuyApiUrl = localStorage.getItem('splitBuyApiUrl') || '';
-        let splitBuyApiToken = '';
+        const SPLIT_BUY_API_TOKEN_STORAGE_KEY = 'splitBuyApiToken';
+        let splitBuyApiToken = localStorage.getItem(SPLIT_BUY_API_TOKEN_STORAGE_KEY) || '';
 
         // Apps Script POST 호출 시 인증 토큰을 항상 함께 보내기 위한 헬퍼
         function withToken_(body) {
@@ -1119,6 +1125,8 @@
             document.getElementById('splitBuyApiUrlInput').value = splitBuyApiUrl;
             const tokenInputEl = document.getElementById('splitBuyApiTokenInput');
             if (tokenInputEl) tokenInputEl.value = splitBuyApiToken;
+            const rememberTokenEl = document.getElementById('rememberSplitBuyApiToken');
+            if (rememberTokenEl) rememberTokenEl.checked = !!splitBuyApiToken;
 
             if (splitBuyApiUrl && splitBuyApiToken) {
                 // 분할매수 데이터 동기화가 끝난 뒤에 그리드 5종을 순서대로 불러오도록 직렬화
@@ -1188,6 +1196,12 @@
             splitBuyApiUrl = urlInput;
             splitBuyApiToken = tokenInput;
             localStorage.setItem('splitBuyApiUrl', urlInput);
+            const rememberToken = document.getElementById('rememberSplitBuyApiToken')?.checked;
+            if (rememberToken) {
+                localStorage.setItem(SPLIT_BUY_API_TOKEN_STORAGE_KEY, tokenInput);
+            } else {
+                localStorage.removeItem(SPLIT_BUY_API_TOKEN_STORAGE_KEY);
+            }
             initSplitBuySync().finally(() => initAllGrids_());
             fetchMainDataViaApi_();
         }
