@@ -574,7 +574,6 @@
                             <i class="fa-solid fa-chart-column text-emerald-400"></i> 월별 수익 합계 & 일평균
                         </h3>
                         <div class="flex items-center gap-2 self-start sm:self-auto">
-                            <div id="confirmedProfitFilters_combo" class="flex flex-wrap items-center gap-1" role="group" aria-label="월별 수익 종목 선택"></div>
                             <div class="relative">
                                 <button type="button" id="calBtn_combo" onclick="toggleCalendarG_('combo')" title="시작일 필터"
                                     class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
@@ -711,7 +710,6 @@
                             <i class="fa-solid fa-calendar-check text-amber-500"></i> 연도별 수익금 합계
                         </h3>
                         <div class="flex items-center gap-2 self-start sm:self-auto">
-                            <div id="confirmedProfitFilters_yearly" class="flex flex-wrap items-center gap-1" role="group" aria-label="연도별 수익 종목 선택"></div>
                             <div class="relative">
                                 <button type="button" id="calBtn_yearly" onclick="toggleCalendarG_('yearly')" title="시작일 필터"
                                     class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
@@ -735,10 +733,8 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
                         <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-chart-line text-emerald-400"></i> 월별 수익률 추이
-                            <span class="text-[9px] font-normal text-slate-500">일별 확정 수익금 ÷ 해당 일 계좌 평가액, 월별 복리</span>
                         </h3>
                         <div class="flex items-center gap-2 self-start sm:self-auto">
-                            <div id="confirmedProfitFilters_monthlyReturn" class="flex flex-wrap items-center gap-1" role="group" aria-label="월별 수익률 종목 선택"></div>
                             <div class="relative">
                                 <button type="button" id="calBtn_monthlyReturn" onclick="toggleCalendarG_('monthlyReturn')" title="시작일 필터"
                                     class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
@@ -1125,8 +1121,6 @@
         window.onload = function() {
             renderBuyManagement_();
             restoreCalendarFiltersFromStorage_();
-            renderConfirmedProfitTickerFilters_('combo');
-            renderConfirmedProfitTickerFilters_('yearly');
 
             document.getElementById('splitBuyApiUrlInput').value = splitBuyApiUrl;
             const tokenInputEl = document.getElementById('splitBuyApiTokenInput');
@@ -1350,7 +1344,6 @@
 
         // '종목별 매수 관리'에서 💰 토글로 확정한 (계좌×종목) 수익금 기록. 원본 할당/매수 칸과 무관하게 영구히 남는다.
         let buyMgmtRecordsCache = [];
-        const confirmedProfitTickerSelection_ = { combo: 'ALL', yearly: 'ALL', monthlyReturn: 'ALL' };
         // 확정 기록 내역 표시 모드: 'recent' = 최근 3일, 'all' = 전체
         let buyMgmtRecordsMode = 'recent';
         // 지금 펼쳐져 있는 (계좌×종목) 수익 확정 토글 박스들의 키 집합. 키 형식: `${accountLabel}||${ticker}`
@@ -2354,7 +2347,6 @@
             }
             renderBuyMgmtRecordsTable_();
             updateDailyEntryConfirmedSum_();
-            renderConfirmedProfitCharts_();
         }
 
         // 💰 토글 박스의 '기록 추가' 버튼: 지금 입력된 날짜/메모/수익금을 그 계좌·종목의
@@ -2394,7 +2386,6 @@
                 closeBuyMgmtRecordModal_();
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
-                renderConfirmedProfitCharts_();
                 showNotification(`'${ticker}' ${account} 수익금이 확정되었습니다.`, 'success', '기록 추가 완료');
             } catch (err) {
                 showNotification(`기록 추가에 실패했습니다: ${err.message}`, 'error', '기록 추가 실패');
@@ -2484,7 +2475,6 @@
                 buyMgmtRecordsCache = json.records || buyMgmtRecordsCache;
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
-                renderConfirmedProfitCharts_();
                 showNotification('기록이 수정되었습니다.', 'success', '수정 완료');
             } catch (err) {
                 showNotification(`기록 수정에 실패했습니다: ${err.message}`, 'error', '수정 실패');
@@ -2506,7 +2496,6 @@
                 buyMgmtRecordsCache = json.records || buyMgmtRecordsCache;
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
-                renderConfirmedProfitCharts_();
                 showNotification('확정 기록이 삭제되었습니다.', 'info', '삭제 완료');
             } catch (err) {
                 showNotification(`기록 삭제에 실패했습니다: ${err.message}`, 'error', '삭제 실패');
@@ -2773,118 +2762,11 @@
             return filtered.length > 0 ? filtered : cachedParsedData;
         }
 
-        const confirmedProfitChartKeys_ = ['combo', 'yearly', 'monthlyReturn'];
-
-        function getConfirmedProfitChartData_(chartKey) {
-            const selectedTicker = confirmedProfitTickerSelection_[chartKey] || 'ALL';
-            const startDate = localStorage.getItem(`chartStartDate_${chartKey}`) || '';
-            return buyMgmtRecordsCache
-                .filter(record => /^\d{4}-\d{2}-\d{2}$/.test(String(record.date || '')))
-                .filter(record => !startDate || record.date >= startDate)
-                .filter(record => selectedTicker === 'ALL' || String(record.ticker || '').toUpperCase() === selectedTicker)
-                .map(record => ({
-                    date: record.date,
-                    ticker: String(record.ticker || '').trim().toUpperCase(),
-                    profit: Number(record.profit) || 0
-                }))
-                .sort((a, b) => a.date.localeCompare(b.date));
-        }
-
-        function renderConfirmedProfitTickerFilters_(chartKey) {
-            const container = document.getElementById(`confirmedProfitFilters_${chartKey}`);
-            if (!container) return;
-            const tickers = [...new Set(buyMgmtRecordsCache
-                .map(record => String(record.ticker || '').trim().toUpperCase())
-                .filter(Boolean))].sort();
-            if (confirmedProfitTickerSelection_[chartKey] !== 'ALL' && !tickers.includes(confirmedProfitTickerSelection_[chartKey])) {
-                confirmedProfitTickerSelection_[chartKey] = 'ALL';
-            }
-
-            container.replaceChildren();
-            ['ALL', ...tickers].forEach(ticker => {
-                const button = document.createElement('button');
-                const isActive = confirmedProfitTickerSelection_[chartKey] === ticker;
-                button.type = 'button';
-                button.textContent = ticker === 'ALL' ? '전체' : ticker;
-                button.title = ticker === 'ALL' ? '모든 종목의 확정 수익금' : `${ticker} 확정 수익금만 보기`;
-                button.setAttribute('aria-pressed', String(isActive));
-                button.className = isActive
-                    ? 'px-2 py-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 text-[10px] font-semibold'
-                    : 'px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 text-[10px] font-semibold';
-                button.addEventListener('click', () => {
-                    confirmedProfitTickerSelection_[chartKey] = ticker;
-                    renderConfirmedProfitTickerFilters_(chartKey);
-                    if (chartKey === 'combo') rerenderCombo_();
-                    else if (chartKey === 'yearly') rerenderYearly_();
-                    else rerenderMonthlyReturn_();
-                });
-                container.appendChild(button);
-            });
-        }
-
-        function renderConfirmedProfitCharts_() {
-            confirmedProfitChartKeys_.forEach(renderConfirmedProfitTickerFilters_);
-            rerenderCombo_();
-            rerenderYearly_();
-            rerenderMonthlyReturn_();
-        }
-
-        function calculateConfirmedMonthlyReturn_(records) {
-            if (!records.length) return [];
-            const months = enumerateCalendarMonths_(records[0].date, records[records.length - 1].date);
-            const dailyProfit = {};
-            records.forEach(record => {
-                dailyProfit[record.date] = (dailyProfit[record.date] || 0) + record.profit;
-            });
-            const accountValueByDate = new Map(cachedParsedData.map(item => [item.date, Number(item.accountVal)]));
-
-            return months.map(month => {
-                let monthlyGrowth = 1;
-                let hasValidValuation = true;
-                Object.keys(dailyProfit).filter(date => date.startsWith(`${month}-`)).sort().forEach(date => {
-                    const accountValue = accountValueByDate.get(date);
-                    if (!(accountValue > 0)) {
-                        hasValidValuation = false;
-                        return;
-                    }
-                    const dailyFactor = 1 + dailyProfit[date] / accountValue;
-                    if (dailyFactor < 0) hasValidValuation = false;
-                    else monthlyGrowth *= dailyFactor;
-                });
-                return {
-                    month,
-                    rate: hasValidValuation ? (monthlyGrowth - 1) * 100 : null
-                };
-            });
-        }
-
-        function groupConfirmedProfitByMonth_(records) {
-            if (!records.length) return [];
-            const months = enumerateCalendarMonths_(records[0].date, records[records.length - 1].date);
-            const totals = Object.fromEntries(months.map(month => [month, 0]));
-            records.forEach(record => { totals[record.date.substring(0, 7)] += record.profit; });
-            return months.map(month => ({
-                month,
-                totalRevenue: totals[month],
-                avgRevenue: totals[month] / new Date(Date.UTC(Number(month.substring(0, 4)), Number(month.substring(5, 7)), 0)).getUTCDate()
-            }));
-        }
-
-        function groupConfirmedProfitByYear_(records) {
-            if (!records.length) return [];
-            const firstYear = Number(records[0].date.substring(0, 4));
-            const lastYear = Number(records[records.length - 1].date.substring(0, 4));
-            const totals = {};
-            for (let year = firstYear; year <= lastYear; year++) totals[String(year)] = 0;
-            records.forEach(record => { totals[record.date.substring(0, 4)] += record.profit; });
-            return Object.keys(totals).map(year => ({ year, totalRevenue: totals[year] }));
-        }
-
-        function rerenderCombo_() { renderMonthlyComboChart(groupConfirmedProfitByMonth_(getConfirmedProfitChartData_('combo'))); }
+        function rerenderCombo_() { renderMonthlyComboChart(groupDataByMonth(getFilteredDailyData_('combo'))); }
         function rerenderAcc_() { renderAccountChart(getFilteredDailyData_('acc')); }
         function rerenderMdd_() { renderMddChart(getFilteredDailyData_('mdd')); }
-        function rerenderYearly_() { renderYearlyBarChart(groupConfirmedProfitByYear_(getConfirmedProfitChartData_('yearly'))); }
-        function rerenderMonthlyReturn_() { renderMonthlyReturnChart(calculateConfirmedMonthlyReturn_(getConfirmedProfitChartData_('monthlyReturn'))); }
+        function rerenderYearly_() { renderYearlyBarChart(groupDataByYear(getFilteredDailyData_('yearly'))); }
+        function rerenderMonthlyReturn_() { renderMonthlyReturnChart(calculateMonthlyStats(getFilteredDailyData_('monthlyReturn')).monthlyDetails); }
         function rerenderTable_() { cachedChartData = getFilteredDailyData_('table'); renderDetailTable(cachedChartData); }
 
         const CALENDAR_APPLY_CALLBACKS = {
@@ -3339,8 +3221,8 @@
                 data: {
                     labels: filtered.map(d => d.month),
                     datasets: [
-                        { label: '월별 확정 수익금 ($)', data: filtered.map(d => d.totalRevenue), backgroundColor: 'rgba(16, 185, 129, 0.65)', borderColor: '#10b981', borderWidth: 2, borderRadius: 6, yAxisID: 'y' },
-                        { label: '일평균 확정 수익금 ($)', data: filtered.map(d => d.avgRevenue), type: 'line', borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 3, tension: 0.3, yAxisID: 'y2' }
+                        { label: '월별 수익금 ($)', data: filtered.map(d => d.totalRevenue), backgroundColor: 'rgba(16, 185, 129, 0.65)', borderColor: '#10b981', borderWidth: 2, borderRadius: 6, yAxisID: 'y' },
+                        { label: '일평균 ($)', data: filtered.map(d => d.avgRevenue), type: 'line', borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 3, tension: 0.3, yAxisID: 'y2' }
                     ]
                 },
                 options: {
@@ -3546,7 +3428,7 @@
 
             yearlyChartInstance = new Chart(yearlyCtx, {
                 type: 'bar',
-                data: { labels: filtered.map(d => d.year), datasets: [{ label: '연간 확정 수익금 ($)', data: filtered.map(d => d.totalRevenue), backgroundColor: 'rgba(251, 191, 36, 0.7)', borderColor: '#f59e0b', borderWidth: 2, borderRadius: 6 }] },
+                data: { labels: filtered.map(d => d.year), datasets: [{ label: '연 수익금', data: filtered.map(d => d.totalRevenue), backgroundColor: 'rgba(251, 191, 36, 0.7)', borderColor: '#f59e0b', borderWidth: 2, borderRadius: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#1e293b' } } } }
             });
         }
@@ -3558,7 +3440,7 @@
 
             monthlyReturnChartInstance = new Chart(returnCtx, {
                 type: 'line',
-                data: { labels: filtered.map(d => d.month), datasets: [{ label: '일별 확정 수익금 ÷ 해당 일 전체 계좌 평가액, 월별 복리 (%)', data: filtered.map(d => d.rate), borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, borderWidth: 2.5 }] },
+                data: { labels: filtered.map(d => d.month), datasets: [{ label: '월 수익률 (%)', data: filtered.map(d => d.rate), borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, borderWidth: 2.5 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#1e293b' } } } }
             });
         }
