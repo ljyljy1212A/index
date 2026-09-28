@@ -39,7 +39,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Pretendard', sans-serif;
@@ -117,90 +117,18 @@
             padding-bottom: 0.3rem !important;
         }
 
-        /* ===== 가독성 개선 레이어 (기존 기능/ID는 그대로, 보이는 방식만 정리) ===== */
-        html { -webkit-text-size-adjust: 100%; }
-        body { font-size: 15px; line-height: 1.5; }
-
-        /* 너무 작았던 글자(9~11px)를 읽을 수 있는 크기로 */
-        body .text-\[9px\]  { font-size: 11px; }
-        body .text-\[10px\] { font-size: 12px; }
-        body .text-\[11px\] { font-size: 13px; }
-        body .text-xs       { font-size: 13px; }
-        body .text-slate-600 { color: #7c8aa0; }   /* 배경 대비가 낮던 보조 글씨 */
-        body .text-slate-500 { color: #94a3b8; }
-
-        /* 카드 제목 */
-        body main h2.text-sm, body main h3.text-sm { font-size: 15px; letter-spacing: -0.01em; }
-
-        /* 섹션 머리글 */
+        /* Layout rules for features unique to this version of the dashboard. */
         .sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .sec-head i { font-size: 15px; }
-        .sec-title { font-size: 16px; font-weight: 700; color: #e2e8f0; letter-spacing: -0.01em; }
-        .sec-sub { font-size: 12px; color: #7c8aa0; margin-left: 4px; }
-
-        /* 탭 바 */
         .tabbar { position: sticky; top: 56px; z-index: 40; background: rgba(15,23,42,.94); backdrop-filter: blur(8px); border-bottom: 1px solid #1e293b; }
         .tabbar-inner { max-width: 1600px; margin: 0 auto; padding: 0 12px; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
         .tabbar-inner::-webkit-scrollbar { display: none; }
-        .tab-btn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; padding: 13px 14px; font-size: 14px; font-weight: 600; color: #94a3b8; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .15s, border-color .15s; }
-        .tab-btn:hover { color: #e2e8f0; }
-        .tab-btn.active { color: #34d399; border-bottom-color: #34d399; }
-        .tab-btn:focus-visible { outline: 2px solid #34d399; outline-offset: -2px; border-radius: 6px; }
-        @media (max-width: 640px) { .tab-btn { padding: 12px 11px; font-size: 13.5px; gap: 6px; } }
-
-        /* 알림 토스트: 어느 탭에서든 보이게 고정 */
         .toast-host { position: fixed; top: 112px; right: 16px; z-index: 60; width: min(380px, calc(100vw - 32px)); pointer-events: none; }
         .toast-host > * { pointer-events: auto; box-shadow: 0 12px 32px rgba(0,0,0,.45); cursor: pointer; }
         .toast-host #statusNotification { background-color: #0f172a; }
-
-        /* 카드 */
-        .tab-pane .rounded-2xl.border { border-color: #22304a; }
         .tab-pane { animation: none; }
-
-        /* 표 가독성: 헤더 고정 + 줄무늬는 그대로 두되 셀 여백 확보 */
-        .tab-pane table th { font-size: 12px; }
-        .tab-pane table td { font-size: 13px; }
-
-        /* ===== 가독성 2차: 대비·글자 크기·표·모바일 입력 ===== */
-        body { background-color: #0a1120; font-size: 16px; line-height: 1.55; font-variant-numeric: tabular-nums; }
-        body .bg-slate-900 { background-color: #131d33; }
-        body .bg-slate-950 { background-color: #0b1324; }
-        body .border-slate-800, body .border-slate-800\/60, body .border-slate-800\/80 { border-color: #2c3d5c; }
-        body .border-slate-700 { border-color: #3a4d70; }
-        body .text-slate-300 { color: #e2e8f0; }
-        body .text-slate-400 { color: #c1cce0; }
-        body .text-slate-500 { color: #aab7cd; }
-        body .text-slate-600 { color: #96a4bc; }
-        body .text-rose-500 { color: #fb7185; }
-        body input::placeholder, body textarea::placeholder { color: #7f8ea8; }
-        body .text-\[9px\]  { font-size: 12px; }
-        body .text-\[10px\] { font-size: 13px; }
-        body .text-\[11px\] { font-size: 14px; }
-        body .text-xs       { font-size: 14px; }
-        body .text-sm       { font-size: 15px; }
-        body main h2.text-sm, body main h3.text-sm { font-size: 16px; font-weight: 700; color: #f1f5f9; }
-        body .tab-pane .grid > .rounded-2xl > span.font-semibold:first-child { font-size: 13px; color: #cbd5e1; }
-        body .tab-pane .grid > .rounded-2xl { padding: 1.1rem 1.15rem; }
-        body main .rounded-2xl.p-5 { padding: 1.5rem; }
-        body .tab-pane .gap-6, body .tab-pane .gap-5 { gap: 1.5rem; }
-        .tab-pane table th { font-size: 13px; color: #cbd5e1; background: #16223a; position: sticky; top: 0; z-index: 1; }
-        .tab-pane table td { font-size: 14px; }
-        .tab-pane table tbody tr:nth-child(even) { background: rgba(148,163,184,.05); }
-        .tab-pane table tbody tr:hover { background: rgba(52,211,153,.08); }
-        #detailDataTable.density-compact th, #detailDataTable.density-compact td { padding-top: .4rem !important; padding-bottom: .4rem !important; }
-        body input, body select, body textarea { font-size: 15px; }
-        body input:not([type=checkbox]):not([type=radio]), body select, body textarea { border-color: #3a4d70; }
-        body input:focus, body select:focus, body textarea:focus { outline: 2px solid rgba(52,211,153,.55); outline-offset: 1px; }
-        @media (max-width: 640px) {
-            body input, body select, body textarea { font-size: 16px; }
-            body main { padding-left: 12px; padding-right: 12px; }
-            body main .rounded-2xl.p-5 { padding: 1.1rem; }
-        }
-
-        /* 추가 지표 접이식 */
-        .extra-kpis > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #131d33; border: 1px solid #2c3d5c; border-radius: 16px; color: #e2e8f0; font-weight: 600; font-size: 14px; }
+        .extra-kpis > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #1e293b; border: 1px solid #334155; border-radius: 16px; color: #f1f5f9; font-weight: 600; font-size: 14px; }
         .extra-kpis > summary::-webkit-details-marker { display: none; }
-        .extra-kpis > summary span { color: #aab7cd; font-weight: 400; font-size: 13px; }
+        .extra-kpis > summary span { color: #94a3b8; font-weight: 400; font-size: 13px; }
         .extra-kpis > summary i { color: #34d399; transition: transform .2s; }
         .extra-kpis[open] > summary i { transform: rotate(180deg); }
         .extra-kpis > summary:focus-visible { outline: 2px solid #34d399; outline-offset: 2px; }
