@@ -22,7 +22,7 @@
  * ===================================================================
  */
 
-const CACHE_VERSION = 'dashboard-cache-v1';
+const CACHE_VERSION = 'dashboard-cache-v3';
 // 🩹 [정밀검사 개선] "네트워크 우선, 실패 시 캐시" 전략은 성공한 GET 응답을 전부
 // 캐시에 계속 쌓기만 하고 지우는 로직이 없었다. CDN 자산(Tailwind/Chart.js/FontAwesome/
 // Google Fonts 등)의 URL이 버전업 등으로 바뀌면 예전 항목이 캐시에 계속 누적될 수 있으므로,
@@ -43,6 +43,7 @@ async function trimCache_(cacheName, maxEntries) {
 }
 
 const CORE_ASSETS = [
+  './',
   './index.html',
   './manifest.json',
   './icon-192.png',
@@ -164,6 +165,6 @@ self.addEventListener('fetch', (event) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((cached) => cached || Promise.reject('오프라인이며 캐시도 없음')))
+      .catch(() => caches.match(req).then((cached) => cached || (req.mode === 'navigate' ? caches.match('./index.html') : Promise.reject('오프라인이며 캐시도 없음'))))
   );
 });
