@@ -2943,30 +2943,54 @@
             });
         }
 
+        function enumerateCalendarMonths_(startDate, endDate) {
+            if (!startDate || !endDate) return [];
+            const cursor = new Date(`${startDate.substring(0, 7)}-01T00:00:00Z`);
+            const end = new Date(`${endDate.substring(0, 7)}-01T00:00:00Z`);
+            const months = [];
+            while (cursor <= end) {
+                months.push(`${cursor.getUTCFullYear()}-${String(cursor.getUTCMonth() + 1).padStart(2, '0')}`);
+                cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+            }
+            return months;
+        }
+
         function calculateMonthlyStats(data) {
             if (!data || data.length === 0) return { avgMonthlyRevenue: 0, avgMonthlyReturn: 0, monthlyDetails: [] };
 
             const monthlyMap = {};
+            const monthKeys = enumerateCalendarMonths_(data[0].date, data[data.length - 1].date);
+            monthKeys.forEach(monthKey => { monthlyMap[monthKey] = { revenueSum: 0, growth: 1 }; });
             data.forEach(item => {
                 const monthKey = item.date.substring(0, 7);
-                if (!monthlyMap[monthKey]) monthlyMap[monthKey] = { revenueSum: 0, records: [] };
                 monthlyMap[monthKey].revenueSum += item.revenue;
-                monthlyMap[monthKey].records.push(item);
             });
 
-            const monthKeys = Object.keys(monthlyMap).sort();
+            // Spread each observed-period return evenly across its calendar days,
+            // so gaps crossing month boundaries are attributed to both months.
+            data.forEach((item, index) => {
+                const previousDate = index > 0 ? data[index - 1].date : item.date;
+                const intervalDays = Math.max(daysBetween_(previousDate, item.date), 1);
+                const periodFactor = Math.max(0, 1 + (item.dailyReturn || 0));
+                const dailyFactor = periodFactor > 0 ? Math.pow(periodFactor, 1 / intervalDays) : 0;
+                const day = new Date(`${item.date}T00:00:00Z`);
+                for (let offset = 0; offset < intervalDays; offset++) {
+                    if (index > 0 || offset === intervalDays - 1) {
+                        const monthKey = `${day.getUTCFullYear()}-${String(day.getUTCMonth() + 1).padStart(2, '0')}`;
+                        if (monthlyMap[monthKey]) monthlyMap[monthKey].growth *= dailyFactor;
+                    }
+                    day.setUTCDate(day.getUTCDate() - 1);
+                }
+            });
+
             let sumOfMonthlyRevenues = 0;
             let sumOfMonthlyReturns = 0;
             const monthlyDetails = []; 
 
-            monthKeys.forEach((mKey, idx) => {
+            monthKeys.forEach(mKey => {
                 const mData = monthlyMap[mKey];
                 sumOfMonthlyRevenues += mData.revenueSum;
-
-                mData.records.sort((a, b) => new Date(a.date) - new Date(b.date));
-                const endRecord = mData.records[mData.records.length - 1];
-
-                const mReturn = mData.records.reduce((growth, item) => growth * (1 + (item.dailyReturn || 0)), 1) - 1;
+                const mReturn = mData.growth - 1;
                 sumOfMonthlyReturns += mReturn;
 
                 monthlyDetails.push({ month: mKey, rate: mReturn * 100 });
@@ -3020,12 +3044,11 @@
 
             const totalReturn = data.reduce((growth, item) => growth * (1 + item.dailyReturn), 1) - 1;
 
-            const diffDays = Math.max(totalDaySpan - 1, 1);
+            const diffDays = Math.max(totalDaySpan, 1);
 
-            let annualizedReturn = 0;
-            if (totalReturn > -1) {
-                annualizedReturn = diffDays >= 15 ? Math.pow(1 + totalReturn, 365 / diffDays) - 1 : totalReturn * (365 / diffDays);
-            }
+            const annualizedReturn = totalReturn > -1
+                ? Math.pow(1 + totalReturn, 365 / diffDays) - 1
+                : -1;
             document.getElementById('kpiAnnualReturn').innerText = `${(annualizedReturn * 100).toFixed(2)}%`;
 
             maybeSaveYieldSnapshot_(data[data.length - 1].date, {
@@ -3096,17 +3119,20 @@
 
         function groupDataByMonth(data) {
             const groups = {};
+            const monthKeys = data.length > 0
+                ? enumerateCalendarMonths_(data[0].date, data[data.length - 1].date)
+                : [];
+            monthKeys.forEach(monthKey => { groups[monthKey] = { sumRevenue: 0 }; });
             data.forEach(item => {
                 const monthKey = item.date.substring(0, 7);
-                if (!groups[monthKey]) groups[monthKey] = { sumRevenue: 0, totalDays: 0 };
                 groups[monthKey].sumRevenue += item.revenue;
-                groups[monthKey].totalDays += 1;
             });
 
             return Object.keys(groups).map(key => ({
                 month: key,
                 totalRevenue: groups[key].sumRevenue,
-                avgRevenue: groups[key].totalDays > 0 ? (groups[key].sumRevenue / groups[key].totalDays) : 0
+                avgRevenue: groups[key].sumRevenue
+                    / new Date(Date.UTC(Number(key.substring(0, 4)), Number(key.substring(5, 7)), 0)).getUTCDate()
             })).sort((a, b) => a.month.localeCompare(b.month));
         }
 
