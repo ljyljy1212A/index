@@ -3174,6 +3174,7 @@
 
         let dailyEntryDateValue = '';
         let dailyEntryDateTouched = false;
+        let dailyEntryDateBeforeToday_ = null;
         let calendarViewYear = null;
         let calendarViewMonth = null;
 
@@ -3281,18 +3282,34 @@
                 <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-800">
                     <span class="text-[9px] text-slate-600"><span class="inline-block w-1 h-1 rounded-full bg-sky-400 mr-1"></span>기록 있음</span>
                     <div class="flex gap-3">
-                        <button onclick="selectDailyEntryDate_('${today}')" class="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold">오늘로</button>
+                        <button onclick="toggleDailyEntryToday_('${today}')" ${dailyEntryDateValue === today && !dailyEntryDateBeforeToday_ ? 'disabled' : ''}
+                            class="text-[10px] font-semibold ${dailyEntryDateValue === today && !dailyEntryDateBeforeToday_ ? 'text-slate-700 cursor-not-allowed' : 'text-emerald-400 hover:text-emerald-300'}">
+                            ${dailyEntryDateBeforeToday_ ? '이전 날짜 복원' : '오늘로'}
+                        </button>
                         <button onclick="document.getElementById('dailyEntryCalendarPopup').classList.add('hidden')" class="text-[10px] text-slate-500 hover:text-slate-300">닫기</button>
                     </div>
                 </div>
             `;
         }
 
-        function selectDailyEntryDate_(dateStr) {
+        function toggleDailyEntryToday_(today) {
+            if (dailyEntryDateBeforeToday_) {
+                const previousDate = dailyEntryDateBeforeToday_;
+                dailyEntryDateBeforeToday_ = null;
+                selectDailyEntryDate_(previousDate, true);
+                return;
+            }
+            if (dailyEntryDateValue && dailyEntryDateValue !== today) dailyEntryDateBeforeToday_ = dailyEntryDateValue;
+            selectDailyEntryDate_(today, true, true);
+        }
+
+        function selectDailyEntryDate_(dateStr, keepCalendarOpen = false, preserveTodayToggle = false) {
+            if (!preserveTodayToggle) dailyEntryDateBeforeToday_ = null;
             dailyEntryDateValue = dateStr;
             dailyEntryDateTouched = true;
             setDailyEntryDateLabel_(dateStr);
-            document.getElementById('dailyEntryCalendarPopup').classList.add('hidden');
+            if (keepCalendarOpen) renderDailyEntryCalendar_();
+            else document.getElementById('dailyEntryCalendarPopup').classList.add('hidden');
             loadDateIntoForm_(dateStr);
             syncDateCheckedCheckbox_();
             updateDailyEntryConfirmedSum_();
