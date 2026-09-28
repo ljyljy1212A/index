@@ -804,6 +804,22 @@
                         "일일 기록 입력" 카드의 "당일 확정 수익금 합계" 계산에 반영됩니다.
                         편집/삭제 버튼으로 직접 고치거나 지울 수 있습니다.
                     </p>
+                    <section class="mb-5 border-b border-slate-800/60 pb-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                            <h4 class="text-xs font-bold text-slate-300">확정 수익금 차트</h4>
+                            <div id="confirmedProfitTickerFilters" class="flex flex-wrap items-center gap-1" role="group" aria-label="확정 수익금 종목 선택"></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                            <div class="min-w-0">
+                                <h5 class="text-[11px] font-semibold text-slate-400 mb-2">월별 수익 합계 & 일평균</h5>
+                                <div class="relative h-56 w-full"><canvas id="confirmedProfitMonthlyChart"></canvas></div>
+                            </div>
+                            <div class="min-w-0">
+                                <h5 class="text-[11px] font-semibold text-slate-400 mb-2">연도별 수익금 합계</h5>
+                                <div class="relative h-56 w-full"><canvas id="confirmedProfitYearlyChart"></canvas></div>
+                            </div>
+                        </div>
+                    </section>
                     <div class="overflow-x-auto max-h-80 overflow-y-auto">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead class="sticky top-0 bg-slate-900">
@@ -930,6 +946,9 @@
         let yearlyChartInstance = null;
         let donutChartInstance = null;
         let monthlyReturnChartInstance = null; 
+        let confirmedProfitMonthlyChartInstance = null;
+        let confirmedProfitYearlyChartInstance = null;
+        let confirmedProfitSelectedTicker_ = 'ALL';
 
         let activeTableMode = 'recent'; 
         let activeAccChartFilter = 'ALL';
@@ -1120,6 +1139,7 @@
 
         window.onload = function() {
             renderBuyManagement_();
+            renderConfirmedProfitHistoryCharts_();
             restoreCalendarFiltersFromStorage_();
 
             document.getElementById('splitBuyApiUrlInput').value = splitBuyApiUrl;
@@ -2347,6 +2367,119 @@
             }
             renderBuyMgmtRecordsTable_();
             updateDailyEntryConfirmedSum_();
+            renderConfirmedProfitHistoryCharts_();
+        }
+
+        function getConfirmedProfitChartRecords_() {
+            return buyMgmtRecordsCache
+                .filter(record => /^\d{4}-\d{2}-\d{2}$/.test(String(record.date || '')))
+                .filter(record => confirmedProfitSelectedTicker_ === 'ALL'
+                    || String(record.ticker || '').trim().toUpperCase() === confirmedProfitSelectedTicker_)
+                .map(record => ({
+                    date: String(record.date),
+                    profit: Number(record.profit) || 0,
+                    ticker: String(record.ticker || '').trim().toUpperCase()
+                }))
+                .sort((a, b) => a.date.localeCompare(b.date));
+        }
+
+        function renderConfirmedProfitTickerFilter_() {
+            const container = document.getElementById('confirmedProfitTickerFilters');
+            if (!container) return;
+            const tickers = [...new Set(buyMgmtRecordsCache
+                .map(record => String(record.ticker || '').trim().toUpperCase())
+                .filter(Boolean))].sort();
+            if (confirmedProfitSelectedTicker_ !== 'ALL' && !tickers.includes(confirmedProfitSelectedTicker_)) {
+                confirmedProfitSelectedTicker_ = 'ALL';
+            }
+
+            container.replaceChildren();
+            ['ALL', ...tickers].forEach(ticker => {
+                const button = document.createElement('button');
+                const selected = confirmedProfitSelectedTicker_ === ticker;
+                button.type = 'button';
+                button.textContent = ticker === 'ALL' ? '전체' : ticker;
+                button.setAttribute('aria-pressed', String(selected));
+                button.className = selected
+                    ? 'px-2.5 py-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 text-[10px] font-semibold'
+                    : 'px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 text-[10px] font-semibold';
+                button.addEventListener('click', () => {
+                    confirmedProfitSelectedTicker_ = ticker;
+                    renderConfirmedProfitHistoryCharts_();
+                });
+                container.appendChild(button);
+            });
+        }
+
+        function groupConfirmedProfitsByMonth_(records) {
+            if (!records.length) return [];
+            const months = enumerateCalendarMonths_(records[0].date, records[records.length - 1].date);
+            const totals = Object.fromEntries(months.map(month => [month, 0]));
+            records.forEach(record => { totals[record.date.substring(0, 7)] += record.profit; });
+            return months.map(month => ({
+                month,
+                totalRevenue: totals[month],
+                avgRevenue: totals[month]
+                    / new Date(Date.UTC(Number(month.substring(0, 4)), Number(month.substring(5, 7)), 0)).getUTCDate()
+            }));
+        }
+
+        function groupConfirmedProfitsByYear_(records) {
+            if (!records.length) return [];
+            const firstYear = Number(records[0].date.substring(0, 4));
+            const lastYear = Number(records[records.length - 1].date.substring(0, 4));
+            const totals = {};
+            for (let year = firstYear; year <= lastYear; year++) totals[String(year)] = 0;
+            records.forEach(record => { totals[record.date.substring(0, 4)] += record.profit; });
+            return Object.keys(totals).map(year => ({ year, totalRevenue: totals[year] }));
+        }
+
+        function renderConfirmedProfitHistoryCharts_() {
+            renderConfirmedProfitTickerFilter_();
+            const records = getConfirmedProfitChartRecords_();
+            const monthlyData = groupConfirmedProfitsByMonth_(records);
+            const yearlyData = groupConfirmedProfitsByYear_(records);
+
+            const monthlyCanvas = document.getElementById('confirmedProfitMonthlyChart');
+            const yearlyCanvas = document.getElementById('confirmedProfitYearlyChart');
+            if (monthlyCanvas) {
+                if (confirmedProfitMonthlyChartInstance) confirmedProfitMonthlyChartInstance.destroy();
+                confirmedProfitMonthlyChartInstance = new Chart(monthlyCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: monthlyData.map(item => item.month),
+                        datasets: [
+                            { label: '월별 확정 수익금 ($)', data: monthlyData.map(item => item.totalRevenue), backgroundColor: 'rgba(16, 185, 129, 0.65)', borderColor: '#10b981', borderWidth: 2, borderRadius: 5, yAxisID: 'y' },
+                            { label: '일평균 확정 수익금 ($)', data: monthlyData.map(item => item.avgRevenue), type: 'line', borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2.5, tension: 0.3, yAxisID: 'y2' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                            y: { position: 'left', grid: { color: '#1e293b' }, ticks: { color: '#10b981' } },
+                            y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#f59e0b' } }
+                        }
+                    }
+                });
+            }
+            if (yearlyCanvas) {
+                if (confirmedProfitYearlyChartInstance) confirmedProfitYearlyChartInstance.destroy();
+                confirmedProfitYearlyChartInstance = new Chart(yearlyCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: yearlyData.map(item => item.year),
+                        datasets: [{ label: '연간 확정 수익금 ($)', data: yearlyData.map(item => item.totalRevenue), backgroundColor: 'rgba(251, 191, 36, 0.7)', borderColor: '#f59e0b', borderWidth: 2, borderRadius: 5 }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { grid: { display: false }, ticks: { color: '#94a3b8' } }, y: { grid: { color: '#1e293b' }, ticks: { color: '#fbbf24' } } }
+                    }
+                });
+            }
         }
 
         // 💰 토글 박스의 '기록 추가' 버튼: 지금 입력된 날짜/메모/수익금을 그 계좌·종목의
@@ -2386,6 +2519,7 @@
                 closeBuyMgmtRecordModal_();
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
+                renderConfirmedProfitHistoryCharts_();
                 showNotification(`'${ticker}' ${account} 수익금이 확정되었습니다.`, 'success', '기록 추가 완료');
             } catch (err) {
                 showNotification(`기록 추가에 실패했습니다: ${err.message}`, 'error', '기록 추가 실패');
@@ -2475,6 +2609,7 @@
                 buyMgmtRecordsCache = json.records || buyMgmtRecordsCache;
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
+                renderConfirmedProfitHistoryCharts_();
                 showNotification('기록이 수정되었습니다.', 'success', '수정 완료');
             } catch (err) {
                 showNotification(`기록 수정에 실패했습니다: ${err.message}`, 'error', '수정 실패');
@@ -2496,6 +2631,7 @@
                 buyMgmtRecordsCache = json.records || buyMgmtRecordsCache;
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
+                renderConfirmedProfitHistoryCharts_();
                 showNotification('확정 기록이 삭제되었습니다.', 'info', '삭제 완료');
             } catch (err) {
                 showNotification(`기록 삭제에 실패했습니다: ${err.message}`, 'error', '삭제 실패');
