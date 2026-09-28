@@ -793,10 +793,6 @@
                             <span id="buyMgmtRecordsSyncStatus" class="text-[10px] text-slate-500">대기 중</span>
                             <span class="text-xs text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80" id="buyMgmtRecordsCount">총 0건</span>
                         </div>
-                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs self-start sm:self-auto">
-                            <button id="btnBuyMgmtRecordsRecent" onclick="toggleBuyMgmtRecordsMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 3일</button>
-                            <button id="btnBuyMgmtRecordsAll" onclick="toggleBuyMgmtRecordsMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
-                        </div>
                     </div>
                     <p class="text-[10px] text-slate-500 mb-3">
                         각 칸의 <i class="fa-solid fa-coins text-amber-400"></i> 버튼으로 확정된 날짜별 수익금 목록입니다.
@@ -807,19 +803,56 @@
                     <section class="mb-5 border-b border-slate-800/60 pb-4">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                             <h4 class="text-xs font-bold text-slate-300">확정 수익금 차트</h4>
-                            <div id="confirmedProfitTickerFilters" class="flex flex-wrap items-center gap-1" role="group" aria-label="확정 수익금 종목 선택"></div>
+                            <label class="flex items-center gap-2 text-[10px] text-slate-500">
+                                종목
+                                <select id="confirmedProfitTickerSelect" aria-label="확정 수익금 차트 종목 선택" class="min-w-24 max-w-40 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-slate-200 focus:outline-none focus:border-sky-500"></select>
+                            </label>
                         </div>
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                             <div class="min-w-0">
-                                <h5 class="text-[11px] font-semibold text-slate-400 mb-2">월별 수익 합계 & 일평균</h5>
+                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                    <h5 class="text-[11px] font-semibold text-slate-400">월별 수익 합계 & 일평균</h5>
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="relative">
+                                            <button type="button" id="calBtn_confirmedMonthly" onclick="toggleCalendarG_('confirmedMonthly')" title="시작일 필터" class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i> <span id="calLabel_confirmedMonthly">전체</span></button>
+                                            <div id="calPopup_confirmedMonthly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                                        </div>
+                                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                                            <button id="btnConfirmedMonthly3M" onclick="setConfirmedProfitPeriod_('monthly', '3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                            <button id="btnConfirmedMonthly6M" onclick="setConfirmedProfitPeriod_('monthly', '6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                            <button id="btnConfirmedMonthly1Y" onclick="setConfirmedProfitPeriod_('monthly', '1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                            <button id="btnConfirmedMonthlyALL" onclick="setConfirmedProfitPeriod_('monthly', 'ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="relative h-56 w-full"><canvas id="confirmedProfitMonthlyChart"></canvas></div>
                             </div>
                             <div class="min-w-0">
-                                <h5 class="text-[11px] font-semibold text-slate-400 mb-2">연도별 수익금 합계</h5>
+                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                    <h5 class="text-[11px] font-semibold text-slate-400">연도별 수익금 합계</h5>
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="relative">
+                                            <button type="button" id="calBtn_confirmedYearly" onclick="toggleCalendarG_('confirmedYearly')" title="시작일 필터" class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i> <span id="calLabel_confirmedYearly">전체</span></button>
+                                            <div id="calPopup_confirmedYearly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                                        </div>
+                                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                                            <button id="btnConfirmedYearly3Y" onclick="setConfirmedProfitPeriod_('yearly', '3Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3Y</button>
+                                            <button id="btnConfirmedYearly5Y" onclick="setConfirmedProfitPeriod_('yearly', '5Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">5Y</button>
+                                            <button id="btnConfirmedYearlyALL" onclick="setConfirmedProfitPeriod_('yearly', 'ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="relative h-56 w-full"><canvas id="confirmedProfitYearlyChart"></canvas></div>
                             </div>
                         </div>
                     </section>
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <h4 class="text-[11px] font-bold text-slate-400">확정 수익금 내역 목록</h4>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                            <button id="btnBuyMgmtRecordsRecent" onclick="toggleBuyMgmtRecordsMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 3일</button>
+                            <button id="btnBuyMgmtRecordsAll" onclick="toggleBuyMgmtRecordsMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                        </div>
+                    </div>
                     <div class="overflow-x-auto max-h-80 overflow-y-auto">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead class="sticky top-0 bg-slate-900">
@@ -949,6 +982,8 @@
         let confirmedProfitMonthlyChartInstance = null;
         let confirmedProfitYearlyChartInstance = null;
         let confirmedProfitSelectedTicker_ = 'ALL';
+        let activeConfirmedProfitMonthlyPeriod_ = 'ALL';
+        let activeConfirmedProfitYearlyPeriod_ = 'ALL';
 
         let activeTableMode = 'recent'; 
         let activeAccChartFilter = 'ALL';
@@ -1141,6 +1176,7 @@
             renderBuyManagement_();
             renderConfirmedProfitHistoryCharts_();
             restoreCalendarFiltersFromStorage_();
+            renderConfirmedProfitHistoryCharts_();
 
             document.getElementById('splitBuyApiUrlInput').value = splitBuyApiUrl;
             const tokenInputEl = document.getElementById('splitBuyApiTokenInput');
@@ -2370,9 +2406,11 @@
             renderConfirmedProfitHistoryCharts_();
         }
 
-        function getConfirmedProfitChartRecords_() {
+        function getConfirmedProfitChartRecords_(calendarKey) {
+            const startDate = localStorage.getItem(`chartStartDate_${calendarKey}`) || '';
             return buyMgmtRecordsCache
                 .filter(record => /^\d{4}-\d{2}-\d{2}$/.test(String(record.date || '')))
+                .filter(record => !startDate || String(record.date) >= startDate)
                 .filter(record => confirmedProfitSelectedTicker_ === 'ALL'
                     || String(record.ticker || '').trim().toUpperCase() === confirmedProfitSelectedTicker_)
                 .map(record => ({
@@ -2384,31 +2422,38 @@
         }
 
         function renderConfirmedProfitTickerFilter_() {
-            const container = document.getElementById('confirmedProfitTickerFilters');
-            if (!container) return;
+            const select = document.getElementById('confirmedProfitTickerSelect');
+            if (!select) return;
             const tickers = [...new Set(buyMgmtRecordsCache
                 .map(record => String(record.ticker || '').trim().toUpperCase())
                 .filter(Boolean))].sort();
             if (confirmedProfitSelectedTicker_ !== 'ALL' && !tickers.includes(confirmedProfitSelectedTicker_)) {
                 confirmedProfitSelectedTicker_ = 'ALL';
             }
+            select.replaceChildren(new Option('전체', 'ALL'), ...tickers.map(ticker => new Option(ticker, ticker)));
+            select.value = confirmedProfitSelectedTicker_;
+            select.onchange = () => {
+                confirmedProfitSelectedTicker_ = select.value;
+                renderConfirmedProfitHistoryCharts_();
+            };
+        }
 
-            container.replaceChildren();
-            ['ALL', ...tickers].forEach(ticker => {
-                const button = document.createElement('button');
-                const selected = confirmedProfitSelectedTicker_ === ticker;
-                button.type = 'button';
-                button.textContent = ticker === 'ALL' ? '전체' : ticker;
-                button.setAttribute('aria-pressed', String(selected));
-                button.className = selected
-                    ? 'px-2.5 py-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 text-[10px] font-semibold'
-                    : 'px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 text-[10px] font-semibold';
-                button.addEventListener('click', () => {
-                    confirmedProfitSelectedTicker_ = ticker;
-                    renderConfirmedProfitHistoryCharts_();
-                });
-                container.appendChild(button);
+        function setConfirmedProfitPeriod_(chartType, mode) {
+            const isMonthly = chartType === 'monthly';
+            const allowed = isMonthly ? ['3M', '6M', '1Y', 'ALL'] : ['3Y', '5Y', 'ALL'];
+            if (!allowed.includes(mode)) return;
+            if (isMonthly) activeConfirmedProfitMonthlyPeriod_ = mode;
+            else activeConfirmedProfitYearlyPeriod_ = mode;
+            const prefix = isMonthly ? 'btnConfirmedMonthly' : 'btnConfirmedYearly';
+            allowed.forEach(period => {
+                const button = document.getElementById(`${prefix}${period}`);
+                if (!button) return;
+                button.className = period === mode
+                    ? 'px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white'
+                    : 'px-2 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200';
+                button.setAttribute('aria-pressed', String(period === mode));
             });
+            renderConfirmedProfitHistoryCharts_();
         }
 
         function groupConfirmedProfitsByMonth_(records) {
@@ -2436,9 +2481,10 @@
 
         function renderConfirmedProfitHistoryCharts_() {
             renderConfirmedProfitTickerFilter_();
-            const records = getConfirmedProfitChartRecords_();
-            const monthlyData = groupConfirmedProfitsByMonth_(records);
-            const yearlyData = groupConfirmedProfitsByYear_(records);
+            const monthlyRecords = getConfirmedProfitChartRecords_('confirmedMonthly');
+            const yearlyRecords = getConfirmedProfitChartRecords_('confirmedYearly');
+            const monthlyData = sliceMonthlyData(groupConfirmedProfitsByMonth_(monthlyRecords), activeConfirmedProfitMonthlyPeriod_);
+            const yearlyData = sliceYearlyData(groupConfirmedProfitsByYear_(yearlyRecords), activeConfirmedProfitYearlyPeriod_);
 
             const monthlyCanvas = document.getElementById('confirmedProfitMonthlyChart');
             const yearlyCanvas = document.getElementById('confirmedProfitYearlyChart');
@@ -2912,7 +2958,9 @@
             yearly: () => rerenderYearly_(),
             monthlyReturn: () => rerenderMonthlyReturn_(),
             table: () => rerenderTable_(),
-            avgRevenue: () => { if (cachedParsedData.length > 0) updateKpiCards(cachedParsedData); }
+            avgRevenue: () => { if (cachedParsedData.length > 0) updateKpiCards(cachedParsedData); },
+            confirmedMonthly: () => renderConfirmedProfitHistoryCharts_(),
+            confirmedYearly: () => renderConfirmedProfitHistoryCharts_()
         };
 
         const calendarInstances = {};
@@ -3084,7 +3132,7 @@
             }
             localStorage.removeItem('avgRevenueStartDate');
 
-            ['combo', 'acc', 'mdd', 'yearly', 'monthlyReturn', 'table', 'avgRevenue'].forEach(key => {
+            ['combo', 'acc', 'mdd', 'yearly', 'monthlyReturn', 'table', 'avgRevenue', 'confirmedMonthly', 'confirmedYearly'].forEach(key => {
                 initCalendarInstance_(key);
                 calendarFilterBeforeAll_[key] = localStorage.getItem(`chartStartDateBeforeAll_${key}`) || '';
                 const saved = localStorage.getItem(`chartStartDate_${key}`);
