@@ -283,7 +283,7 @@
                     <div class="flex items-center gap-1.5">
                         <button type="button" id="btnAvgRevenueWeekdayOnly" onclick="toggleAvgRevenueWeekdayOnly_()" title="주말(토/일) 제외하고 거래일 기준으로만 계산"
                             class="text-[9px] px-1.5 py-0.5 rounded-md border border-slate-700 text-slate-600 hover:text-sky-400 hover:border-sky-500/50">평일만</button>
-                        <button type="button" id="calBtn_avgRevenue" onclick="toggleCalendarG_('avgRevenue')" title="일평균 계산 기준일 설정"
+                        <button type="button" id="calBtn_avgRevenue" onclick="onCalendarIconClickG_('avgRevenue', event)" title="일평균 계산 기준일 설정"
                             class="text-slate-600 hover:text-sky-400 text-[10px]">
                             <i class="fa-solid fa-calendar-days"></i>
                         </button>
@@ -293,7 +293,7 @@
                 <div class="mt-1 flex items-baseline gap-1">
                     <span id="kpiAvgRevenue" class="text-base lg:text-lg font-extrabold text-sky-400">$0.00</span>
                 </div>
-                <span id="kpiAvgRevenueRange" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
+                <span id="kpiAvgRevenueRange" onclick="toggleCalendarG_('avgRevenue', event)" title="클릭하여 기준일 변경" class="text-[9px] text-slate-600 leading-tight mt-0.5 cursor-pointer hover:text-sky-400"></span>
             </div>
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
@@ -424,7 +424,8 @@
                             <button type="button" id="dailyEntryDateBtn" onclick="toggleDailyEntryCalendar()"
                                 class="w-full flex items-center justify-between bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none hover:border-emerald-500 transition">
                                 <span id="dailyEntryDateLabel">날짜 선택</span>
-                                <i class="fa-solid fa-calendar-days text-slate-500"></i>
+                                <span id="dailyEntryIconBtn" role="button" tabindex="0" onclick="onDailyEntryIconClick_(event)" title="날짜 선택"
+                                    class="px-1 -mr-1 cursor-pointer hover:text-emerald-400"><i class="fa-solid fa-calendar-days text-slate-500"></i></span>
                             </button>
                             <div id="dailyEntryCalendarPopup" class="hidden absolute z-30 mt-1 left-0 right-0 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
                         </div>
@@ -572,9 +573,9 @@
                     <div class="flex items-center gap-2 self-start sm:self-auto">
                         <div class="relative">
                             <div class="flex items-center gap-1">
-                                <button type="button" id="calBtn_table" onclick="toggleCalendarG_('table', event)" title="시작일 선택"
+                                <button type="button" id="calBtn_table" onclick="onCalendarIconClickG_('table', event)" title="시작일 선택"
                                     class="text-[10px] px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i></button>
-                                <button type="button" id="calToggleBtn_table" onclick="toggleCalendarFilterG_('table', event)" title="전체 보기"
+                                <button type="button" id="calToggleBtn_table" onclick="toggleCalendarG_('table', event)" title="날짜 선택"
                                     class="text-[10px] px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><span id="calLabel_table">전체</span></button>
                             </div>
                             <div id="calPopup_table" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
@@ -779,9 +780,9 @@
                             </select>
                             <div class="relative">
                                 <div class="flex items-center gap-1">
-                                    <button type="button" id="calBtn_combo" onclick="toggleCalendarG_('combo', event)" title="시작일 선택"
+                                    <button type="button" id="calBtn_combo" onclick="onCalendarIconClickG_('combo', event)" title="시작일 선택"
                                         class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i></button>
-                                    <button type="button" id="calToggleBtn_combo" onclick="toggleCalendarFilterG_('combo', event)" title="전체 보기"
+                                    <button type="button" id="calToggleBtn_combo" onclick="toggleCalendarG_('combo', event)" title="날짜 선택"
                                         class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><span id="calLabel_combo">전체</span></button>
                                 </div>
                                 <div id="calPopup_combo" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
@@ -882,9 +883,9 @@
                                 </select>
                                 <div class="relative">
                                     <div class="flex items-center gap-1">
-                                        <button type="button" id="calBtn_acc" onclick="toggleCalendarG_('acc', event)" title="시작일 선택"
+                                        <button type="button" id="calBtn_acc" onclick="onCalendarIconClickG_('acc', event)" title="시작일 선택"
                                             class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i></button>
-                                        <button type="button" id="calToggleBtn_acc" onclick="toggleCalendarFilterG_('acc', event)" title="전체 보기"
+                                        <button type="button" id="calToggleBtn_acc" onclick="toggleCalendarG_('acc', event)" title="날짜 선택"
                                             class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><span id="calLabel_acc">전체</span></button>
                                     </div>
                                     <div id="calPopup_acc" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
@@ -927,9 +928,9 @@
                             <div class="flex items-center gap-2 self-start sm:self-auto">
                                 <div class="relative">
                                     <div class="flex items-center gap-1">
-                                        <button type="button" id="calBtn_mdd" onclick="toggleCalendarG_('mdd', event)" title="시작일 선택"
+                                        <button type="button" id="calBtn_mdd" onclick="onCalendarIconClickG_('mdd', event)" title="시작일 선택"
                                             class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i></button>
-                                        <button type="button" id="calToggleBtn_mdd" onclick="toggleCalendarFilterG_('mdd', event)" title="전체 보기"
+                                        <button type="button" id="calToggleBtn_mdd" onclick="toggleCalendarG_('mdd', event)" title="날짜 선택"
                                             class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><span id="calLabel_mdd">전체</span></button>
                                     </div>
                                     <div id="calPopup_mdd" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
@@ -988,9 +989,9 @@
                         <div class="flex items-center gap-2 self-start sm:self-auto">
                             <div class="relative">
                                 <div class="flex items-center gap-1">
-                                    <button type="button" id="calBtn_yearly" onclick="toggleCalendarG_('yearly', event)" title="시작일 선택"
+                                    <button type="button" id="calBtn_yearly" onclick="onCalendarIconClickG_('yearly', event)" title="시작일 선택"
                                         class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i></button>
-                                    <button type="button" id="calToggleBtn_yearly" onclick="toggleCalendarFilterG_('yearly', event)" title="전체 보기"
+                                    <button type="button" id="calToggleBtn_yearly" onclick="toggleCalendarG_('yearly', event)" title="날짜 선택"
                                         class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><span id="calLabel_yearly">전체</span></button>
                                 </div>
                                 <div id="calPopup_yearly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
@@ -1034,9 +1035,9 @@
                             </select>
                             <div class="relative">
                                 <div class="flex items-center gap-1">
-                                    <button type="button" id="calBtn_monthlyReturn" onclick="toggleCalendarG_('monthlyReturn', event)" title="시작일 선택"
+                                    <button type="button" id="calBtn_monthlyReturn" onclick="onCalendarIconClickG_('monthlyReturn', event)" title="시작일 선택"
                                         class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i></button>
-                                    <button type="button" id="calToggleBtn_monthlyReturn" onclick="toggleCalendarFilterG_('monthlyReturn', event)" title="전체 보기"
+                                    <button type="button" id="calToggleBtn_monthlyReturn" onclick="toggleCalendarG_('monthlyReturn', event)" title="날짜 선택"
                                         class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><span id="calLabel_monthlyReturn">전체</span></button>
                                 </div>
                                 <div id="calPopup_monthlyReturn" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
@@ -1088,9 +1089,9 @@
                             </select>
                             <div class="relative">
                                 <div class="flex items-center gap-1">
-                                    <button type="button" id="calBtn_tickerMonthly" onclick="toggleCalendarG_('tickerMonthly', event)" title="시작일 선택"
+                                    <button type="button" id="calBtn_tickerMonthly" onclick="onCalendarIconClickG_('tickerMonthly', event)" title="시작일 선택"
                                         class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i></button>
-                                    <button type="button" id="calToggleBtn_tickerMonthly" onclick="toggleCalendarFilterG_('tickerMonthly', event)" title="전체 보기"
+                                    <button type="button" id="calToggleBtn_tickerMonthly" onclick="toggleCalendarG_('tickerMonthly', event)" title="날짜 선택"
                                         class="text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><span id="calLabel_tickerMonthly">전체</span></button>
                                 </div>
                                 <div id="calPopup_tickerMonthly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
@@ -3202,6 +3203,38 @@
         function setDailyEntryDateLabel_(dateStr) {
             const label = document.getElementById('dailyEntryDateLabel');
             if (label) label.innerText = dateStr || '날짜 선택';
+            updateDailyEntryIconState_();
+        }
+
+        // 📅 아이콘 클릭: 오늘이 아니면 "오늘로"(직전 날짜 기억) → 다시 클릭하면 "이전 날짜 복원".
+        // 이미 오늘이고 복원할 날짜도 없으면 달력 팝업을 열고 닫는다.
+        function onDailyEntryIconClick_(evt) {
+            if (evt) evt.stopPropagation();
+            const today = todayStr_();
+            if (dailyEntryDateBeforeToday_ || (dailyEntryDateValue && dailyEntryDateValue !== today)) {
+                document.getElementById('dailyEntryCalendarPopup').classList.add('hidden');
+                if (dailyEntryDateBeforeToday_) {
+                    const previousDate = dailyEntryDateBeforeToday_;
+                    dailyEntryDateBeforeToday_ = null;
+                    selectDailyEntryDate_(previousDate, false);
+                } else {
+                    dailyEntryDateBeforeToday_ = dailyEntryDateValue;
+                    selectDailyEntryDate_(today, false, true);
+                }
+                return;
+            }
+            toggleDailyEntryCalendar();
+        }
+
+        function updateDailyEntryIconState_() {
+            const el = document.getElementById('dailyEntryIconBtn');
+            if (!el) return;
+            const today = todayStr_();
+            el.title = dailyEntryDateBeforeToday_
+                ? '클릭하여 이전 날짜 복원 (다시 클릭하면 오늘)'
+                : (dailyEntryDateValue && dailyEntryDateValue !== today)
+                    ? '클릭하여 오늘로 (다시 클릭하면 이전 날짜 복원)'
+                    : '날짜 선택';
         }
 
         function refreshDailyEntryDate_() {
@@ -5240,6 +5273,21 @@
             popup.classList.contains('hidden') ? openCalendarG_(key) : popup.classList.add('hidden');
         }
 
+        // 📅 달력 아이콘 클릭: 기준일이 걸려 있으면 "전체 보기", 전체 보기 상태에서 복원할
+        // 이전 날짜가 있으면 "이전 날짜 복원"(재클릭 가능한 토글). 둘 다 아니면 날짜 선택 팝업을 연다.
+        // 날짜를 바꾸고 싶을 땐 옆의 날짜/전체 라벨(일평균은 하단 기간 텍스트)을 누르면 팝업이 열린다.
+        function onCalendarIconClickG_(key, evt) {
+            if (evt) evt.stopPropagation();
+            const inst = initCalendarInstance_(key);
+            if (inst.value || calendarFilterBeforeAll_[key]) {
+                const popup = document.getElementById(`calPopup_${key}`);
+                if (popup) popup.classList.add('hidden');
+                resetCalendarFilterG_(key, evt);
+                return;
+            }
+            toggleCalendarG_(key, evt);
+        }
+
         function toggleCalendarFilterG_(key, evt) {
             if (evt) evt.stopPropagation();
             const inst = initCalendarInstance_(key);
@@ -5330,15 +5378,17 @@
 
         function updateCalendarLabelG_(key, dateStr) {
             const label = document.getElementById(`calLabel_${key}`);
-            const button = document.getElementById(`calToggleBtn_${key}`);
+            const iconBtn = document.getElementById(`calBtn_${key}`);
             const canRestore = Boolean(calendarFilterBeforeAll_[key]);
-            if (button) {
-                button.title = dateStr
+            if (iconBtn) {
+                iconBtn.title = dateStr
                     ? '클릭하여 전체 보기 (다시 클릭하면 이전 날짜 복원)'
                     : canRestore
                         ? '클릭하여 이전 날짜 복원 (다시 클릭하면 전체 보기)'
                         : '날짜 선택';
-                button.setAttribute('aria-label', button.title);
+                iconBtn.setAttribute('aria-label', iconBtn.title);
+                iconBtn.classList.toggle('text-violet-400', Boolean(dateStr));
+                iconBtn.classList.toggle('border-violet-500/60', Boolean(dateStr));
             }
             if (!label) return;
             if (dateStr) {
@@ -5346,7 +5396,7 @@
                 label.classList.remove('text-slate-500');
                 label.classList.add('text-violet-300');
             } else {
-                label.innerText = canRestore ? '이전 날짜 복원' : '전체';
+                label.innerText = '전체';
                 label.classList.add('text-slate-500');
                 label.classList.remove('text-violet-300');
             }

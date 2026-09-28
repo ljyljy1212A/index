@@ -22,7 +22,7 @@
  * ===================================================================
  */
 
-const CACHE_VERSION = 'dashboard-cache-v3';
+const CACHE_VERSION = 'dashboard-cache-v4';
 // 🩹 [정밀검사 개선] "네트워크 우선, 실패 시 캐시" 전략은 성공한 GET 응답을 전부
 // 캐시에 계속 쌓기만 하고 지우는 로직이 없었다. CDN 자산(Tailwind/Chart.js/FontAwesome/
 // Google Fonts 등)의 URL이 버전업 등으로 바뀌면 예전 항목이 캐시에 계속 누적될 수 있으므로,
@@ -153,8 +153,11 @@ self.addEventListener('fetch', (event) => {
   // 같은 출처(페이지 자체) 또는 버전 미고정 CDN 자산(Tailwind Play CDN 등):
   // "네트워크 우선, 실패 시 캐시" 전략. 최신 배포본을 최대한 우선 사용하되, 오프라인이면
   // 마지막으로 성공한 캐시로 대체한다.
+  // 같은 출처(index.html 등)는 브라우저 HTTP 캐시를 거치지 않고 항상 서버에 재검증해서,
+  // 새로 배포한 index.html이 옛 버전에 가려지지 않도록 한다.
+  const freshReq = url.origin === self.location.origin ? new Request(req, { cache: 'no-cache' }) : req;
   event.respondWith(
-    fetch(req)
+    fetch(freshReq)
       .then((res) => {
         if (res && res.ok) {
           const resClone = res.clone();
