@@ -15,6 +15,108 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Core layout fallback keeps the dashboard usable when the Tailwind CDN is unreachable. */
+        *, *::before, *::after { box-sizing: border-box; }
+        [class~="hidden"] { display: none !important; }
+        [class~="flex"] { display: flex; }
+        [class~="inline-flex"] { display: inline-flex; }
+        [class~="grid"] { display: grid; }
+        [class~="block"] { display: block; }
+        [class~="relative"] { position: relative; }
+        [class~="absolute"] { position: absolute; }
+        [class~="fixed"] { position: fixed; }
+        [class~="items-center"] { align-items: center; }
+        [class~="items-start"] { align-items: flex-start; }
+        [class~="items-baseline"] { align-items: baseline; }
+        [class~="justify-between"] { justify-content: space-between; }
+        [class~="justify-center"] { justify-content: center; }
+        [class~="justify-end"] { justify-content: flex-end; }
+        [class~="flex-col"] { flex-direction: column; }
+        [class~="flex-wrap"] { flex-wrap: wrap; }
+        [class~="flex-1"] { flex: 1 1 0%; }
+        [class~="w-full"] { width: 100%; }
+        [class~="min-h-screen"] { min-height: 100vh; }
+        [class~="overflow-x-auto"] { overflow-x: auto; }
+        [class~="text-center"] { text-align: center; }
+        [class~="text-right"] { text-align: right; }
+        [class~="text-left"] { text-align: left; }
+        [class~="font-bold"], [class~="font-extrabold"] { font-weight: 700; }
+        [class~="font-semibold"] { font-weight: 600; }
+        [class~="font-mono"] { font-family: ui-monospace, Consolas, monospace; }
+        [class~="text-xs"] { font-size: 12px; }
+        [class~="text-sm"] { font-size: 14px; }
+        [class~="text-lg"] { font-size: 18px; }
+        [class~="text-[10px]"] { font-size: 10px; }
+        [class~="text-[11px]"] { font-size: 11px; }
+        [class~="p-2"] { padding: 8px; }
+        [class~="p-3"] { padding: 12px; }
+        [class~="p-4"] { padding: 16px; }
+        [class~="p-5"] { padding: 20px; }
+        [class~="px-2"] { padding-left: 8px; padding-right: 8px; }
+        [class~="px-3"] { padding-left: 12px; padding-right: 12px; }
+        [class~="px-4"] { padding-left: 16px; padding-right: 16px; }
+        [class~="py-1"] { padding-top: 4px; padding-bottom: 4px; }
+        [class~="py-2"] { padding-top: 8px; padding-bottom: 8px; }
+        [class~="py-3"] { padding-top: 12px; padding-bottom: 12px; }
+        [class~="mt-1"] { margin-top: 4px; }
+        [class~="mt-2"] { margin-top: 8px; }
+        [class~="mt-3"] { margin-top: 12px; }
+        [class~="mt-4"] { margin-top: 16px; }
+        [class~="mb-2"] { margin-bottom: 8px; }
+        [class~="mb-3"] { margin-bottom: 12px; }
+        [class~="mb-4"] { margin-bottom: 16px; }
+        [class~="gap-1"] { gap: 4px; }
+        [class~="gap-2"] { gap: 8px; }
+        [class~="gap-3"] { gap: 12px; }
+        [class~="gap-4"] { gap: 16px; }
+        [class~="gap-6"] { gap: 24px; }
+        [class~="grid-cols-1"] { grid-template-columns: minmax(0, 1fr); }
+        [class~="grid-cols-2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        [class~="max-w-[1800px]"] { max-width: 1800px; }
+        [class~="mx-auto"] { margin-left: auto; margin-right: auto; }
+        [class~="rounded-lg"] { border-radius: 8px; }
+        [class~="rounded-xl"] { border-radius: 12px; }
+        [class~="rounded-2xl"] { border-radius: 16px; }
+        [class~="border"] { border: 1px solid #334155; }
+        [class~="border-b"] { border-bottom: 1px solid #334155; }
+        [class~="bg-slate-950"] { background-color: #020617; }
+        [class~="bg-slate-900"] { background-color: #0f172a; }
+        [class~="bg-slate-800"] { background-color: #1e293b; }
+        [class~="bg-emerald-600"] { background-color: #059669; }
+        [class~="text-slate-100"] { color: #f1f5f9; }
+        [class~="text-slate-200"] { color: #e2e8f0; }
+        [class~="text-slate-300"] { color: #cbd5e1; }
+        [class~="text-slate-400"] { color: #94a3b8; }
+        [class~="text-slate-500"] { color: #64748b; }
+        [class~="text-slate-600"] { color: #475569; }
+        [class~="text-emerald-400"] { color: #34d399; }
+        [class~="text-cyan-400"] { color: #22d3ee; }
+        [class~="text-sky-400"] { color: #38bdf8; }
+        [class~="text-amber-400"] { color: #fbbf24; }
+        [class~="text-rose-400"] { color: #fb7185; }
+        button, input, textarea, select { font: inherit; }
+        button { cursor: pointer; }
+        input, textarea, select { max-width: 100%; }
+        table { border-collapse: collapse; }
+        th, td { border-color: #1e293b; }
+        header { position: sticky; top: 0; z-index: 50; }
+        main { width: 100%; margin-top: 24px; }
+        @media (min-width: 640px) {
+            [class~="sm:grid-cols-3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            [class~="sm:flex-row"] { flex-direction: row; }
+            [class~="sm:items-center"] { align-items: center; }
+        }
+        @media (min-width: 768px) {
+            [class~="md:grid-cols-2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            [class~="md:grid-cols-4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            [class~="md:col-span-2"] { grid-column: span 2 / span 2; }
+        }
+        @media (min-width: 1024px) {
+            [class~="lg:grid-cols-8"] { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+            [class~="lg:grid-cols-12"] { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+            [class~="lg:col-span-6"] { grid-column: span 6 / span 6; }
+            [class~="lg:col-span-12"] { grid-column: span 12 / span 12; }
+        }
         body {
             font-family: 'Pretendard', sans-serif;
             background-color: #0f172a;
@@ -54,6 +156,9 @@
                 <span id="syncStatusBadge" class="text-xs bg-slate-800 px-3 py-1.5 rounded-full text-slate-400 border border-slate-700/50">
                     <i id="syncStatusIcon" class="fa-solid fa-circle-notch animate-spin mr-1.5 text-slate-500"></i> <span id="syncStatusText">연동 대기 중</span>
                 </span>
+                <button type="button" onclick="manualRefreshAllRemoteData_()" title="모든 시트 데이터 새로고침" aria-label="모든 시트 데이터 새로고침" class="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-slate-400 hover:border-sky-500 hover:text-sky-300">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -169,6 +274,12 @@
                         <input type="number" id="dailyEntryRevenue" step="0.01" placeholder="0"
                             class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
                     </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] text-slate-500 font-semibold mb-1">입출금 ($, 입금 + / 출금 -; 당일 수익률 계산에서 제외)</label>
+                    <input type="number" id="dailyEntryExternalFlow" step="0.01" placeholder="0"
+                        class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <!-- 종목별 매수 관리에서 확정한 수익금을, 선택된 날짜 기준으로 자동 합산해 보여준다.
@@ -347,6 +458,7 @@
                             <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
                                 <th class="p-3">날짜</th>
                                 <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('revenue')">당일 수익금 <span id="sortIcon_revenue" class="text-[10px]"></span></th>
+                                <th class="p-3 text-right">입출금</th>
                                 <th class="p-3 text-right">누적 수익금</th>
                                 <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('accountVal')">계좌 평가액 <span id="sortIcon_accountVal" class="text-[10px]"></span></th>
                                 <th class="p-3 text-right cursor-pointer select-none hover:text-slate-200" onclick="toggleTableSort('cash')">현금 <span id="sortIcon_cash" class="text-[10px]"></span></th>
@@ -678,6 +790,7 @@
                             <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                                 <i class="fa-solid fa-clipboard-check text-emerald-400"></i> 확정 수익금 내역
                             </h3>
+                            <span id="buyMgmtRecordsSyncStatus" class="text-[10px] text-slate-500">대기 중</span>
                             <span class="text-xs text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80" id="buyMgmtRecordsCount">총 0건</span>
                         </div>
                         <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs self-start sm:self-auto">
@@ -761,7 +874,7 @@
                             class="flex-1 bg-slate-950 text-slate-300 text-[11px] p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500"
                             placeholder="https://script.google.com/macros/s/.../exec">
                     </div>
-                    <label class="block text-[11px] text-slate-400 font-semibold mb-1.5 mt-2.5">인증 토큰 <span class="text-slate-600 font-normal">(Code.gs의 API_TOKEN과 동일하게)</span></label>
+                    <label class="block text-[11px] text-slate-400 font-semibold mb-1.5 mt-2.5">인증 토큰 <span class="text-slate-600 font-normal">(Apps Script 스크립트 속성 API_TOKEN)</span></label>
                     <div class="flex gap-1.5">
                         <input type="password" id="splitBuyApiTokenInput" autocomplete="off"
                             class="flex-1 bg-slate-950 text-slate-300 text-[11px] p-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500"
@@ -774,14 +887,36 @@
                     </div>
                     <p class="text-[10px] text-slate-500 leading-relaxed mt-2">
                         일일 기록 입력 / 매수 목록 / 차수 기록 / 메모장 / 메모장1 / 자산 현황 그래프가 모두 이 주소+토큰으로
-                        구글시트와 동기화됩니다. 시트를 "링크가 있는 모든 사용자에게 공개"로 바꾸지 않아도 되며,
-                        토큰이 일치하지 않으면 조회/저장 모두 거부됩니다.
+                        토큰은 페이지 메모리에만 보관되므로 새로고침 후 다시 입력해야 합니다. Apps Script 프로젝트 설정의
+                        스크립트 속성에 같은 API_TOKEN을 등록하고 새 버전을 배포해야 조회/저장이 동작합니다.
                     </p>
                 </div>
             </div>
         </section>
 
     </main>
+
+    <div id="buyMgmtRecordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onclick="if (event.target === this) closeBuyMgmtRecordModal_()">
+        <section role="dialog" aria-modal="true" aria-labelledby="buyMgmtModalTitle" class="w-full max-w-sm rounded-xl border border-amber-500/30 bg-slate-900 p-5 shadow-2xl">
+            <div class="mb-4 flex items-start justify-between gap-3">
+                <div>
+                    <h2 id="buyMgmtModalTitle" class="text-sm font-bold text-slate-100">실현 수익금 기록</h2>
+                    <p id="buyMgmtModalContext" class="mt-1 text-xs text-amber-300"></p>
+                </div>
+                <button type="button" onclick="closeBuyMgmtRecordModal_()" aria-label="닫기" class="text-slate-500 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <label for="buyMgmtModalDate" class="mb-1 block text-[11px] text-slate-400">날짜</label>
+            <input type="date" id="buyMgmtModalDate" class="mb-3 w-full rounded-lg border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100">
+            <label for="buyMgmtModalMemo" class="mb-1 block text-[11px] text-slate-400">메모 (선택)</label>
+            <input type="text" id="buyMgmtModalMemo" placeholder="메모(선택)" class="mb-3 w-full rounded-lg border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100">
+            <label for="buyMgmtModalProfit" class="mb-1 block text-[11px] text-slate-400">수익금 ($)</label>
+            <input type="number" step="0.01" id="buyMgmtModalProfit" placeholder="수익금" class="mb-4 w-full rounded-lg border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100">
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeBuyMgmtRecordModal_()" class="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300">취소</button>
+                <button type="button" onclick="commitBuyMgmtRecord_()" class="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"><i class="fa-solid fa-check mr-1"></i>기록 추가</button>
+            </div>
+        </section>
+    </div>
 
     <script>
         let comboChartInstance = null;
@@ -807,11 +942,19 @@
         const splitBuySaveTimers = {};
 
         let splitBuyApiUrl = localStorage.getItem('splitBuyApiUrl') || '';
-        let splitBuyApiToken = localStorage.getItem('splitBuyApiToken') || '';
+        let splitBuyApiToken = '';
 
         // Apps Script POST 호출 시 인증 토큰을 항상 함께 보내기 위한 헬퍼
         function withToken_(body) {
             return { ...body, token: splitBuyApiToken };
+        }
+
+        function apiRequest_(body) {
+            return fetchWithRetry_(splitBuyApiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(withToken_(body))
+            });
         }
 
         // 메모 등 사용자 입력 텍스트를 HTML로 그대로 넣으면 <, > 가 태그로 오인되어
@@ -899,6 +1042,10 @@
             badgeText.innerText = text;
         }
 
+        function syncTimeLabel_() {
+            return new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date());
+        }
+
         // 네트워크 장애 대비 폴백: 마지막으로 성공한 메인 데이터를 로컬에 캐싱해두고,
         // 다음 연동이 실패했을 때 화면을 비우는 대신 "마지막으로 성공한 데이터"를 계속 보여준다.
         function cacheMainDataSnapshot_(matrix) {
@@ -937,8 +1084,7 @@
             if (!silent) setMainSyncBadge_('loading', '연동 중...');
 
             try {
-                const qs = `action=getMainData&token=${encodeURIComponent(splitBuyApiToken)}`;
-                const res = await fetchWithRetry_(`${splitBuyApiUrl}?${qs}`);
+                const res = await apiRequest_({ action: 'getMainData' });
                 const json = await res.json();
 
                 if (!json.success) throw new Error(json.error || '알 수 없는 오류');
@@ -949,7 +1095,7 @@
                 parseAndRenderData(json.matrix, "Apps Script API 연동");
                 cacheMainDataSnapshot_(json.matrix);
 
-                setMainSyncBadge_('ok', '구글 시트 연동 완료');
+                setMainSyncBadge_('ok', `구글 시트 연동 완료 · ${syncTimeLabel_()}`);
                 if (!silent) showNotification("실시간 구글 스프레드시트 정보를 연동했습니다!", "success", "동기화 성공");
             } catch (err) {
                 console.error('메인 데이터 동기화 실패:', err);
@@ -996,7 +1142,15 @@
         function refreshAllRemoteData_({ silent = true } = {}) {
             if (!splitBuyApiUrl || !splitBuyApiToken) return;
             fetchMainDataViaApi_({ silent });
-            initSplitBuySync();
+            initSplitBuySync().finally(() => initAllGrids_());
+        }
+
+        function manualRefreshAllRemoteData_() {
+            if (!splitBuyApiUrl || !splitBuyApiToken) {
+                showNotification('Apps Script URL과 세션 인증 토큰을 설정해주세요.', 'error', '동기화 설정 필요');
+                return;
+            }
+            refreshAllRemoteData_({ silent: false });
         }
 
         function startAutoRefresh_() {
@@ -1028,13 +1182,12 @@
             const tokenInput = (document.getElementById('splitBuyApiTokenInput').value || '').trim();
             if (!urlInput) return;
             if (!tokenInput) {
-                showNotification('인증 토큰을 입력해주세요. Code.gs의 API_TOKEN과 동일한 값이어야 합니다.', 'error', '토큰 미입력');
+                showNotification('인증 토큰을 입력해주세요. Apps Script 스크립트 속성 API_TOKEN과 같아야 합니다.', 'error', '토큰 미입력');
                 return;
             }
             splitBuyApiUrl = urlInput;
             splitBuyApiToken = tokenInput;
             localStorage.setItem('splitBuyApiUrl', urlInput);
-            localStorage.setItem('splitBuyApiToken', tokenInput);
             initSplitBuySync().finally(() => initAllGrids_());
             fetchMainDataViaApi_();
         }
@@ -1044,7 +1197,7 @@
             setSplitBuySyncStatus('loading', '동기화 중...');
 
             try {
-                const res = await fetchWithRetry_(`${splitBuyApiUrl}?action=getAll&token=${encodeURIComponent(splitBuyApiToken)}`);
+                const res = await apiRequest_({ action: 'getAll' });
                 const json = await res.json();
 
                 if (!json.success) throw new Error(json.error || '알 수 없는 오류');
@@ -1057,7 +1210,7 @@
                 }
 
                 renderBuyManagement_();
-                setSplitBuySyncStatus('ok', '구글시트 동기화 완료');
+                setSplitBuySyncStatus('ok', `구글시트 동기화 완료 · ${syncTimeLabel_()}`);
             } catch (err) {
                 setSplitBuySyncStatus('error', '동기화 실패 (URL 확인)');
                 console.error('분할매수 동기화 실패:', err);
@@ -1217,11 +1370,11 @@
             const cfg = GRID_CONFIGS[key];
             setGridSyncStatus_(key, 'loading', '불러오는 중...');
             try {
-                const res = await fetchWithRetry_(`${splitBuyApiUrl}?action=getGrid&sheetName=${encodeURIComponent(cfg.sheetName)}&token=${encodeURIComponent(splitBuyApiToken)}`);
+                const res = await apiRequest_({ action: 'getGrid', sheetName: cfg.sheetName });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '조회 실패');
                 applyGridResponse_(key, json);
-                setGridSyncStatus_(key, 'ok', '동기화됨');
+                setGridSyncStatus_(key, 'ok', `동기화됨 · ${syncTimeLabel_()}`);
                 if (key === 'stepLog') ensureStepLogSpecialColumns_();
             } catch (err) {
                 setGridSyncStatus_(key, 'error', '조회 실패');
@@ -1769,6 +1922,7 @@
             const source = existing || latest;
 
             document.getElementById('dailyEntryRevenue').value = existing ? existing.revenue : '';
+            document.getElementById('dailyEntryExternalFlow').value = existing ? (existing.externalFlow || 0) : '';
             document.getElementById('dailyEntryAccountVal').value = source ? source.accountVal : '';
             document.getElementById('dailyEntryStockSumInput').value = source ? (source.stockSumAgg || '') : '';
             document.getElementById('dailyEntryMemo').value = existing ? (existing.memo || '') : '';
@@ -1881,11 +2035,12 @@
             }
 
             const revenueParsed = parseStrictNumber_(document.getElementById('dailyEntryRevenue').value);
+            const externalFlowParsed = parseStrictNumber_(document.getElementById('dailyEntryExternalFlow').value);
             const accountValParsed = parseStrictNumber_(document.getElementById('dailyEntryAccountVal').value);
             const stockSumParsed = parseStrictNumber_(document.getElementById('dailyEntryStockSumInput').value);
 
-            if (!revenueParsed.ok || !accountValParsed.ok || !stockSumParsed.ok) {
-                showNotification('수익금 / 계좌 평가액 / 종목합산평가금액은 숫자만 입력할 수 있어요. 입력값을 확인해주세요.', 'error', '입력 오류');
+            if (!revenueParsed.ok || !externalFlowParsed.ok || !accountValParsed.ok || !stockSumParsed.ok) {
+                showNotification('수익금 / 입출금 / 계좌 평가액 / 종목합산평가금액은 숫자만 입력할 수 있어요. 입력값을 확인해주세요.', 'error', '입력 오류');
                 return;
             }
             if (accountValParsed.wasEmpty) {
@@ -1894,6 +2049,7 @@
             }
 
             const revenue = revenueParsed.value;
+            const externalFlow = externalFlowParsed.value;
             const accountVal = accountValParsed.value;
             const stockSumVal = stockSumParsed.value;
             const memo = document.getElementById('dailyEntryMemo').value.trim();
@@ -1923,7 +2079,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(withToken_({
-                        action: 'saveDailyRecord', date, revenue, accountVal, stockSumVal, memo,
+                        action: 'saveDailyRecord', date, revenue, externalFlow, accountVal, stockSumVal, memo,
                         tickerValues: buildTickerSnapshotFromBuyManagement_()
                     }))
                 });
@@ -1937,6 +2093,7 @@
                 dailyEntryDateValue = '';
                 refreshDailyEntryDate_();
                 document.getElementById('dailyEntryRevenue').value = '';
+                document.getElementById('dailyEntryExternalFlow').value = '';
                 document.getElementById('dailyEntryMemo').value = '';
                 document.getElementById('dailyEntryAccountVal').value = '';
                 document.getElementById('dailyEntryStockSumInput').value = '';
@@ -2063,8 +2220,6 @@
                     const half = allocNum / 2;
                     const remain = allocNum - boughtNum;
 
-                    const isBoxOpen = buyMgmtOpenCells.has(buyMgmtCellKey_(accountLabel, t));
-
                     return `
                         <td class="p-2">
                             <div class="flex gap-1">
@@ -2079,23 +2234,9 @@
                                 <span class="text-slate-500">1/2: $${half.toLocaleString(undefined, {maximumFractionDigits: 1})}</span>
                                 <span class="flex items-center gap-1.5">
                                     <span class="font-bold ${remain < 0 ? 'text-rose-400' : 'text-sky-400'}">잔여: $${remain.toLocaleString(undefined, {maximumFractionDigits: 1})}</span>
-                                    <button type="button" onclick="toggleBuyMgmtProfitBox_('${accountLabel}','${t}',${step})" title="이 계좌·종목의 실현 수익금 확정"
+                                    <button type="button" onclick="openBuyMgmtRecordModal_('${accountLabel}','${t}')" title="이 계좌·종목의 실현 수익금 기록"
                                         class="text-amber-500/70 hover:text-amber-400"><i class="fa-solid fa-coins"></i></button>
                                 </span>
-                            </div>
-                            <div id="buyMgmtBox_${t}_${step}" class="${isBoxOpen ? '' : 'hidden'} mt-1.5 p-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5 space-y-1">
-                                <input type="date" id="buyMgmtProfitDate_${t}_${step}" value="${todayStr_()}"
-                                    class="w-full bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
-                                <input type="text" id="buyMgmtProfitMemo_${t}_${step}" placeholder="메모(선택)"
-                                    class="w-full bg-slate-950 text-slate-300 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
-                                <div class="flex gap-1">
-                                    <input type="number" step="0.01" id="buyMgmtProfitAmount_${t}_${step}" placeholder="수익금"
-                                        class="w-full bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-amber-500">
-                                    <button type="button" onclick="commitBuyMgmtRecord_('${accountLabel}','${t}',${step})"
-                                        class="shrink-0 text-[10px] px-1.5 rounded font-semibold text-amber-400 hover:text-amber-300 border border-amber-500/30 bg-amber-500/10 whitespace-nowrap">
-                                        <i class="fa-solid fa-check"></i> 기록 추가
-                                    </button>
-                                </div>
                             </div>
                         </td>`;
                 }).join('');
@@ -2155,21 +2296,39 @@
         // 📌 종목별 매수 관리 "확정 수익금 내역" (💰 토글 / 기록 추가 / 조회 / 편집 / 삭제)
         // ===================================================================
 
-        function toggleBuyMgmtProfitBox_(accountLabel, ticker, step) {
-            const key = buyMgmtCellKey_(accountLabel, ticker);
-            if (buyMgmtOpenCells.has(key)) buyMgmtOpenCells.delete(key);
-            else buyMgmtOpenCells.add(key);
-            renderBuyManagement_();
+        let activeBuyMgmtRecord_ = null;
+        let pendingBuyMgmtRequests_ = (() => {
+            try { return JSON.parse(localStorage.getItem('pendingBuyMgmtRequests') || '{}'); }
+            catch (_) { return {}; }
+        })();
+
+        function openBuyMgmtRecordModal_(account, ticker) {
+            activeBuyMgmtRecord_ = { account, ticker };
+            document.getElementById('buyMgmtModalContext').innerText = `${account} · ${ticker}`;
+            document.getElementById('buyMgmtModalDate').value = todayStr_();
+            document.getElementById('buyMgmtModalMemo').value = '';
+            document.getElementById('buyMgmtModalProfit').value = '';
+            document.getElementById('buyMgmtRecordModal').classList.remove('hidden');
+            document.getElementById('buyMgmtModalProfit').focus();
+        }
+
+        function closeBuyMgmtRecordModal_() {
+            document.getElementById('buyMgmtRecordModal').classList.add('hidden');
+            activeBuyMgmtRecord_ = null;
         }
 
         async function fetchBuyMgmtRecords_() {
             if (!splitBuyApiUrl || !splitBuyApiToken) return;
+            const status = document.getElementById('buyMgmtRecordsSyncStatus');
+            if (status) status.innerText = '불러오는 중';
             try {
-                const res = await fetchWithRetry_(`${splitBuyApiUrl}?action=getBuyMgmtRecords&token=${encodeURIComponent(splitBuyApiToken)}`);
+                const res = await apiRequest_({ action: 'getBuyMgmtRecords' });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '조회 실패');
                 buyMgmtRecordsCache = json.records || [];
+                if (status) status.innerText = `동기화됨 · ${syncTimeLabel_()}`;
             } catch (err) {
+                if (status) status.innerText = '동기화 실패';
                 console.error('종목별 매수 관리 확정 내역 조회 실패:', err);
             }
             renderBuyMgmtRecordsTable_();
@@ -2178,37 +2337,42 @@
 
         // 💰 토글 박스의 '기록 추가' 버튼: 지금 입력된 날짜/메모/수익금을 그 계좌·종목의
         // 확정 내역으로 영구 저장한다. 이후 할당/매수 칸을 바꿔도 이 값은 그대로 남는다.
-        async function commitBuyMgmtRecord_(accountLabel, ticker, step) {
+        async function commitBuyMgmtRecord_() {
             if (!splitBuyApiUrl || !splitBuyApiToken) { showNotification('먼저 "Apps Script 동기화 설정" 카드에서 웹앱 URL을 저장해주세요.', 'error', '동기화 주소 미설정'); return; }
-
-            const dateEl = document.getElementById(`buyMgmtProfitDate_${ticker}_${step}`);
-            const memoEl = document.getElementById(`buyMgmtProfitMemo_${ticker}_${step}`);
-            const profitEl = document.getElementById(`buyMgmtProfitAmount_${ticker}_${step}`);
-            if (!dateEl || !profitEl) return;
-
-            const dateVal = dateEl.value;
-            const memoVal = memoEl ? memoEl.value : '';
-            const profitRaw = profitEl.value;
+            if (!activeBuyMgmtRecord_) return;
+            const { account, ticker } = activeBuyMgmtRecord_;
+            const dateVal = document.getElementById('buyMgmtModalDate').value;
+            const memoVal = document.getElementById('buyMgmtModalMemo').value;
+            const profitRaw = document.getElementById('buyMgmtModalProfit').value;
             const profitNum = parseFloat(String(profitRaw || '').replace(/,/g, ''));
 
             if (!dateVal) { showNotification('먼저 날짜를 입력해주세요.', 'error', '기록 추가 불가'); return; }
             if (profitRaw === '' || isNaN(profitNum)) { showNotification('먼저 수익금을 입력해주세요.', 'error', '기록 추가 불가'); return; }
-            if (!confirm(`${accountLabel} ${ticker}의 수익금 $${profitNum.toFixed(2)}을(를) 확정합니다.\n확정 후에는 할당/매수 칸을 바꿔도 이 기록은 그대로 남습니다. 계속할까요?`)) return;
+            if (!confirm(`${account} ${ticker}의 수익금 $${profitNum.toFixed(2)}을(를) 확정합니다.\n확정 후에는 할당/매수 칸을 바꿔도 이 기록은 그대로 남습니다. 계속할까요?`)) return;
+
+            const requestKey = `${account}||${ticker}`;
+            const fingerprint = JSON.stringify([dateVal, ticker, account, memoVal, profitNum]);
+            if (!pendingBuyMgmtRequests_[requestKey] || pendingBuyMgmtRequests_[requestKey].fingerprint !== fingerprint) {
+                const bytes = new Uint8Array(16);
+                crypto.getRandomValues(bytes);
+                pendingBuyMgmtRequests_[requestKey] = {
+                    id: Array.from(bytes, b => b.toString(16).padStart(2, '0')).join(''),
+                    fingerprint
+                };
+                localStorage.setItem('pendingBuyMgmtRequests', JSON.stringify(pendingBuyMgmtRequests_));
+            }
 
             try {
-                const res = await fetchWithRetry_(splitBuyApiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(withToken_({ action: 'addBuyMgmtRecord', date: dateVal, ticker, account: accountLabel, memo: memoVal, profit: profitNum }))
-                });
+                const res = await apiRequest_({ action: 'addBuyMgmtRecord', requestId: pendingBuyMgmtRequests_[requestKey].id, date: dateVal, ticker, account, memo: memoVal, profit: profitNum });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '기록 추가 실패');
+                delete pendingBuyMgmtRequests_[requestKey];
+                localStorage.setItem('pendingBuyMgmtRequests', JSON.stringify(pendingBuyMgmtRequests_));
                 buyMgmtRecordsCache = json.records || buyMgmtRecordsCache;
-                buyMgmtOpenCells.delete(buyMgmtCellKey_(accountLabel, ticker));
-                renderBuyManagement_();
+                closeBuyMgmtRecordModal_();
                 renderBuyMgmtRecordsTable_();
                 updateDailyEntryConfirmedSum_();
-                showNotification(`'${ticker}' ${accountLabel} 수익금이 확정되었습니다.`, 'success', '기록 추가 완료');
+                showNotification(`'${ticker}' ${account} 수익금이 확정되었습니다.`, 'success', '기록 추가 완료');
             } catch (err) {
                 showNotification(`기록 추가에 실패했습니다: ${err.message}`, 'error', '기록 추가 실패');
                 console.error('종목별 매수 관리 수익 확정 실패:', err);
@@ -2430,12 +2594,12 @@
 
             const headers = rawMatrix[0].map(h => h.trim());
             const parsedData = [];
-            let currentMaxAccountVal = -Infinity;
-            let prevAccountVal = null;
 
             // 수정: 인덱스를 헤더명을 통해 동적으로 탐색하여 오류 예방
             let memoIndex = headers.findIndex(h => h.includes("특이사항"));
             if (memoIndex === -1) memoIndex = 6;
+
+            const externalFlowIndex = headers.findIndex(h => h.includes("입출금"));
 
             let stockSumAggIndex = headers.findIndex(h => h.includes("종목") || h.includes("합산"));
             if (stockSumAggIndex === -1) stockSumAggIndex = 7;
@@ -2445,7 +2609,7 @@
             const detectedTickers = [];
             for (let sIdx = stockStartIndex; sIdx < headers.length; sIdx++) {
                 const h = headers[sIdx] && headers[sIdx].trim();
-                if (h && h !== "" && h.toUpperCase() !== "현금") {
+                if (h && h !== "" && h.toUpperCase() !== "현금" && h !== '입출금') {
                     detectedTickers.push(h.toUpperCase());
                 }
             }
@@ -2471,28 +2635,20 @@
 
                 const rawStockSumAgg = cols[stockSumAggIndex]?.trim();
                 const stockSumAgg = parseFloat(rawStockSumAgg?.replace(/[^0-9.-]/g, '')) || 0;
+                const externalFlow = externalFlowIndex >= 0
+                    ? (parseFloat(String(cols[externalFlowIndex] || '').replace(/[^0-9.-]/g, '')) || 0)
+                    : 0;
 
                 if (dateStr && !isNaN(revenue) && !isNaN(totalAccVal)) {
-                    if (totalAccVal > currentMaxAccountVal) currentMaxAccountVal = totalAccVal;
-
-                    const mdd = currentMaxAccountVal > 0 ? ((totalAccVal - currentMaxAccountVal) / currentMaxAccountVal) : 0;
-                    const mddPeak = currentMaxAccountVal;
-                    const mddAmount = currentMaxAccountVal - totalAccVal;
-                    let dailyReturn = (prevAccountVal !== null && prevAccountVal > 0) ? (totalAccVal - prevAccountVal) / prevAccountVal : 0;
-                    prevAccountVal = totalAccVal;
-
                     const rawCash = totalAccVal - stockSumAgg;
 
                     const record = {
                         date: dateStr,
                         revenue: revenue,
                         accountVal: totalAccVal,
-                        mdd: mdd,
-                        mddPeak: mddPeak,
-                        mddAmount: mddAmount,
-                        dailyReturn: dailyReturn,
                         memo: memoVal,
                         stockSumAgg: stockSumAgg,
+                        externalFlow: externalFlow,
                         cash: rawCash
                     };
 
@@ -2503,9 +2659,27 @@
             parsedData.sort((a, b) => new Date(a.date) - new Date(b.date));
 
             let rollingSum = 0;
+            let prevAccountVal = null;
+            let wealthIndex = 1;
+            let peakIndex = 1;
+            let initialAccountValue = null;
             parsedData.forEach(item => {
                 rollingSum += item.revenue;
                 item.cumRevenue = rollingSum;
+                const baseAccount = prevAccountVal !== null
+                    ? prevAccountVal
+                    : item.accountVal - item.revenue - item.externalFlow;
+                if (initialAccountValue === null) initialAccountValue = baseAccount > 0 ? baseAccount : item.accountVal;
+                item.dailyReturn = baseAccount > 0
+                    ? (item.accountVal - item.externalFlow - baseAccount) / baseAccount
+                    : 0;
+                wealthIndex *= 1 + item.dailyReturn;
+                peakIndex = Math.max(peakIndex, wealthIndex);
+                item.wealthIndex = wealthIndex;
+                item.mdd = peakIndex > 0 ? (wealthIndex - peakIndex) / peakIndex : 0;
+                item.mddPeak = peakIndex;
+                item.mddAmount = Math.max(0, (peakIndex - wealthIndex) * initialAccountValue);
+                prevAccountVal = item.accountVal;
             });
 
             cachedParsedData = parsedData;
@@ -2592,6 +2766,7 @@
         };
 
         const calendarInstances = {};
+        const calendarFilterBeforeAll_ = {};
 
         function initCalendarInstance_(key) {
             if (!calendarInstances[key]) calendarInstances[key] = { year: null, month: null, value: '' };
@@ -2601,6 +2776,14 @@
         function toggleCalendarG_(key) {
             const popup = document.getElementById(`calPopup_${key}`);
             if (!popup) return;
+            const instance = initCalendarInstance_(key);
+            const hasRestorableDate = !!(instance.value || calendarFilterBeforeAll_[key]);
+
+            if (hasRestorableDate) {
+                if (popup.classList.contains('hidden')) openCalendarG_(key);
+                resetCalendarFilterG_(key);
+                return;
+            }
             popup.classList.contains('hidden') ? openCalendarG_(key) : popup.classList.add('hidden');
         }
 
@@ -2674,13 +2857,21 @@
                 <div class="grid grid-cols-7 gap-0.5">${cellsHtml}</div>
                 <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-800">
                     <span class="text-[9px] text-slate-600"><span class="inline-block w-1 h-1 rounded-full bg-sky-400 mr-1"></span>기록 있음</span>
-                    <button onclick="resetCalendarFilterG_('${key}', event)" class="text-[10px] text-rose-400 hover:text-rose-300 font-semibold">전체보기</button>
+                    <button onclick="resetCalendarFilterG_('${key}', event)" ${inst.value || calendarFilterBeforeAll_[key] ? '' : 'disabled'} class="text-[10px] ${inst.value || calendarFilterBeforeAll_[key] ? 'text-rose-400 hover:text-rose-300' : 'text-slate-700 cursor-not-allowed'} font-semibold">${inst.value ? '전체보기' : calendarFilterBeforeAll_[key] ? '이전 날짜 복원' : '전체보기'}</button>
                 </div>
             `;
         }
 
         function updateCalendarLabelG_(key, dateStr) {
             const label = document.getElementById(`calLabel_${key}`);
+            const button = document.getElementById(`calBtn_${key}`);
+            if (button) {
+                button.title = dateStr
+                    ? '클릭하여 전체 보기, 다시 클릭하여 이전 날짜 복원'
+                    : calendarFilterBeforeAll_[key]
+                        ? '클릭하여 이전 날짜 복원, 다시 클릭하여 전체 보기'
+                        : '날짜 필터 선택';
+            }
             if (!label) return;
             if (dateStr) {
                 label.innerText = dateStr;
@@ -2695,6 +2886,8 @@
 
         function selectCalendarDateG_(key, dateStr) {
             calendarInstances[key].value = dateStr;
+            delete calendarFilterBeforeAll_[key];
+            localStorage.removeItem(`chartStartDateBeforeAll_${key}`);
             localStorage.setItem(`chartStartDate_${key}`, dateStr);
             updateCalendarLabelG_(key, dateStr);
             document.getElementById(`calPopup_${key}`).classList.add('hidden');
@@ -2703,10 +2896,23 @@
 
         function resetCalendarFilterG_(key, evt) {
             if (evt) evt.stopPropagation();
-            calendarInstances[key].value = '';
-            localStorage.removeItem(`chartStartDate_${key}`);
-            updateCalendarLabelG_(key, '');
-            document.getElementById(`calPopup_${key}`).classList.add('hidden');
+            const instance = initCalendarInstance_(key);
+            if (instance.value) {
+                calendarFilterBeforeAll_[key] = instance.value;
+                localStorage.setItem(`chartStartDateBeforeAll_${key}`, instance.value);
+                instance.value = '';
+                localStorage.removeItem(`chartStartDate_${key}`);
+                updateCalendarLabelG_(key, '');
+            } else if (calendarFilterBeforeAll_[key]) {
+                instance.value = calendarFilterBeforeAll_[key];
+                delete calendarFilterBeforeAll_[key];
+                localStorage.removeItem(`chartStartDateBeforeAll_${key}`);
+                localStorage.setItem(`chartStartDate_${key}`, instance.value);
+                updateCalendarLabelG_(key, instance.value);
+            } else {
+                return;
+            }
+            renderCalendarG_(key);
             if (CALENDAR_APPLY_CALLBACKS[key]) CALENDAR_APPLY_CALLBACKS[key]();
         }
 
@@ -2730,11 +2936,10 @@
 
             ['combo', 'acc', 'mdd', 'yearly', 'monthlyReturn', 'table', 'avgRevenue'].forEach(key => {
                 initCalendarInstance_(key);
+                calendarFilterBeforeAll_[key] = localStorage.getItem(`chartStartDateBeforeAll_${key}`) || '';
                 const saved = localStorage.getItem(`chartStartDate_${key}`);
-                if (saved) {
-                    calendarInstances[key].value = saved;
-                    updateCalendarLabelG_(key, saved);
-                }
+                if (saved) calendarInstances[key].value = saved;
+                updateCalendarLabelG_(key, saved || '');
             });
         }
 
@@ -2761,19 +2966,7 @@
                 mData.records.sort((a, b) => new Date(a.date) - new Date(b.date));
                 const endRecord = mData.records[mData.records.length - 1];
 
-                let startVal = 0;
-                if (idx === 0) {
-                    const startRecord = mData.records[0];
-                    startVal = startRecord.accountVal - startRecord.revenue;
-                    if (startVal <= 0) startVal = startRecord.accountVal;
-                } else {
-                    const prevMonthKey = monthKeys[idx - 1];
-                    const prevRecords = monthlyMap[prevMonthKey].records;
-                    startVal = prevRecords[prevRecords.length - 1].accountVal;
-                }
-
-                const endVal = endRecord.accountVal;
-                const mReturn = startVal > 0 ? (endVal - startVal) / startVal : 0;
+                const mReturn = mData.records.reduce((growth, item) => growth * (1 + (item.dailyReturn || 0)), 1) - 1;
                 sumOfMonthlyReturns += mReturn;
 
                 monthlyDetails.push({ month: mKey, rate: mReturn * 100 });
@@ -2825,9 +3018,7 @@
             document.getElementById('kpiMonthlyAvgRevenue').innerText = `$${mStats.avgMonthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`;
             document.getElementById('kpiMonthlyAvgReturn').innerText = `${(mStats.avgMonthlyReturn * 100).toFixed(2)}%`;
 
-            const startVal = data[0].accountVal - data[0].revenue;
-            const initialVal = startVal > 0 ? startVal : data[0].accountVal;
-            const totalReturn = initialVal > 0 ? (currentAccount - initialVal) / initialVal : 0;
+            const totalReturn = data.reduce((growth, item) => growth * (1 + item.dailyReturn), 1) - 1;
 
             const diffDays = Math.max(totalDaySpan - 1, 1);
 
@@ -3340,6 +3531,7 @@
                 tr.innerHTML = `
                     <td class="p-3 text-slate-400">${item.date}</td>
                     <td class="p-3 text-right font-semibold text-emerald-400">$${item.revenue.toFixed(2)}</td>
+                    <td class="p-3 text-right font-mono ${item.externalFlow < 0 ? 'text-rose-400' : item.externalFlow > 0 ? 'text-sky-400' : 'text-slate-600'}">${item.externalFlow === 0 ? '-' : `${item.externalFlow < 0 ? '-' : '+'}$${Math.abs(item.externalFlow).toFixed(2)}`}</td>
                     <td class="p-3 text-right text-slate-400">$${item.cumRevenue.toFixed(2)}</td>
                     <td class="p-3 text-right font-mono">$${item.accountVal.toLocaleString(undefined, {minimumFractionDigits: 1})}</td>
                     <td class="p-3 text-right font-mono ${cashVal < 0 ? 'text-rose-400' : 'text-cyan-400'}">$${cashVal.toLocaleString(undefined, {minimumFractionDigits: 1})}</td>
