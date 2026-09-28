@@ -5300,11 +5300,12 @@
             }
         }
 
-        function selectCalendarDateG_(key, dateStr) {
+        function selectCalendarDateG_(key, dateStr, keepPopupOpen = false) {
             calendarInstances[key].value = dateStr;
             localStorage.setItem(`chartStartDate_${key}`, dateStr);
             updateCalendarLabelG_(key, dateStr);
-            document.getElementById(`calPopup_${key}`).classList.add('hidden');
+            if (keepPopupOpen) renderCalendarG_(key);
+            else document.getElementById(`calPopup_${key}`).classList.add('hidden');
             if (CALENDAR_APPLY_CALLBACKS[key]) CALENDAR_APPLY_CALLBACKS[key]();
             // 🩹 [정밀검사 개선 - 문제 B] 다른 기기(PC/휴대폰)도 같은 기준일을 보도록 서버에도 저장
             pushUiSettingsPatch_({ chartStart: { [key]: dateStr } });
@@ -5317,7 +5318,7 @@
                 const previousDate = calendarFilterBeforeAll_[key];
                 if (!previousDate) return;
                 delete calendarFilterBeforeAll_[key];
-                selectCalendarDateG_(key, previousDate);
+                selectCalendarDateG_(key, previousDate, true);
                 return;
             }
 
@@ -5325,7 +5326,7 @@
             instance.value = '';
             localStorage.removeItem(`chartStartDate_${key}`);
             updateCalendarLabelG_(key, '');
-            document.getElementById(`calPopup_${key}`).classList.add('hidden');
+            renderCalendarG_(key);
             if (CALENDAR_APPLY_CALLBACKS[key]) CALENDAR_APPLY_CALLBACKS[key]();
             // 🩹 [정밀검사 개선 - 문제 B] "전체보기"로 되돌린 것도 다른 기기에 동일하게 반영
             pushUiSettingsPatch_({ chartStart: { [key]: '' } });
