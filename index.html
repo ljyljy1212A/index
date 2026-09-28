@@ -116,6 +116,50 @@
             padding-top: 0.3rem !important;
             padding-bottom: 0.3rem !important;
         }
+
+        /* ===== 가독성 개선 레이어 (기존 기능/ID는 그대로, 보이는 방식만 정리) ===== */
+        html { -webkit-text-size-adjust: 100%; }
+        body { font-size: 15px; line-height: 1.5; }
+
+        /* 너무 작았던 글자(9~11px)를 읽을 수 있는 크기로 */
+        body .text-\[9px\]  { font-size: 11px; }
+        body .text-\[10px\] { font-size: 12px; }
+        body .text-\[11px\] { font-size: 13px; }
+        body .text-xs       { font-size: 13px; }
+        body .text-slate-600 { color: #7c8aa0; }   /* 배경 대비가 낮던 보조 글씨 */
+        body .text-slate-500 { color: #94a3b8; }
+
+        /* 카드 제목 */
+        body main h2.text-sm, body main h3.text-sm { font-size: 15px; letter-spacing: -0.01em; }
+
+        /* 섹션 머리글 */
+        .sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .sec-head i { font-size: 15px; }
+        .sec-title { font-size: 16px; font-weight: 700; color: #e2e8f0; letter-spacing: -0.01em; }
+        .sec-sub { font-size: 12px; color: #7c8aa0; margin-left: 4px; }
+
+        /* 탭 바 */
+        .tabbar { position: sticky; top: 56px; z-index: 40; background: rgba(15,23,42,.94); backdrop-filter: blur(8px); border-bottom: 1px solid #1e293b; }
+        .tabbar-inner { max-width: 1600px; margin: 0 auto; padding: 0 12px; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+        .tabbar-inner::-webkit-scrollbar { display: none; }
+        .tab-btn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; padding: 13px 14px; font-size: 14px; font-weight: 600; color: #94a3b8; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .15s, border-color .15s; }
+        .tab-btn:hover { color: #e2e8f0; }
+        .tab-btn.active { color: #34d399; border-bottom-color: #34d399; }
+        .tab-btn:focus-visible { outline: 2px solid #34d399; outline-offset: -2px; border-radius: 6px; }
+        @media (max-width: 640px) { .tab-btn { padding: 12px 11px; font-size: 13.5px; gap: 6px; } }
+
+        /* 알림 토스트: 어느 탭에서든 보이게 고정 */
+        .toast-host { position: fixed; top: 112px; right: 16px; z-index: 60; width: min(380px, calc(100vw - 32px)); pointer-events: none; }
+        .toast-host > * { pointer-events: auto; box-shadow: 0 12px 32px rgba(0,0,0,.45); cursor: pointer; }
+        .toast-host #statusNotification { background-color: #0f172a; }
+
+        /* 카드 */
+        .tab-pane .rounded-2xl.border { border-color: #22304a; }
+        .tab-pane { animation: none; }
+
+        /* 표 가독성: 헤더 고정 + 줄무늬는 그대로 두되 셀 여백 확보 */
+        .tab-pane table th { font-size: 12px; }
+        .tab-pane table td { font-size: 13px; }
     </style>
 </head>
 <body class="min-h-screen pb-12">
@@ -153,17 +197,21 @@
 
     <!-- 상단 헤더 네비게이션 -->
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
-                    <i class="fa-solid fa-chart-pie text-xl animate-pulse"></i>
+                    <i class="fa-solid fa-chart-pie text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-slate-100">투자 성과 & 자산배분 대시보드</h1>
-                    <p class="text-xs text-slate-400">구글 시트 연동형 자산 관리 시스템</p>
+                    <h1 class="text-base sm:text-lg font-bold text-slate-100">투자 성과 &amp; 자산배분</h1>
+                    <p class="hidden sm:block text-xs text-slate-400">구글 시트 연동 대시보드</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
+                <a href="https://edition.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener noreferrer"
+                    class="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-300 px-3 py-1.5 rounded-full border border-slate-700/50 bg-slate-800 transition">
+                    <i class="fa-solid fa-gauge-simple-high text-amber-400"></i> Fear &amp; Greed
+                </a>
                 <span id="syncStatusBadge" class="text-xs bg-slate-800 px-3 py-1.5 rounded-full text-slate-400 border border-slate-700/50">
                     <i id="syncStatusIcon" class="fa-solid fa-circle-notch animate-spin mr-1.5 text-slate-500"></i> <span id="syncStatusText">연동 대기 중</span>
                 </span>
@@ -171,27 +219,56 @@
         </div>
     </header>
 
-    <main class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- ================= 탭 네비게이션 ================= -->
+    <nav id="tabBar" class="tabbar" aria-label="대시보드 메뉴">
+        <div class="tabbar-inner">
+            <button type="button" class="tab-btn" data-tab="home"><i class="fa-solid fa-gauge-high"></i><span>요약</span></button>
+            <button type="button" class="tab-btn" data-tab="record"><i class="fa-solid fa-pen-to-square"></i><span>기록·계산</span></button>
+            <button type="button" class="tab-btn" data-tab="charts"><i class="fa-solid fa-chart-line"></i><span>차트</span></button>
+            <button type="button" class="tab-btn" data-tab="data"><i class="fa-solid fa-table"></i><span>데이터</span></button>
+            <button type="button" class="tab-btn" data-tab="buy"><i class="fa-solid fa-layer-group"></i><span>종목 매수</span></button>
+            <button type="button" class="tab-btn" data-tab="settings"><i class="fa-solid fa-gear"></i><span>설정</span></button>
+        </div>
+    </nav>
 
-        <!-- 지표 요약 카드 그리드 -->
-        <div class="lg:col-span-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">누적 수익금</span>
-                <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiTotalRevenue" class="text-base lg:text-lg font-extrabold text-emerald-400">$0.00</span>
+    <!-- 알림창: 어느 탭에서든 보이도록 화면 우상단 토스트로 고정 (showNotification이 id로 제어) -->
+    <div id="toastHost" class="toast-host">
+            <div id="statusNotification" class="hidden p-5 rounded-2xl text-xs transition-all duration-300 bg-slate-900 border border-slate-800">
+                <div class="flex items-start gap-3">
+                    <div id="statusIconContainer" class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                        <i id="statusIcon" class="fa-solid fa-circle-info text-base"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 id="statusTitle" class="font-bold text-sm text-slate-200 mb-1">상태 알림</h4>
+                        <div id="statusMessage" class="text-slate-400 leading-relaxed text-[11px] space-y-2"></div>
+                    </div>
                 </div>
             </div>
+    </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">현재 계좌 평가액</span>
+    <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+
+        <!-- ================= 요약 ================= -->
+        <div id="tab-home" class="tab-pane">
+
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-wallet text-emerald-400"></i><h2 class="sec-title">핵심 현황</h2></div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                <span class="text-[11px] text-slate-400 font-semibold leading-tight">누적 수익금</span>
                 <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiCurrentAccount" class="text-base lg:text-lg font-extrabold text-slate-100">$0.00</span>
+                    <span id="kpiTotalRevenue" class="text-2xl lg:text-3xl font-extrabold tracking-tight text-emerald-400">$0.00</span>
                 </div>
             </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg relative">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                <span class="text-[11px] text-slate-400 font-semibold leading-tight">현재 계좌 평가액</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiCurrentAccount" class="text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-100">$0.00</span>
+                </div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
+                    <span class="text-[11px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
                     <div class="flex items-center gap-1.5">
                         <button type="button" id="btnAvgRevenueWeekdayOnly" onclick="toggleAvgRevenueWeekdayOnly_()" title="주말(토/일) 제외하고 거래일 기준으로만 계산"
                             class="text-[9px] px-1.5 py-0.5 rounded-md border border-slate-700 text-slate-600 hover:text-sky-400 hover:border-sky-500/50">평일만</button>
@@ -203,117 +280,21 @@
                     <div id="calPopup_avgRevenue" class="hidden absolute z-30 mt-1 top-6 right-3 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
                 </div>
                 <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiAvgRevenue" class="text-base lg:text-lg font-extrabold text-sky-400">$0.00</span>
+                    <span id="kpiAvgRevenue" class="text-2xl lg:text-3xl font-extrabold tracking-tight text-sky-400">$0.00</span>
                 </div>
                 <span id="kpiAvgRevenueRange" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
             </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">최대 낙폭 (MDD)</span>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                <span class="text-[11px] text-slate-400 font-semibold leading-tight">월 평균 수익금</span>
                 <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiMaxMDD" class="text-base lg:text-lg font-extrabold text-rose-500">0.00%</span>
-                </div>
-                <span id="kpiMaxMDDAmount" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
-            </div>
-
-            <!-- 🆕 [기능 추가] 낙폭에서 다시 고점을 회복하기까지 평균적으로 며칠이 걸렸는지.
-                 calculateDrawdownEpisodes_로 뽑은 에피소드 중 "회복 완료된" 것만 평균낸다
-                 (아직 회복 전인 현재 진행 중 낙폭은 분모에서 제외). -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">평균 회복 소요일</span>
-                <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiAvgRecoveryDays" class="text-base lg:text-lg font-extrabold text-amber-400">-</span>
-                </div>
-                <span id="kpiAvgRecoveryDaysNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
-            </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">월 평균 수익금</span>
-                <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiMonthlyAvgRevenue" class="text-base lg:text-lg font-extrabold text-emerald-400">$0.00</span>
+                    <span id="kpiMonthlyAvgRevenue" class="text-2xl lg:text-3xl font-extrabold tracking-tight text-emerald-400">$0.00</span>
                 </div>
             </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">월 평균 수익률</span>
-                <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiMonthlyAvgReturn" class="text-base lg:text-lg font-extrabold text-sky-400">0.00%</span>
-                </div>
             </div>
+        </section>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">연환산 수익률</span>
-                <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiAnnualReturn" class="text-base lg:text-lg font-extrabold text-amber-400">0.00%</span>
-                </div>
-            </div>
-
-            <!-- 🆕 [기능 추가 - 위험지표 KPI] 연환산 변동성/승률/최대 연속 손실일. 전부 화면 계산
-                 전용이며 시트(수익률데이터 등)에는 저장하지 않는다. 일평균 수익금 카드와 동일한
-                 기준일 필터(chartStartDate_avgRevenue) + "평일만" 토글을 적용한다. -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg"
-                title="일별수익률(입출금 보정)의 표본표준편차 × sqrt(연환산 거래일수). '평일만' 토글이 켜지면 252일, 꺼지면 365일 기준입니다.">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">연환산 변동성</span>
-                <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiVolatility" class="text-base lg:text-lg font-extrabold text-amber-400">-</span>
-                </div>
-                <span id="kpiVolatilityNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
-            </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg"
-                title="수익금 > 0인 날 수 ÷ 수익금 ≠ 0인 날 수. 수익금이 정확히 0인 날은 분모에서 제외합니다.">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">승률</span>
-                <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiWinRate" class="text-base lg:text-lg font-extrabold text-sky-400">-</span>
-                </div>
-                <span id="kpiWinRateNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
-            </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg"
-                title="수익금 < 0인 날이 연속된 최대 일수. 수익금이 정확히 0인 날은 끊지도, 잇지도 않고 무시합니다.">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">최대 연속 손실일</span>
-                <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiMaxLossStreak" class="text-base lg:text-lg font-extrabold text-rose-400">-</span>
-                </div>
-                <span id="kpiMaxLossStreakNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
-            </div>
-
-            <!-- 🆕 [기능 추가] 샤프/소르티노 비율. 변동성 KPI와 같은 표본(입출금 보정 일별수익률)을 쓰며,
-                 무위험 수익률은 카드를 눌러 바꿀 수 있다(기본 0%, 이 기기 localStorage에 저장). -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg cursor-pointer hover:border-amber-500/50 transition"
-                onclick="promptRiskFreeRate_()"
-                title="(일평균 수익률 − 무위험 일수익률) ÷ 일수익률 표준편차 × sqrt(연환산 일수). 카드를 누르면 무위험 수익률(연 %)을 바꿀 수 있습니다.">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">샤프 비율</span>
-                <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiSharpe" class="text-base lg:text-lg font-extrabold text-sky-400">-</span>
-                </div>
-                <span id="kpiSharpeNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
-            </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg cursor-pointer hover:border-amber-500/50 transition"
-                onclick="promptRiskFreeRate_()"
-                title="(일평균 수익률 − 무위험 일수익률) ÷ 하방편차 × sqrt(연환산 일수). 하방편차는 무위험 일수익률 아래로 내려간 날만 반영합니다. 카드를 누르면 무위험 수익률을 바꿀 수 있습니다.">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">소르티노 비율</span>
-                <div class="mt-1 flex items-baseline gap-1">
-                    <span id="kpiSortino" class="text-base lg:text-lg font-extrabold text-sky-400">-</span>
-                </div>
-                <span id="kpiSortinoNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
-            </div>
-
-            <a href="https://edition.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener noreferrer"
-                class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg hover:border-amber-500/50 hover:bg-slate-800/60 transition group">
-                <span class="text-[10px] text-slate-400 font-semibold leading-tight">Fear &amp; Greed Index</span>
-                <div class="mt-1 flex items-center gap-1.5">
-                    <span class="text-sm font-extrabold text-amber-400 group-hover:text-amber-300">CNN에서 보기</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-500 group-hover:text-amber-300"></i>
-                </div>
-            </a>
-        </div>
-
-        <!-- 🆕 [기능 추가] 목표 계좌 평가액 진행률 카드. 목표 금액은 시트 데이터가 아니라
-             Apps Script의 화면 설정(uiSettings)에 저장되어 다른 기기와 동기화된다(지난번
-             "평일만"/차트별 기준일 필터/목표 비중(%)과 동일한 방식). localStorage에도 함께
-             저장해두어 오프라인일 때는 마지막 값을 그대로 보여주는 폴백 캐시로 쓴다. -->
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-bullseye text-amber-400"></i><h2 class="sec-title">목표 달성</h2></div>
         <div class="lg:col-span-12 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -350,14 +331,194 @@
                 <div id="goalProgressNote" class="text-[10px] text-slate-500 mt-1.5"></div>
             </div>
         </div>
+        </section>
 
-        <!-- 1열: 일일 기록 입력 & 계산기 영역 -->
-        <section class="lg:col-span-6 flex flex-col gap-6">
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-percent text-sky-400"></i><h2 class="sec-title">수익률 · 위험조정 성과</h2></div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">월 평균 수익률</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiMonthlyAvgReturn" class="text-lg lg:text-xl font-extrabold text-sky-400">0.00%</span>
+                </div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">연환산 수익률</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiAnnualReturn" class="text-lg lg:text-xl font-extrabold text-amber-400">0.00%</span>
+                </div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg cursor-pointer hover:border-amber-500/50 transition"
+                onclick="promptRiskFreeRate_()"
+                title="(일평균 수익률 − 무위험 일수익률) ÷ 일수익률 표준편차 × sqrt(연환산 일수). 카드를 누르면 무위험 수익률(연 %)을 바꿀 수 있습니다.">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">샤프 비율</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiSharpe" class="text-lg lg:text-xl font-extrabold text-sky-400">-</span>
+                </div>
+                <span id="kpiSharpeNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg cursor-pointer hover:border-amber-500/50 transition"
+                onclick="promptRiskFreeRate_()"
+                title="(일평균 수익률 − 무위험 일수익률) ÷ 하방편차 × sqrt(연환산 일수). 하방편차는 무위험 일수익률 아래로 내려간 날만 반영합니다. 카드를 누르면 무위험 수익률을 바꿀 수 있습니다.">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">소르티노 비율</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiSortino" class="text-lg lg:text-xl font-extrabold text-sky-400">-</span>
+                </div>
+                <span id="kpiSortinoNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
+            </div>
+            </div>
+        </section>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="flex flex-col gap-6">
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-shield-halved text-rose-400"></i><h2 class="sec-title">위험 지표</h2></div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">최대 낙폭 (MDD)</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiMaxMDD" class="text-lg lg:text-xl font-extrabold text-rose-500">0.00%</span>
+                </div>
+                <span id="kpiMaxMDDAmount" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">평균 회복 소요일</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiAvgRecoveryDays" class="text-lg lg:text-xl font-extrabold text-amber-400">-</span>
+                </div>
+                <span id="kpiAvgRecoveryDaysNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg"
+                title="일별수익률(입출금 보정)의 표본표준편차 × sqrt(연환산 거래일수). '평일만' 토글이 켜지면 252일, 꺼지면 365일 기준입니다.">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">연환산 변동성</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiVolatility" class="text-lg lg:text-xl font-extrabold text-amber-400">-</span>
+                </div>
+                <span id="kpiVolatilityNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg"
+                title="수익금 > 0인 날 수 ÷ 수익금 ≠ 0인 날 수. 수익금이 정확히 0인 날은 분모에서 제외합니다.">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">승률</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiWinRate" class="text-lg lg:text-xl font-extrabold text-sky-400">-</span>
+                </div>
+                <span id="kpiWinRateNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg"
+                title="수익금 < 0인 날이 연속된 최대 일수. 수익금이 정확히 0인 날은 끊지도, 잇지도 않고 무시합니다.">
+                <span class="text-[10px] text-slate-400 font-semibold leading-tight">최대 연속 손실일</span>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="kpiMaxLossStreak" class="text-lg lg:text-xl font-extrabold text-rose-400">-</span>
+                </div>
+                <span id="kpiMaxLossStreakNote" class="text-[9px] text-slate-600 leading-tight mt-0.5"></span>
+            </div>
+            </div>
+        </section>
 
-            <!-- 일일 기록 입력 카드 -->
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-chart-area text-emerald-400"></i><h2 class="sec-title">자산 추이 · 월별 수익</h2></div>
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                            <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-sky-400"></i> 계좌 평가액 추이
+                            </h3>
+                            <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                                <select id="yearSelect_acc" onchange="onYearSelectChange_('acc', this.value)"
+                                    title="연도별로 보기 (목록이 길어지는 것을 방지)"
+                                    class="bg-slate-950 text-sky-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-sky-500">
+                                    <option value="전체">전체 연도</option>
+                                </select>
+                                <div class="relative">
+                                    <button type="button" id="calBtn_acc" onclick="toggleCalendarG_('acc')" title="시작일 필터"
+                                        class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                        <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_acc">전체</span>
+                                    </button>
+                                    <div id="calPopup_acc" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                                </div>
+                                <div id="periodGroup_acc" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
+                                    <button id="btnAccFilter3M" onclick="toggleAccChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                    <button id="btnAccFilter6M" onclick="toggleAccChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                    <button id="btnAccFilter1Y" onclick="toggleAccChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                    <button id="btnAccFilterALL" onclick="toggleAccChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative h-64 w-full">
+                            <canvas id="accountValueChart"></canvas>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800/60">
+                            <p id="yearHint_acc" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
+                            <div class="overflow-x-auto max-h-72 overflow-y-auto">
+                                <table class="w-full text-left text-[11px] border-collapse">
+                                    <thead class="sticky top-0 bg-slate-900">
+                                        <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                            <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('acc','month')">월 <span id="tickerSortIcon_acc_month"></span></th>
+                                            <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('acc','endValue')">월말 평가액 <span id="tickerSortIcon_acc_endValue"></span></th>
+                                            <th class="py-1.5 text-right">전월 대비</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tickerMonthlyTableBody_acc" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-column text-emerald-400"></i> 월별 수익 합계 & 일평균
+                        </h3>
+                        <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                            <select id="yearSelect_combo" onchange="onYearSelectChange_('combo', this.value)"
+                                title="연도별로 보기 (목록이 길어지는 것을 방지)"
+                                class="bg-slate-950 text-emerald-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                                <option value="전체">전체 연도</option>
+                            </select>
+                            <div class="relative">
+                                <button type="button" id="calBtn_combo" onclick="toggleCalendarG_('combo')" title="시작일 필터"
+                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_combo">전체</span>
+                                </button>
+                                <div id="calPopup_combo" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                            </div>
+                            <div id="periodGroup_combo" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
+                                <button id="btnComboFilter3M" onclick="toggleComboChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                <button id="btnComboFilter6M" onclick="toggleComboChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                <button id="btnComboFilter1Y" onclick="toggleComboChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                <button id="btnComboFilterALL" onclick="toggleComboChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="monthlyComboChart"></canvas>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60">
+                        <p id="yearHint_combo" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
+                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
+                            <table class="w-full text-left text-[11px] border-collapse">
+                                <thead class="sticky top-0 bg-slate-900">
+                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('combo','month')">월 <span id="tickerSortIcon_combo_month"></span></th>
+                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('combo','totalRevenue')">월 수익합계 <span id="tickerSortIcon_combo_totalRevenue"></span></th>
+                                        <th class="py-1.5 text-right">일평균</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickerMonthlyTableBody_combo" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        </div>
+
+        <!-- ================= 기록·계산 ================= -->
+        <div id="tab-record" class="tab-pane hidden">
+
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-pen-to-square text-emerald-400"></i><h2 class="sec-title">오늘의 기록</h2></div>
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+                <div class="xl:col-span-2">
             <div id="dailyEntryCard" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
                 <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
                     <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -443,10 +604,7 @@
                 </p>
             </div>
                 </div>
-
-                <div class="flex flex-col gap-6">
-
-            <!-- 퍼센트 계산기 -->
+                <div class="flex flex-col gap-5">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
                 <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
                     <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -471,8 +629,6 @@
                     <div id="percentCalcResult" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-right font-mono font-bold text-fuchsia-400 text-sm">-</div>
                 </div>
             </div>
-
-            <!-- 수익률 퍼센트 계산기 -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
                 <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
                     <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -504,23 +660,315 @@
                     <div id="returnPercentCalcResult" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-right font-mono font-bold text-amber-400 text-sm">-</div>
                 </div>
             </div>
+                </div>
+            </div>
+        </section>
 
-            <!-- 상태 표시 알림창 -->
-            <div id="statusNotification" class="hidden p-5 rounded-2xl text-xs transition-all duration-300 bg-slate-900 border border-slate-800">
-                <div class="flex items-start gap-3">
-                    <div id="statusIconContainer" class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-                        <i id="statusIcon" class="fa-solid fa-circle-info text-base"></i>
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-note-sticky text-yellow-400"></i><h2 class="sec-title">메모</h2><span class="sec-sub">입력하면 구글 시트에 자동 저장</span></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
+                <div class="flex items-center justify-between gap-4 mb-3">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-note-sticky text-yellow-400"></i> 메모장
+                        </h3>
+                        <span id="notepadSyncStatus" class="text-[10px] text-slate-500">
+                            <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
+                        </span>
                     </div>
-                    <div class="flex-1">
-                        <h4 id="statusTitle" class="font-bold text-sm text-slate-200 mb-1">상태 알림</h4>
-                        <div id="statusMessage" class="text-slate-400 leading-relaxed text-[11px] space-y-2"></div>
+                </div>
+
+                <div class="w-full">
+                    <textarea id="notepadSingleInput" rows="6" placeholder="자유롭게 메모를 입력하세요 (자동 덮어쓰기 저장)"
+                        oninput="onNotepadSingleInput_(this.value)"
+                        class="w-full bg-slate-950 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-yellow-500 resize-y"></textarea>
+                </div>
+                <p class="text-[10px] text-slate-600 mt-2">입력한 메모는 항상 최신 상태로 덮어씌워져 구글 시트에 자동으로 저장됩니다.</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
+                <div class="flex items-center justify-between gap-4 mb-3">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-note-sticky text-yellow-400"></i> 메모장1
+                        </h3>
+                        <span id="notepad1SyncStatus" class="text-[10px] text-slate-500">
+                            <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
+                        </span>
+                    </div>
+                </div>
+
+                <div class="w-full">
+                    <textarea id="notepad1SingleInput" rows="6" placeholder="자유롭게 메모를 입력하세요 (자동 덮어쓰기 저장)"
+                        oninput="onNotepad1SingleInput_(this.value)"
+                        class="w-full bg-slate-950 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-yellow-500 resize-y"></textarea>
+                </div>
+                <p class="text-[10px] text-slate-600 mt-2">입력한 메모는 항상 최신 상태로 덮어씌워져 구글 시트에 자동으로 저장됩니다.</p>
+            </div>
+            </div>
+        </section>
+        </div>
+
+        <!-- ================= 차트 ================= -->
+        <div id="tab-charts" class="tab-pane hidden">
+
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-chart-column text-emerald-400"></i><h2 class="sec-title">수익 추이</h2></div>
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-emerald-400"></i> 월별 수익률 추이
+                        </h3>
+                        <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                            <select id="yearSelect_monthlyReturn" onchange="onYearSelectChange_('monthlyReturn', this.value)"
+                                title="연도별로 보기 (목록이 길어지는 것을 방지)"
+                                class="bg-slate-950 text-emerald-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
+                                <option value="전체">전체 연도</option>
+                            </select>
+                            <div class="relative">
+                                <button type="button" id="calBtn_monthlyReturn" onclick="toggleCalendarG_('monthlyReturn')" title="시작일 필터"
+                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_monthlyReturn">전체</span>
+                                </button>
+                                <div id="calPopup_monthlyReturn" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                            </div>
+                            <div id="periodGroup_monthlyReturn" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
+                                <button id="btnMonRetFilter3M" onclick="toggleMonthlyReturnChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                <button id="btnMonRetFilter6M" onclick="toggleMonthlyReturnChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                <button id="btnMonRetFilter1Y" onclick="toggleMonthlyReturnChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                <button id="btnMonRetFilterALL" onclick="toggleMonthlyReturnChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative h-56 w-full">
+                        <canvas id="monthlyReturnChart"></canvas>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60">
+                        <p id="yearHint_monthlyReturn" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
+                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
+                            <table class="w-full text-left text-[11px] border-collapse">
+                                <thead class="sticky top-0 bg-slate-900">
+                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('monthlyReturn','month')">월 <span id="tickerSortIcon_monthlyReturn_month"></span></th>
+                                        <th class="py-1.5 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('monthlyReturn','rate')">수익률 <span id="tickerSortIcon_monthlyReturn_rate"></span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickerMonthlyTableBody_monthlyReturn" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-check text-amber-500"></i> 연도별 수익금 합계
+                        </h3>
+                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <div class="relative">
+                                <button type="button" id="calBtn_yearly" onclick="toggleCalendarG_('yearly')" title="시작일 필터"
+                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_yearly">전체</span>
+                                </button>
+                                <div id="calPopup_yearly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                            </div>
+                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                                <button id="btnYearlyFilter3Y" onclick="toggleYearlyChartFilter('3Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3Y</button>
+                                <button id="btnYearlyFilter5Y" onclick="toggleYearlyChartFilter('5Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">5Y</button>
+                                <button id="btnYearlyFilterALL" onclick="toggleYearlyChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative h-56 w-full">
+                        <canvas id="yearlyBarChart"></canvas>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60">
+                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
+                            <table class="w-full text-left text-[11px] border-collapse">
+                                <thead class="sticky top-0 bg-slate-900">
+                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('yearly','year')">연도 <span id="tickerSortIcon_yearly_year"></span></th>
+                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('yearly','totalRevenue')">연간 수익합계 <span id="tickerSortIcon_yearly_totalRevenue"></span></th>
+                                        <th class="py-1.5 text-right">연 일평균</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickerMonthlyTableBody_yearly" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-arrow-trend-down text-rose-400"></i><h2 class="sec-title">낙폭</h2></div>
+            <div class="grid grid-cols-1 gap-5">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                            <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-area text-rose-500"></i> 최고점 대비 하락률 (MDD)
+                            </h3>
+                            <div class="flex items-center gap-2 self-start sm:self-auto">
+                                <div class="relative">
+                                    <button type="button" id="calBtn_mdd" onclick="toggleCalendarG_('mdd')" title="시작일 필터"
+                                        class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                        <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_mdd">전체</span>
+                                    </button>
+                                    <div id="calPopup_mdd" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                                </div>
+                                <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
+                                    <button id="btnMddFilter3M" onclick="toggleMddChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                    <button id="btnMddFilter6M" onclick="toggleMddChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                    <button id="btnMddFilter1Y" onclick="toggleMddChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                    <button id="btnMddFilterALL" onclick="toggleMddChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative h-64 w-full">
+                            <canvas id="mddAreaChart"></canvas>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800/60">
+                            <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                                <h4 class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-clock-rotate-left text-rose-400"></i> MDD 회복 이력
+                                </h4>
+                                <div class="flex items-center gap-2">
+                                    <span id="mddRecoverySummary" class="text-[10px] text-slate-500"></span>
+                                    <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-[10px]">
+                                        <button id="btnMddRecoveryTop3" onclick="toggleMddRecoveryMode_('top3')" class="px-2.5 py-1 rounded-lg font-semibold bg-rose-600 text-white shadow-sm">Top3</button>
+                                        <button id="btnMddRecoveryAll" onclick="toggleMddRecoveryMode_('all')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto max-h-48 overflow-y-auto">
+                                <table class="w-full text-left text-[11px] border-collapse">
+                                    <thead class="sticky top-0 bg-slate-900">
+                                        <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                            <th class="py-1.5 pr-2">고점일</th>
+                                            <th class="py-1.5 pr-2">저점일</th>
+                                            <th class="py-1.5 pr-2">회복일</th>
+                                            <th class="py-1.5 pr-2 text-right">하락폭</th>
+                                            <th class="py-1.5 pr-2 text-right">하락기간</th>
+                                            <th class="py-1.5 text-right">회복기간</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mddRecoveryTableBody" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </section>
 
-            <!-- 데이터 상세 테이블 보기 -->
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-chart-pie text-sky-400"></i><h2 class="sec-title">자산 배분 · 종목별 성과</h2></div>
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-slate-800/60 pb-2.5">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-cyan-400"></i> 자산 포트폴리오 비중
+                        </h3>
+                        <div id="cashStockRatioBadge" class="hidden text-[10px] font-semibold text-slate-300 bg-slate-950 px-2 py-1 rounded-xl border border-slate-800/80 flex items-center gap-2">
+                            <span class="text-cyan-400">현금 <span id="cashPercentRatio" class="font-mono font-bold">0.0%</span></span>
+                            <span class="text-slate-700">|</span>
+                            <span class="text-sky-400">주식 <span id="stockPercentRatio" class="font-mono font-bold">0.0%</span></span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center gap-4 flex-1">
+                        <div class="relative w-36 h-36 flex-shrink-0">
+                            <canvas id="portfolioDonutChart"></canvas>
+                        </div>
+                        <div class="flex-1 w-full overflow-y-auto max-h-48 text-[11px] space-y-1.5" id="portfolioBreakdown"></div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between xl:col-span-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-slate-800/60 pb-2.5">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-emerald-400"></i> 종목별 누적 수익금 비중
+                        </h3>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px]">
+                            <button id="btnTickerProfitChartDonut" onclick="toggleTickerProfitChartType_('doughnut')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">도넛</button>
+                            <button id="btnTickerProfitChartBar" onclick="toggleTickerProfitChartType_('bar')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">막대</button>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center gap-4 flex-1">
+                        <div class="relative w-full sm:w-56 h-56 flex-shrink-0">
+                            <canvas id="tickerProfitChart"></canvas>
+                        </div>
+                        <div class="flex-1 w-full overflow-y-auto max-h-56 text-[11px] space-y-1.5" id="tickerProfitBreakdown"></div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between xl:col-span-2">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-800/60 pb-2.5">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-building-columns text-sky-400"></i> 계좌별 누적 확정 수익금
+                        </h3>
+                    </div>
+                    <div class="relative w-full h-56">
+                        <canvas id="accountProfitChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-[11px] space-y-1.5" id="accountProfitBreakdown"></div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg xl:col-span-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-cyan-400"></i> 종목별 누적 월별 수익금 & 일평균
+                        </h3>
+                        <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                            <select id="tickerSelect_tickerMonthly" onchange="onTickerSelectChange_('tickerMonthly', this.value)"
+                                class="bg-slate-950 text-slate-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-cyan-500">
+                                <option value="전체">전체 종목</option>
+                            </select>
+                            <select id="yearSelect_tickerMonthly" onchange="onYearSelectChange_('tickerMonthly', this.value)"
+                                title="연도별로 보기 (목록이 길어지는 것을 방지)"
+                                class="bg-slate-950 text-cyan-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-cyan-500">
+                                <option value="전체">전체 연도</option>
+                            </select>
+                            <div class="relative">
+                                <button type="button" id="calBtn_tickerMonthly" onclick="toggleCalendarG_('tickerMonthly')" title="시작일 필터"
+                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
+                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_tickerMonthly">전체</span>
+                                </button>
+                                <div id="calPopup_tickerMonthly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                            </div>
+                            <div id="periodGroup_tickerMonthly" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
+                                <button id="btnTickerMonthlyFilter3M" onclick="toggleTickerMonthlyChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
+                                <button id="btnTickerMonthlyFilter6M" onclick="toggleTickerMonthlyChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
+                                <button id="btnTickerMonthlyFilter1Y" onclick="toggleTickerMonthlyChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
+                                <button id="btnTickerMonthlyFilterALL" onclick="toggleTickerMonthlyChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="tickerMonthlyComboChart"></canvas>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60">
+                        <p id="yearHint_tickerMonthly" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
+                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
+                            <table class="w-full text-left text-[11px] border-collapse">
+                                <thead class="sticky top-0 bg-slate-900">
+                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
+                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('tickerMonthly','month')">월 <span id="tickerSortIcon_tickerMonthly_month"></span></th>
+                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('tickerMonthly','totalRevenue')">누적 수익금 <span id="tickerSortIcon_tickerMonthly_totalRevenue"></span></th>
+                                        <th class="py-1.5 text-right">일평균</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickerMonthlyTableBody_tickerMonthly" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        </div>
+
+        <!-- ================= 데이터 ================= -->
+        <div id="tab-data" class="tab-pane hidden">
+
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-list-ol text-slate-300"></i><h2 class="sec-title">일별 상세 기록</h2></div>
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
                     <div class="flex items-center gap-3">
@@ -603,8 +1051,10 @@
                     </button>
                 </div>
             </div>
+        </section>
 
-            <!-- 수익률 데이터 -->
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-percent text-emerald-400"></i><h2 class="sec-title">수익률 데이터</h2></div>
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
                     <div class="flex items-center gap-3">
@@ -638,408 +1088,14 @@
                 </div>
                 <p class="text-[10px] text-slate-600 mt-2">대시보드를 새로고침할 때마다 그 시점의 지표 값이 오늘 날짜로 자동 기록됩니다.</p>
             </div>
-
-            <!-- 메모장 (단일 덮어쓰기 메모장) -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
-                <div class="flex items-center justify-between gap-4 mb-3">
-                    <div class="flex items-center gap-3">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-note-sticky text-yellow-400"></i> 메모장
-                        </h3>
-                        <span id="notepadSyncStatus" class="text-[10px] text-slate-500">
-                            <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
-                        </span>
-                    </div>
-                </div>
-
-                <div class="w-full">
-                    <textarea id="notepadSingleInput" rows="6" placeholder="자유롭게 메모를 입력하세요 (자동 덮어쓰기 저장)"
-                        oninput="onNotepadSingleInput_(this.value)"
-                        class="w-full bg-slate-950 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-yellow-500 resize-y"></textarea>
-                </div>
-                <p class="text-[10px] text-slate-600 mt-2">입력한 메모는 항상 최신 상태로 덮어씌워져 구글 시트에 자동으로 저장됩니다.</p>
-            </div>
-
-            <!-- 메모장1 (단일 덮어쓰기 메모장, 메모장과 동일 기능/별도 저장소) -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
-                <div class="flex items-center justify-between gap-4 mb-3">
-                    <div class="flex items-center gap-3">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-note-sticky text-yellow-400"></i> 메모장1
-                        </h3>
-                        <span id="notepad1SyncStatus" class="text-[10px] text-slate-500">
-                            <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
-                        </span>
-                    </div>
-                </div>
-
-                <div class="w-full">
-                    <textarea id="notepad1SingleInput" rows="6" placeholder="자유롭게 메모를 입력하세요 (자동 덮어쓰기 저장)"
-                        oninput="onNotepad1SingleInput_(this.value)"
-                        class="w-full bg-slate-950 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-yellow-500 resize-y"></textarea>
-                </div>
-                <p class="text-[10px] text-slate-600 mt-2">입력한 메모는 항상 최신 상태로 덮어씌워져 구글 시트에 자동으로 저장됩니다.</p>
-            </div>
-
         </section>
+        </div>
 
-        <!-- 차트 컬럼 -->
-        <section class="lg:col-span-6 flex flex-col gap-6">
+        <!-- ================= 종목 매수 ================= -->
+        <div id="tab-buy" class="tab-pane hidden">
 
-            <!-- 차트 영역 1단 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-column text-emerald-400"></i> 월별 수익 합계 & 일평균
-                        </h3>
-                        <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                            <select id="yearSelect_combo" onchange="onYearSelectChange_('combo', this.value)"
-                                title="연도별로 보기 (목록이 길어지는 것을 방지)"
-                                class="bg-slate-950 text-emerald-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
-                                <option value="전체">전체 연도</option>
-                            </select>
-                            <div class="relative">
-                                <button type="button" id="calBtn_combo" onclick="toggleCalendarG_('combo')" title="시작일 필터"
-                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_combo">전체</span>
-                                </button>
-                                <div id="calPopup_combo" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                            </div>
-                            <div id="periodGroup_combo" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
-                                <button id="btnComboFilter3M" onclick="toggleComboChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
-                                <button id="btnComboFilter6M" onclick="toggleComboChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
-                                <button id="btnComboFilter1Y" onclick="toggleComboChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
-                                <button id="btnComboFilterALL" onclick="toggleComboChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="relative h-64 w-full">
-                        <canvas id="monthlyComboChart"></canvas>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-slate-800/60">
-                        <p id="yearHint_combo" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
-                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
-                            <table class="w-full text-left text-[11px] border-collapse">
-                                <thead class="sticky top-0 bg-slate-900">
-                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
-                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('combo','month')">월 <span id="tickerSortIcon_combo_month"></span></th>
-                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('combo','totalRevenue')">월 수익합계 <span id="tickerSortIcon_combo_totalRevenue"></span></th>
-                                        <th class="py-1.5 text-right">일평균</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tickerMonthlyTableBody_combo" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-slate-800/60 pb-2.5">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-pie text-cyan-400"></i> 자산 포트폴리오 비중
-                        </h3>
-                        <div id="cashStockRatioBadge" class="hidden text-[10px] font-semibold text-slate-300 bg-slate-950 px-2 py-1 rounded-xl border border-slate-800/80 flex items-center gap-2">
-                            <span class="text-cyan-400">현금 <span id="cashPercentRatio" class="font-mono font-bold">0.0%</span></span>
-                            <span class="text-slate-700">|</span>
-                            <span class="text-sky-400">주식 <span id="stockPercentRatio" class="font-mono font-bold">0.0%</span></span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col sm:flex-row items-center gap-4 flex-1">
-                        <div class="relative w-36 h-36 flex-shrink-0">
-                            <canvas id="portfolioDonutChart"></canvas>
-                        </div>
-                        <div class="flex-1 w-full overflow-y-auto max-h-48 text-[11px] space-y-1.5" id="portfolioBreakdown"></div>
-                    </div>
-                </div>
-
-                <!-- 종목별 누적 수익금 비중 (종목별 매수 관리에서 확정한 buyMgmtRecordsCache 기준) -->
-                <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-slate-800/60 pb-2.5">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-pie text-emerald-400"></i> 종목별 누적 수익금 비중
-                        </h3>
-                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px]">
-                            <button id="btnTickerProfitChartDonut" onclick="toggleTickerProfitChartType_('doughnut')" class="px-2.5 py-1 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">도넛</button>
-                            <button id="btnTickerProfitChartBar" onclick="toggleTickerProfitChartType_('bar')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">막대</button>
-                        </div>
-                    </div>
-                    <div class="flex flex-col sm:flex-row items-center gap-4 flex-1">
-                        <div class="relative w-full sm:w-56 h-56 flex-shrink-0">
-                            <canvas id="tickerProfitChart"></canvas>
-                        </div>
-                        <div class="flex-1 w-full overflow-y-auto max-h-56 text-[11px] space-y-1.5" id="tickerProfitBreakdown"></div>
-                    </div>
-                </div>
-
-                <!-- 🆕 [기능 추가] 계좌별 누적 확정 수익금 비교 (buyMgmtRecordsCache 기준) -->
-                <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-                    <div class="flex items-center justify-between mb-3 border-b border-slate-800/60 pb-2.5">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-building-columns text-sky-400"></i> 계좌별 누적 확정 수익금
-                        </h3>
-                    </div>
-                    <div class="relative w-full h-56">
-                        <canvas id="accountProfitChart"></canvas>
-                    </div>
-                    <div class="mt-3 text-[11px] space-y-1.5" id="accountProfitBreakdown"></div>
-                </div>
-            </div>
-
-            <!-- 차트 영역 2단 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-                    <div>
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                            <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-line text-sky-400"></i> 계좌 평가액 추이
-                            </h3>
-                            <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                                <select id="yearSelect_acc" onchange="onYearSelectChange_('acc', this.value)"
-                                    title="연도별로 보기 (목록이 길어지는 것을 방지)"
-                                    class="bg-slate-950 text-sky-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-sky-500">
-                                    <option value="전체">전체 연도</option>
-                                </select>
-                                <div class="relative">
-                                    <button type="button" id="calBtn_acc" onclick="toggleCalendarG_('acc')" title="시작일 필터"
-                                        class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                        <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_acc">전체</span>
-                                    </button>
-                                    <div id="calPopup_acc" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                                </div>
-                                <div id="periodGroup_acc" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
-                                    <button id="btnAccFilter3M" onclick="toggleAccChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
-                                    <button id="btnAccFilter6M" onclick="toggleAccChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
-                                    <button id="btnAccFilter1Y" onclick="toggleAccChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
-                                    <button id="btnAccFilterALL" onclick="toggleAccChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="relative h-64 w-full">
-                            <canvas id="accountValueChart"></canvas>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-800/60">
-                            <p id="yearHint_acc" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
-                            <div class="overflow-x-auto max-h-72 overflow-y-auto">
-                                <table class="w-full text-left text-[11px] border-collapse">
-                                    <thead class="sticky top-0 bg-slate-900">
-                                        <tr class="border-b border-slate-800 text-slate-500 font-semibold">
-                                            <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('acc','month')">월 <span id="tickerSortIcon_acc_month"></span></th>
-                                            <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('acc','endValue')">월말 평가액 <span id="tickerSortIcon_acc_endValue"></span></th>
-                                            <th class="py-1.5 text-right">전월 대비</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tickerMonthlyTableBody_acc" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-                    <div>
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                            <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-area text-rose-500"></i> 최고점 대비 하락률 (MDD)
-                            </h3>
-                            <div class="flex items-center gap-2 self-start sm:self-auto">
-                                <div class="relative">
-                                    <button type="button" id="calBtn_mdd" onclick="toggleCalendarG_('mdd')" title="시작일 필터"
-                                        class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                        <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_mdd">전체</span>
-                                    </button>
-                                    <div id="calPopup_mdd" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                                </div>
-                                <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
-                                    <button id="btnMddFilter3M" onclick="toggleMddChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
-                                    <button id="btnMddFilter6M" onclick="toggleMddChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
-                                    <button id="btnMddFilter1Y" onclick="toggleMddChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
-                                    <button id="btnMddFilterALL" onclick="toggleMddChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="relative h-64 w-full">
-                            <canvas id="mddAreaChart"></canvas>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-800/60">
-                            <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
-                                <h4 class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-clock-rotate-left text-rose-400"></i> MDD 회복 이력
-                                </h4>
-                                <div class="flex items-center gap-2">
-                                    <span id="mddRecoverySummary" class="text-[10px] text-slate-500"></span>
-                                    <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-[10px]">
-                                        <button id="btnMddRecoveryTop3" onclick="toggleMddRecoveryMode_('top3')" class="px-2.5 py-1 rounded-lg font-semibold bg-rose-600 text-white shadow-sm">Top3</button>
-                                        <button id="btnMddRecoveryAll" onclick="toggleMddRecoveryMode_('all')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="overflow-x-auto max-h-48 overflow-y-auto">
-                                <table class="w-full text-left text-[11px] border-collapse">
-                                    <thead class="sticky top-0 bg-slate-900">
-                                        <tr class="border-b border-slate-800 text-slate-500 font-semibold">
-                                            <th class="py-1.5 pr-2">고점일</th>
-                                            <th class="py-1.5 pr-2">저점일</th>
-                                            <th class="py-1.5 pr-2">회복일</th>
-                                            <th class="py-1.5 pr-2 text-right">하락폭</th>
-                                            <th class="py-1.5 pr-2 text-right">하락기간</th>
-                                            <th class="py-1.5 text-right">회복기간</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="mddRecoveryTableBody" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 차트 영역 3단 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-calendar-check text-amber-500"></i> 연도별 수익금 합계
-                        </h3>
-                        <div class="flex items-center gap-2 self-start sm:self-auto">
-                            <div class="relative">
-                                <button type="button" id="calBtn_yearly" onclick="toggleCalendarG_('yearly')" title="시작일 필터"
-                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_yearly">전체</span>
-                                </button>
-                                <div id="calPopup_yearly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                            </div>
-                            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
-                                <button id="btnYearlyFilter3Y" onclick="toggleYearlyChartFilter('3Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3Y</button>
-                                <button id="btnYearlyFilter5Y" onclick="toggleYearlyChartFilter('5Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">5Y</button>
-                                <button id="btnYearlyFilterALL" onclick="toggleYearlyChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="relative h-56 w-full">
-                        <canvas id="yearlyBarChart"></canvas>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-slate-800/60">
-                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
-                            <table class="w-full text-left text-[11px] border-collapse">
-                                <thead class="sticky top-0 bg-slate-900">
-                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
-                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('yearly','year')">연도 <span id="tickerSortIcon_yearly_year"></span></th>
-                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('yearly','totalRevenue')">연간 수익합계 <span id="tickerSortIcon_yearly_totalRevenue"></span></th>
-                                        <th class="py-1.5 text-right">연 일평균</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tickerMonthlyTableBody_yearly" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-line text-emerald-400"></i> 월별 수익률 추이
-                        </h3>
-                        <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                            <select id="yearSelect_monthlyReturn" onchange="onYearSelectChange_('monthlyReturn', this.value)"
-                                title="연도별로 보기 (목록이 길어지는 것을 방지)"
-                                class="bg-slate-950 text-emerald-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
-                                <option value="전체">전체 연도</option>
-                            </select>
-                            <div class="relative">
-                                <button type="button" id="calBtn_monthlyReturn" onclick="toggleCalendarG_('monthlyReturn')" title="시작일 필터"
-                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_monthlyReturn">전체</span>
-                                </button>
-                                <div id="calPopup_monthlyReturn" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                            </div>
-                            <div id="periodGroup_monthlyReturn" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
-                                <button id="btnMonRetFilter3M" onclick="toggleMonthlyReturnChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
-                                <button id="btnMonRetFilter6M" onclick="toggleMonthlyReturnChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
-                                <button id="btnMonRetFilter1Y" onclick="toggleMonthlyReturnChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
-                                <button id="btnMonRetFilterALL" onclick="toggleMonthlyReturnChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="relative h-56 w-full">
-                        <canvas id="monthlyReturnChart"></canvas>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-slate-800/60">
-                        <p id="yearHint_monthlyReturn" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
-                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
-                            <table class="w-full text-left text-[11px] border-collapse">
-                                <thead class="sticky top-0 bg-slate-900">
-                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
-                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('monthlyReturn','month')">월 <span id="tickerSortIcon_monthlyReturn_month"></span></th>
-                                        <th class="py-1.5 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('monthlyReturn','rate')">수익률 <span id="tickerSortIcon_monthlyReturn_rate"></span></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tickerMonthlyTableBody_monthlyReturn" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 차트 영역 4단 -->
-            <div class="grid grid-cols-1 gap-6">
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="fa-solid fa-layer-group text-cyan-400"></i> 종목별 누적 월별 수익금 & 일평균
-                        </h3>
-                        <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                            <select id="tickerSelect_tickerMonthly" onchange="onTickerSelectChange_('tickerMonthly', this.value)"
-                                class="bg-slate-950 text-slate-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-cyan-500">
-                                <option value="전체">전체 종목</option>
-                            </select>
-                            <select id="yearSelect_tickerMonthly" onchange="onYearSelectChange_('tickerMonthly', this.value)"
-                                title="연도별로 보기 (목록이 길어지는 것을 방지)"
-                                class="bg-slate-950 text-cyan-300 text-[10px] px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-cyan-500">
-                                <option value="전체">전체 연도</option>
-                            </select>
-                            <div class="relative">
-                                <button type="button" id="calBtn_tickerMonthly" onclick="toggleCalendarG_('tickerMonthly')" title="시작일 필터"
-                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_tickerMonthly">전체</span>
-                                </button>
-                                <div id="calPopup_tickerMonthly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                            </div>
-                            <div id="periodGroup_tickerMonthly" class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner transition-opacity">
-                                <button id="btnTickerMonthlyFilter3M" onclick="toggleTickerMonthlyChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
-                                <button id="btnTickerMonthlyFilter6M" onclick="toggleTickerMonthlyChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
-                                <button id="btnTickerMonthlyFilter1Y" onclick="toggleTickerMonthlyChartFilter('1Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">1Y</button>
-                                <button id="btnTickerMonthlyFilterALL" onclick="toggleTickerMonthlyChartFilter('ALL')" class="px-2 py-1 rounded-lg font-semibold bg-sky-600 text-white">ALL</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="relative h-64 w-full">
-                        <canvas id="tickerMonthlyComboChart"></canvas>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-slate-800/60">
-                        <p id="yearHint_tickerMonthly" class="text-[10px] text-slate-500 mb-1.5 hidden"></p>
-                        <div class="overflow-x-auto max-h-72 overflow-y-auto">
-                            <table class="w-full text-left text-[11px] border-collapse">
-                                <thead class="sticky top-0 bg-slate-900">
-                                    <tr class="border-b border-slate-800 text-slate-500 font-semibold">
-                                        <th class="py-1.5 pr-2 cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('tickerMonthly','month')">월 <span id="tickerSortIcon_tickerMonthly_month"></span></th>
-                                        <th class="py-1.5 pr-2 text-right cursor-pointer select-none hover:text-slate-300" onclick="toggleTickerBreakdownSort_('tickerMonthly','totalRevenue')">누적 수익금 <span id="tickerSortIcon_tickerMonthly_totalRevenue"></span></th>
-                                        <th class="py-1.5 text-right">일평균</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tickerMonthlyTableBody_tickerMonthly" class="text-slate-300 divide-y divide-slate-800/40"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- 그리드 기능: 매수 목록 / 차수 기록 -->
-        <section class="lg:col-span-12 flex flex-col gap-6">
-
-            <!-- 종목별 매수 관리 -->
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-layer-group text-emerald-400"></i><h2 class="sec-title">종목별 매수 관리 · 확정 수익금</h2></div>
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
                     <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -1108,8 +1164,10 @@
                     </div>
                 </div>
             </div>
+        </section>
 
-            <!-- 차수 기록 -->
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-clock-rotate-left text-amber-400"></i><h2 class="sec-title">차수 기록</h2></div>
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
                     <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -1141,11 +1199,14 @@
                     <table class="w-full text-left text-xs border-collapse" id="stepLogTable"></table>
                 </div>
             </div>
+        </section>
+        </div>
 
-            <!-- 동기화 설정 카드 -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- ================= 설정 ================= -->
+        <div id="tab-settings" class="tab-pane hidden">
 
-                <!-- Apps Script 동기화 설정 카드 -->
+        <section class="mb-8">
+            <div class="sec-head"><i class="fa-solid fa-gear text-slate-300"></i><h2 class="sec-title">구글 시트 연동 · 백업</h2></div>
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
                     <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
                         <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -1217,8 +1278,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </section>
+        </div>
+
 
         <!-- 💡 [기능 추가] 백업 목록 보기 → 복원 모달 -->
         <div id="backupRestoreModalOverlay" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
@@ -1263,6 +1325,7 @@
                 </div>
             </div>
         </div>
+
 
     </main>
 
@@ -3526,6 +3589,7 @@
         // 폼이 있는 위치로 스크롤한다. 저장 시 saveDailyRecordToSheet()가 같은 날짜를
         // upsert(있으면 수정, 없으면 새로 추가)하므로 별도의 수정 API가 필요 없다.
         function editDailyRecordFromTable_(dateStr) {
+            if (typeof showTab_ === 'function') showTab_('record');
             selectDailyEntryDate_(dateStr);
             const card = document.getElementById('dailyEntryCard');
             if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -7293,6 +7357,57 @@
         renderDataQualityCard_();
         updateDailyQueueBadge_();
         setTimeout(flushDailyRecordQueue_, 3000); // 앱 시작 시 남아 있는 전송 대기 기록 재전송
+    </script>
+    <script>
+        /* ===== 탭 전환 / 토스트 자동 닫힘 (기존 로직과 독립) ===== */
+        (function () {
+            var TABS = ['home', 'record', 'charts', 'data', 'buy', 'settings'];
+            var KEY = 'dashboardActiveTab_v1';
+
+            window.showTab_ = function (name) {
+                if (TABS.indexOf(name) < 0) name = 'home';
+                TABS.forEach(function (t) {
+                    var pane = document.getElementById('tab-' + t);
+                    if (pane) pane.classList.toggle('hidden', t !== name);
+                });
+                document.querySelectorAll('.tab-btn').forEach(function (b) {
+                    var on = b.getAttribute('data-tab') === name;
+                    b.classList.toggle('active', on);
+                    if (on) { b.setAttribute('aria-current', 'page'); b.scrollIntoView({ block: 'nearest', inline: 'center' }); }
+                    else b.removeAttribute('aria-current');
+                });
+                try { localStorage.setItem(KEY, name); } catch (e) {}
+                if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
+                window.scrollTo({ top: 0 });
+                // 숨겨져 있던 탭의 차트가 올바른 크기로 다시 그려지도록
+                setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 30);
+            };
+
+            document.querySelectorAll('.tab-btn').forEach(function (b) {
+                b.addEventListener('click', function () { showTab_(b.getAttribute('data-tab')); });
+            });
+
+            var initial = (location.hash || '').replace('#', '');
+            if (TABS.indexOf(initial) < 0) { try { initial = localStorage.getItem(KEY) || 'home'; } catch (e) { initial = 'home'; } }
+            showTab_(initial);
+
+            // 토스트: 일정 시간 뒤 자동으로 숨김, 누르면 즉시 닫힘
+            var n = document.getElementById('statusNotification');
+            if (n) {
+                var timer = null;
+                var obs = new MutationObserver(function () {
+                    if (n.classList.contains('hidden')) return;
+                    clearTimeout(timer);
+                    var isErr = n.className.indexOf('rose') >= 0;
+                    timer = setTimeout(function () { n.classList.add('hidden'); }, isErr ? 15000 : 7000);
+                });
+                obs.observe(n, { attributes: true, attributeFilter: ['class'] });
+                n.addEventListener('click', function (e) {
+                    if (e.target.closest('a,button,input')) return;
+                    n.classList.add('hidden');
+                });
+            }
+        })();
     </script>
 </body>
 </html>
