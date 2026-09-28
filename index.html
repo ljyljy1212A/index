@@ -160,6 +160,60 @@
         /* 표 가독성: 헤더 고정 + 줄무늬는 그대로 두되 셀 여백 확보 */
         .tab-pane table th { font-size: 12px; }
         .tab-pane table td { font-size: 13px; }
+
+        /* ===== 가독성 2차: 대비·글자 크기·표·모바일 입력 ===== */
+        body { background-color: #0a1120; font-size: 16px; line-height: 1.55; font-variant-numeric: tabular-nums; }
+        body .bg-slate-900 { background-color: #131d33; }
+        body .bg-slate-950 { background-color: #0b1324; }
+        body .border-slate-800, body .border-slate-800\/60, body .border-slate-800\/80 { border-color: #2c3d5c; }
+        body .border-slate-700 { border-color: #3a4d70; }
+
+        /* 흐렸던 글자색을 한 단계씩 밝게 */
+        body .text-slate-300 { color: #e2e8f0; }
+        body .text-slate-400 { color: #c1cce0; }
+        body .text-slate-500 { color: #aab7cd; }
+        body .text-slate-600 { color: #96a4bc; }
+        body .text-rose-500 { color: #fb7185; }
+        body input::placeholder, body textarea::placeholder { color: #7f8ea8; }
+
+        /* 글자 크기 한 단계 더 (앞 단계의 값을 덮어씀) */
+        body .text-\[9px\]  { font-size: 12px; }
+        body .text-\[10px\] { font-size: 13px; }
+        body .text-\[11px\] { font-size: 14px; }
+        body .text-xs       { font-size: 14px; }
+        body .text-sm       { font-size: 15px; }
+        body main h2.text-sm, body main h3.text-sm { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+
+        /* 지표 카드: 이름은 또렷하게, 숫자는 크게 */
+        body .tab-pane .grid > .rounded-2xl > span.font-semibold:first-child { font-size: 13px; color: #cbd5e1; }
+        body .tab-pane .grid > .rounded-2xl { padding: 1.1rem 1.15rem; }
+
+        /* 카드 여백 */
+        body main .rounded-2xl.p-5 { padding: 1.5rem; }
+        body .tab-pane .gap-6, body .tab-pane .gap-5 { gap: 1.5rem; }
+
+        /* 표: 여백, 줄무늬, 마우스 올렸을 때 강조, 머리글 고정 */
+        .tab-pane table th { font-size: 13px; color: #cbd5e1; background: #16223a; position: sticky; top: 0; z-index: 1; }
+        .tab-pane table td { font-size: 14px; }
+        .tab-pane table tbody tr:nth-child(even) { background: rgba(148,163,184,.05); }
+        .tab-pane table tbody tr:hover { background: rgba(52,211,153,.08); }
+        #detailDataTable.density-compact th, #detailDataTable.density-compact td { padding-top: .4rem !important; padding-bottom: .4rem !important; }
+
+        /* 입력칸: 글자를 키우고 테두리를 또렷하게 (아이폰은 16px 미만이면 입력 때 화면이 확대됨) */
+        body input, body select, body textarea { font-size: 15px; }
+        body input:not([type=checkbox]):not([type=radio]), body select, body textarea { border-color: #3a4d70; }
+        body input:focus, body select:focus, body textarea:focus { outline: 2px solid rgba(52,211,153,.55); outline-offset: 1px; }
+        @media (max-width: 640px) {
+            body input, body select, body textarea { font-size: 16px; }
+            body main { padding-left: 12px; padding-right: 12px; }
+            body main .rounded-2xl.p-5 { padding: 1.1rem; }
+            .sec-title { font-size: 17px; }
+        }
+
+        /* 섹션 머리글 강조 */
+        .sec-head { padding-bottom: 8px; border-bottom: 1px solid #22304a; margin-bottom: 14px; }
+        .sec-title { font-size: 18px; }
+        .tab-btn { font-size: 15px; }
     </style>
 </head>
 <body class="min-h-screen pb-12">
