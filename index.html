@@ -5222,6 +5222,15 @@
         function toggleCalendarG_(key) {
             const popup = document.getElementById(`calPopup_${key}`);
             if (!popup) return;
+
+            const inst = initCalendarInstance_(key);
+            if (inst.value || calendarFilterBeforeAll_[key]) {
+                if (popup.classList.contains('hidden')) openCalendarG_(key);
+                resetCalendarFilterG_(key);
+                popup.classList.remove('hidden');
+                return;
+            }
+
             popup.classList.contains('hidden') ? openCalendarG_(key) : popup.classList.add('hidden');
         }
 
@@ -5305,6 +5314,16 @@
 
         function updateCalendarLabelG_(key, dateStr) {
             const label = document.getElementById(`calLabel_${key}`);
+            const button = document.getElementById(`calBtn_${key}`);
+            const canRestore = Boolean(calendarFilterBeforeAll_[key]);
+            if (button) {
+                button.title = dateStr
+                    ? '클릭하여 전체 보기 (다시 클릭하면 이전 날짜 복원)'
+                    : canRestore
+                        ? '클릭하여 이전 날짜 복원 (다시 클릭하면 전체 보기)'
+                        : '날짜 필터 설정';
+                button.setAttribute('aria-label', button.title);
+            }
             if (!label) return;
             if (dateStr) {
                 label.innerText = dateStr;
