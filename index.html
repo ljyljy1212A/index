@@ -184,11 +184,9 @@
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg relative">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
-                    <button type="button" id="calBtn_avgRevenue" onclick="toggleCalendarG_('avgRevenue')" title="일평균 계산 기준일 설정"
-                        class="text-slate-600 hover:text-sky-400 text-[10px]">
-                        <i class="fa-solid fa-calendar-days"></i>
-                    </button>
-                    <div id="calPopup_avgRevenue" class="hidden absolute z-30 mt-1 top-6 right-3 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                    <input type="date" id="calBtn_avgRevenue" onchange="selectCalendarDateG_('avgRevenue', this.value)" title="일평균 계산 기준일 설정"
+                        class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-sky-500">
+                    <button type="button" onclick="resetCalendarFilterG_('avgRevenue', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-sky-300"><i class="fa-solid fa-rotate-left"></i></button>
                 </div>
                 <div class="mt-1 flex items-baseline gap-1">
                     <span id="kpiAvgRevenue" class="text-base lg:text-lg font-extrabold text-sky-400">$0.00</span>
@@ -257,12 +255,8 @@
                     <div>
                         <label class="block text-[10px] text-slate-500 font-semibold mb-1">날짜</label>
                         <div class="relative">
-                            <button type="button" id="dailyEntryDateBtn" onclick="toggleDailyEntryCalendar()"
-                                class="w-full flex items-center justify-between bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none hover:border-emerald-500 transition">
-                                <span id="dailyEntryDateLabel">날짜 선택</span>
-                                <i class="fa-solid fa-calendar-days text-slate-500"></i>
-                            </button>
-                            <div id="dailyEntryCalendarPopup" class="hidden absolute z-30 mt-1 left-0 right-0 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
+                            <input type="date" id="dailyEntryDateBtn" onchange="selectDailyEntryDate_(this.value)"
+                                class="w-full bg-slate-950 text-slate-200 text-xs p-2 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500">
                         </div>
                         <label class="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer select-none mt-1.5">
                             <input type="checkbox" id="dateCheckedInput" onchange="onDateCheckToggle_()"
@@ -418,13 +412,9 @@
                     </div>
                     
                     <div class="flex items-center gap-2 self-start sm:self-auto">
-                        <div class="relative">
-                            <button type="button" id="calBtn_table" onclick="toggleCalendarG_('table')" title="시작일 필터"
-                                class="flex items-center gap-1 text-[10px] px-2 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_table">전체</span>
-                            </button>
-                            <div id="calPopup_table" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                        </div>
+                        <input type="date" id="calBtn_table" onchange="selectCalendarDateG_('table', this.value)" title="시작일 필터"
+                            class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1.5 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                        <button type="button" onclick="resetCalendarFilterG_('table', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
                         <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
                             <button id="btnTableRecent" onclick="toggleTableMode('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 3일</button>
                             <button id="btnTableAll" onclick="toggleTableMode('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
@@ -582,13 +572,9 @@
                             <i class="fa-solid fa-chart-column text-emerald-400"></i> 월별 수익 합계 & 일평균
                         </h3>
                         <div class="flex items-center gap-2 self-start sm:self-auto">
-                            <div class="relative">
-                                <button type="button" id="calBtn_combo" onclick="toggleCalendarG_('combo')" title="시작일 필터"
-                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_combo">전체</span>
-                                </button>
-                                <div id="calPopup_combo" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                            </div>
+                            <input type="date" id="calBtn_combo" onchange="selectCalendarDateG_('combo', this.value)" title="시작일 필터"
+                                class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                            <button type="button" onclick="resetCalendarFilterG_('combo', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
                             <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
                                 <button id="btnComboFilter3M" onclick="toggleComboChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
                                 <button id="btnComboFilter6M" onclick="toggleComboChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
@@ -631,13 +617,9 @@
                                 <i class="fa-solid fa-chart-line text-sky-400"></i> 계좌 평가액 추이
                             </h3>
                             <div class="flex items-center gap-2 self-start sm:self-auto">
-                                <div class="relative">
-                                    <button type="button" id="calBtn_acc" onclick="toggleCalendarG_('acc')" title="시작일 필터"
-                                        class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                        <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_acc">전체</span>
-                                    </button>
-                                    <div id="calPopup_acc" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                                </div>
+                                <input type="date" id="calBtn_acc" onchange="selectCalendarDateG_('acc', this.value)" title="시작일 필터"
+                                    class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                                <button type="button" onclick="resetCalendarFilterG_('acc', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
                                 <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
                                     <button id="btnAccFilter3M" onclick="toggleAccChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
                                     <button id="btnAccFilter6M" onclick="toggleAccChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
@@ -659,13 +641,9 @@
                                 <i class="fa-solid fa-chart-area text-rose-500"></i> 최고점 대비 하락률 (MDD)
                             </h3>
                             <div class="flex items-center gap-2 self-start sm:self-auto">
-                                <div class="relative">
-                                    <button type="button" id="calBtn_mdd" onclick="toggleCalendarG_('mdd')" title="시작일 필터"
-                                        class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                        <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_mdd">전체</span>
-                                    </button>
-                                    <div id="calPopup_mdd" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                                </div>
+                                <input type="date" id="calBtn_mdd" onchange="selectCalendarDateG_('mdd', this.value)" title="시작일 필터"
+                                    class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                                <button type="button" onclick="resetCalendarFilterG_('mdd', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
                                 <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
                                     <button id="btnMddFilter3M" onclick="toggleMddChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
                                     <button id="btnMddFilter6M" onclick="toggleMddChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
@@ -718,13 +696,9 @@
                             <i class="fa-solid fa-calendar-check text-amber-500"></i> 연도별 수익금 합계
                         </h3>
                         <div class="flex items-center gap-2 self-start sm:self-auto">
-                            <div class="relative">
-                                <button type="button" id="calBtn_yearly" onclick="toggleCalendarG_('yearly')" title="시작일 필터"
-                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_yearly">전체</span>
-                                </button>
-                                <div id="calPopup_yearly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                            </div>
+                            <input type="date" id="calBtn_yearly" onchange="selectCalendarDateG_('yearly', this.value)" title="시작일 필터"
+                                class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                            <button type="button" onclick="resetCalendarFilterG_('yearly', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
                             <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
                                 <button id="btnYearlyFilter3Y" onclick="toggleYearlyChartFilter('3Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3Y</button>
                                 <button id="btnYearlyFilter5Y" onclick="toggleYearlyChartFilter('5Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">5Y</button>
@@ -743,13 +717,9 @@
                             <i class="fa-solid fa-chart-line text-emerald-400"></i> 월별 수익률 추이
                         </h3>
                         <div class="flex items-center gap-2 self-start sm:self-auto">
-                            <div class="relative">
-                                <button type="button" id="calBtn_monthlyReturn" onclick="toggleCalendarG_('monthlyReturn')" title="시작일 필터"
-                                    class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition">
-                                    <i class="fa-solid fa-calendar-days"></i> <span id="calLabel_monthlyReturn">전체</span>
-                                </button>
-                                <div id="calPopup_monthlyReturn" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                            </div>
+                            <input type="date" id="calBtn_monthlyReturn" onchange="selectCalendarDateG_('monthlyReturn', this.value)" title="시작일 필터"
+                                class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                            <button type="button" onclick="resetCalendarFilterG_('monthlyReturn', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
                             <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
                                 <button id="btnMonRetFilter3M" onclick="toggleMonthlyReturnChartFilter('3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
                                 <button id="btnMonRetFilter6M" onclick="toggleMonthlyReturnChartFilter('6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
@@ -825,10 +795,8 @@
                                 <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                                     <h5 class="text-[11px] font-semibold text-slate-400">월별 수익 합계 & 일평균</h5>
                                     <div class="flex items-center gap-1.5">
-                                        <div class="relative">
-                                            <button type="button" id="calBtn_confirmedMonthly" onclick="toggleCalendarG_('confirmedMonthly')" title="시작일 필터" class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i> <span id="calLabel_confirmedMonthly">전체</span></button>
-                                            <div id="calPopup_confirmedMonthly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                                        </div>
+                                        <input type="date" id="calBtn_confirmedMonthly" onchange="selectCalendarDateG_('confirmedMonthly', this.value)" title="시작일 필터" class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                                        <button type="button" onclick="resetCalendarFilterG_('confirmedMonthly', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
                                         <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
                                             <button id="btnConfirmedMonthly3M" onclick="setConfirmedProfitPeriod_('monthly', '3M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3M</button>
                                             <button id="btnConfirmedMonthly6M" onclick="setConfirmedProfitPeriod_('monthly', '6M')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">6M</button>
@@ -843,10 +811,8 @@
                                 <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                                     <h5 class="text-[11px] font-semibold text-slate-400">연도별 수익금 합계</h5>
                                     <div class="flex items-center gap-1.5">
-                                        <div class="relative">
-                                            <button type="button" id="calBtn_confirmedYearly" onclick="toggleCalendarG_('confirmedYearly')" title="시작일 필터" class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 hover:border-violet-500 hover:text-violet-400 transition"><i class="fa-solid fa-calendar-days"></i> <span id="calLabel_confirmedYearly">전체</span></button>
-                                            <div id="calPopup_confirmedYearly" class="hidden absolute z-30 mt-1 right-0 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3"></div>
-                                        </div>
+                                        <input type="date" id="calBtn_confirmedYearly" onchange="selectCalendarDateG_('confirmedYearly', this.value)" title="시작일 필터" class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
+                                        <button type="button" onclick="resetCalendarFilterG_('confirmedYearly', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
                                         <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
                                             <button id="btnConfirmedYearly3Y" onclick="setConfirmedProfitPeriod_('yearly', '3Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">3Y</button>
                                             <button id="btnConfirmedYearly5Y" onclick="setConfirmedProfitPeriod_('yearly', '5Y')" class="px-2 py-1 rounded-lg font-semibold text-slate-400">5Y</button>
@@ -977,12 +943,7 @@
             </div>
             <label class="mb-1 block text-[11px] text-slate-400">날짜</label>
             <div class="relative mb-3">
-                <input type="hidden" id="buyMgmtModalDate">
-                <button type="button" id="buyMgmtModalDateButton" onclick="toggleBuyMgmtRecordCalendar_()" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between rounded-lg border border-slate-700 bg-slate-950 p-2 text-left text-xs text-slate-100 hover:border-amber-500 focus:outline-none focus:border-amber-500">
-                    <span id="buyMgmtModalDateLabel">날짜 선택</span>
-                    <i class="fa-solid fa-calendar-days text-slate-500"></i>
-                </button>
-                <div id="buyMgmtRecordCalendarPopup" class="hidden absolute left-0 right-0 z-50 mt-1 rounded-xl border border-slate-700 bg-slate-900 p-3 shadow-2xl"></div>
+                <input type="date" id="buyMgmtModalDate" class="w-full rounded-lg border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
             </div>
             <div class="mb-3 grid grid-cols-2 gap-3">
                 <div>
@@ -1933,8 +1894,6 @@
 
         let dailyEntryDateValue = '';
         let dailyEntryDateTouched = false;
-        let calendarViewYear = null;
-        let calendarViewMonth = null;
 
         function computeDefaultDailyEntryDate_() {
             const latest = getLatestRecord_();
@@ -1944,8 +1903,8 @@
         }
 
         function setDailyEntryDateLabel_(dateStr) {
-            const label = document.getElementById('dailyEntryDateLabel');
-            if (label) label.innerText = dateStr || '날짜 선택';
+            const input = document.getElementById('dailyEntryDateBtn');
+            if (input) input.value = dateStr || '';
         }
 
         function refreshDailyEntryDate_() {
@@ -1966,92 +1925,11 @@
         window.addEventListener('pageshow', refreshDailyEntryDate_);
         setInterval(refreshDailyEntryDate_, 60000);
 
-        function toggleDailyEntryCalendar() {
-            const popup = document.getElementById('dailyEntryCalendarPopup');
-            if (!popup) return;
-            popup.classList.contains('hidden') ? openDailyEntryCalendar() : popup.classList.add('hidden');
-        }
-
-        function openDailyEntryCalendar() {
-            const base = dailyEntryDateValue || todayStr_();
-            const d = new Date(base + 'T00:00:00');
-            calendarViewYear = d.getFullYear();
-            calendarViewMonth = d.getMonth();
-            renderDailyEntryCalendar_();
-            document.getElementById('dailyEntryCalendarPopup').classList.remove('hidden');
-        }
-
-        function changeCalendarMonth_(delta, evt) {
-            if (evt) evt.stopPropagation();
-            calendarViewMonth += delta;
-            if (calendarViewMonth < 0) { calendarViewMonth = 11; calendarViewYear--; }
-            if (calendarViewMonth > 11) { calendarViewMonth = 0; calendarViewYear++; }
-            renderDailyEntryCalendar_();
-        }
-
-        function renderDailyEntryCalendar_() {
-            const popup = document.getElementById('dailyEntryCalendarPopup');
-            if (!popup) return;
-
-            const recordDates = new Set(cachedParsedData.map(item => item.date));
-            const today = todayStr_();
-            const firstOfMonth = new Date(calendarViewYear, calendarViewMonth, 1);
-            const startWeekday = firstOfMonth.getDay();
-            const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
-            const daysInPrevMonth = new Date(calendarViewYear, calendarViewMonth, 0).getDate();
-            const dowLabels = ['일', '월', '화', '수', '목', '금', '토'];
-
-            let cellsHtml = '';
-            for (let i = 0; i < startWeekday; i++) {
-                cellsHtml += `<div class="text-center text-[11px] text-slate-700 py-1.5">${daysInPrevMonth - startWeekday + i + 1}</div>`;
-            }
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const isToday = dateStr === today;
-                const isSelected = dateStr === dailyEntryDateValue;
-                const hasRecord = recordDates.has(dateStr);
-
-                let cls = "relative text-center text-[11px] py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition ";
-                if (isSelected) cls += "bg-emerald-600 text-white font-bold ";
-                else if (isToday) cls += "border border-emerald-500 text-emerald-400 font-bold ";
-                else cls += "text-slate-300 ";
-
-                cellsHtml += `
-                    <div class="${cls}" onclick="selectDailyEntryDate_('${dateStr}')">
-                        ${day}
-                        ${hasRecord ? `<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-sky-400'}"></span>` : ''}
-                    </div>`;
-            }
-            const remaining = (7 - ((startWeekday + daysInMonth) % 7)) % 7;
-            for (let i = 1; i <= remaining; i++) {
-                cellsHtml += `<div class="text-center text-[11px] text-slate-700 py-1.5">${i}</div>`;
-            }
-
-            popup.innerHTML = `
-                <div class="flex items-center justify-between mb-2">
-                    <button onclick="changeCalendarMonth_(-1, event)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-up"></i></button>
-                    <span class="text-xs font-bold text-slate-200">${calendarViewYear}년 ${calendarViewMonth + 1}월</span>
-                    <button onclick="changeCalendarMonth_(1, event)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-down"></i></button>
-                </div>
-                <div class="grid grid-cols-7 gap-0.5 mb-0.5">
-                    ${dowLabels.map(l => `<div class="text-center text-[10px] text-slate-500 font-semibold pb-1">${l}</div>`).join('')}
-                </div>
-                <div class="grid grid-cols-7 gap-0.5">${cellsHtml}</div>
-                <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-800">
-                    <span class="text-[9px] text-slate-600"><span class="inline-block w-1 h-1 rounded-full bg-sky-400 mr-1"></span>기록 있음</span>
-                    <div class="flex gap-3">
-                        <button onclick="selectDailyEntryDate_('${today}')" class="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold">오늘로</button>
-                        <button onclick="document.getElementById('dailyEntryCalendarPopup').classList.add('hidden')" class="text-[10px] text-slate-500 hover:text-slate-300">닫기</button>
-                    </div>
-                </div>
-            `;
-        }
-
         function selectDailyEntryDate_(dateStr) {
+            if (!dateStr) return;
             dailyEntryDateValue = dateStr;
             dailyEntryDateTouched = true;
             setDailyEntryDateLabel_(dateStr);
-            document.getElementById('dailyEntryCalendarPopup').classList.add('hidden');
             loadDateIntoForm_(dateStr);
             syncDateCheckedCheckbox_();
             updateDailyEntryConfirmedSum_();
@@ -2074,14 +1952,6 @@
                 showNotification(`${dateStr}에 이미 저장된 기록을 불러왔습니다. 수정 후 저장하면 그 값을 덮어씁니다.`, 'info', '기존 기록 불러옴');
             }
         }
-
-        document.addEventListener('click', (e) => {
-            const popup = document.getElementById('dailyEntryCalendarPopup');
-            const btn = document.getElementById('dailyEntryDateBtn');
-            if (popup && !popup.classList.contains('hidden') && !popup.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-                popup.classList.add('hidden');
-            }
-        });
 
         function renderDailyEntryForm() {
             const accInput = document.getElementById('dailyEntryAccountVal');
@@ -2436,87 +2306,9 @@
             catch (_) { return {}; }
         })();
 
-        let buyMgmtCalendarYear_ = null;
-        let buyMgmtCalendarMonth_ = null;
-
         function setBuyMgmtModalDate_(dateStr) {
-            document.getElementById('buyMgmtModalDate').value = dateStr;
-            document.getElementById('buyMgmtModalDateLabel').innerText = dateStr;
-            document.getElementById('buyMgmtRecordCalendarPopup').classList.add('hidden');
-            document.getElementById('buyMgmtModalDateButton').setAttribute('aria-expanded', 'false');
+            document.getElementById('buyMgmtModalDate').value = dateStr || '';
         }
-
-        function toggleBuyMgmtRecordCalendar_() {
-            const popup = document.getElementById('buyMgmtRecordCalendarPopup');
-            const button = document.getElementById('buyMgmtModalDateButton');
-            if (popup.classList.contains('hidden')) {
-                const selected = document.getElementById('buyMgmtModalDate').value || todayStr_();
-                const date = new Date(`${selected}T00:00:00`);
-                buyMgmtCalendarYear_ = date.getFullYear();
-                buyMgmtCalendarMonth_ = date.getMonth();
-                renderBuyMgmtRecordCalendar_();
-                popup.classList.remove('hidden');
-                button.setAttribute('aria-expanded', 'true');
-            } else {
-                popup.classList.add('hidden');
-                button.setAttribute('aria-expanded', 'false');
-            }
-        }
-
-        function changeBuyMgmtCalendarMonth_(delta) {
-            const date = new Date(buyMgmtCalendarYear_, buyMgmtCalendarMonth_ + delta, 1);
-            buyMgmtCalendarYear_ = date.getFullYear();
-            buyMgmtCalendarMonth_ = date.getMonth();
-            renderBuyMgmtRecordCalendar_();
-        }
-
-        function selectBuyMgmtRecordDate_(dateStr) {
-            setBuyMgmtModalDate_(dateStr);
-            document.getElementById('buyMgmtRecordCalendarPopup').classList.add('hidden');
-            document.getElementById('buyMgmtModalDateButton').setAttribute('aria-expanded', 'false');
-        }
-
-        function renderBuyMgmtRecordCalendar_() {
-            const popup = document.getElementById('buyMgmtRecordCalendarPopup');
-            const selected = document.getElementById('buyMgmtModalDate').value;
-            const today = todayStr_();
-            const firstWeekday = new Date(buyMgmtCalendarYear_, buyMgmtCalendarMonth_, 1).getDay();
-            const daysInMonth = new Date(buyMgmtCalendarYear_, buyMgmtCalendarMonth_ + 1, 0).getDate();
-            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-            let cells = '';
-            for (let i = 0; i < firstWeekday; i++) cells += '<div></div>';
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${buyMgmtCalendarYear_}-${String(buyMgmtCalendarMonth_ + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const isSelected = dateStr === selected;
-                const isToday = dateStr === today;
-                const style = isSelected
-                    ? 'bg-amber-500 text-slate-950 font-bold'
-                    : isToday
-                        ? 'border border-amber-500 text-amber-300 font-semibold'
-                        : 'text-slate-300 hover:bg-slate-800';
-                cells += `<button type="button" onclick="selectBuyMgmtRecordDate_('${dateStr}')" aria-pressed="${isSelected}" class="h-8 rounded-lg text-[11px] ${style}">${day}</button>`;
-            }
-            popup.innerHTML = `
-                <div class="mb-2 flex items-center justify-between">
-                    <button type="button" onclick="changeBuyMgmtCalendarMonth_(-1)" aria-label="이전 달" class="px-2 py-1 text-slate-400 hover:text-slate-200"><i class="fa-solid fa-chevron-left"></i></button>
-                    <span class="text-xs font-bold text-slate-200">${buyMgmtCalendarYear_}년 ${buyMgmtCalendarMonth_ + 1}월</span>
-                    <button type="button" onclick="changeBuyMgmtCalendarMonth_(1)" aria-label="다음 달" class="px-2 py-1 text-slate-400 hover:text-slate-200"><i class="fa-solid fa-chevron-right"></i></button>
-                </div>
-                <div class="mb-1 grid grid-cols-7 gap-1">${weekdays.map(day => `<span class="py-1 text-center text-[10px] font-semibold text-slate-500">${day}</span>`).join('')}</div>
-                <div class="grid grid-cols-7 gap-1">${cells}</div>
-                <div class="mt-2 flex justify-end border-t border-slate-800 pt-2">
-                    <button type="button" onclick="selectBuyMgmtRecordDate_('${today}')" class="text-[10px] font-semibold text-amber-300 hover:text-amber-200">오늘</button>
-                </div>`;
-        }
-
-        document.addEventListener('click', event => {
-            const popup = document.getElementById('buyMgmtRecordCalendarPopup');
-            const button = document.getElementById('buyMgmtModalDateButton');
-            if (popup && button && !popup.classList.contains('hidden') && !popup.contains(event.target) && !button.contains(event.target)) {
-                popup.classList.add('hidden');
-                button.setAttribute('aria-expanded', 'false');
-            }
-        });
 
         function openBuyMgmtRecordModal_(account, ticker) {
             activeBuyMgmtRecord_ = { mode: 'add', account, ticker };
@@ -2817,7 +2609,7 @@
             document.getElementById('buyMgmtModalProfit').value = Number(rec.profit) || 0;
             document.getElementById('buyMgmtModalSaveButton').innerHTML = '<i class="fa-solid fa-check mr-1"></i>변경 저장';
             document.getElementById('buyMgmtRecordModal').classList.remove('hidden');
-            document.getElementById('buyMgmtModalDateButton').focus();
+            document.getElementById('buyMgmtModalDate').focus();
         }
 
         async function deleteBuyMgmtRecordConfirm_(id) {
@@ -3125,128 +2917,28 @@
         const calendarFilterBeforeAll_ = {};
 
         function initCalendarInstance_(key) {
-            if (!calendarInstances[key]) calendarInstances[key] = { year: null, month: null, value: '' };
+            if (!calendarInstances[key]) calendarInstances[key] = { value: '' };
             return calendarInstances[key];
         }
 
-        function toggleCalendarG_(key) {
-            const popup = document.getElementById(`calPopup_${key}`);
-            if (!popup) return;
-            const instance = initCalendarInstance_(key);
-            const hasRestorableDate = !!(instance.value || calendarFilterBeforeAll_[key]);
-
-            if (hasRestorableDate) {
-                if (popup.classList.contains('hidden')) openCalendarG_(key);
-                resetCalendarFilterG_(key);
-                return;
-            }
-            popup.classList.contains('hidden') ? openCalendarG_(key) : popup.classList.add('hidden');
-        }
-
-        function openCalendarG_(key) {
-            const inst = initCalendarInstance_(key);
-            const base = inst.value || todayStr_();
-            const d = new Date(base + 'T00:00:00');
-            inst.year = d.getFullYear();
-            inst.month = d.getMonth();
-            renderCalendarG_(key);
-            document.getElementById(`calPopup_${key}`).classList.remove('hidden');
-        }
-
-        function changeCalendarMonthG_(key, delta, evt) {
-            if (evt) evt.stopPropagation();
-            const inst = calendarInstances[key];
-            inst.month += delta;
-            if (inst.month < 0) { inst.month = 11; inst.year--; }
-            if (inst.month > 11) { inst.month = 0; inst.year++; }
-            renderCalendarG_(key);
-        }
-
-        function renderCalendarG_(key) {
-            const inst = calendarInstances[key];
-            const popup = document.getElementById(`calPopup_${key}`);
-            if (!popup) return;
-
-            const recordDates = new Set(cachedParsedData.map(item => item.date));
-            const today = todayStr_();
-            const firstOfMonth = new Date(inst.year, inst.month, 1);
-            const startWeekday = firstOfMonth.getDay();
-            const daysInMonth = new Date(inst.year, inst.month + 1, 0).getDate();
-            const daysInPrevMonth = new Date(inst.year, inst.month, 0).getDate();
-            const dowLabels = ['일', '월', '화', '수', '목', '금', '토'];
-
-            let cellsHtml = '';
-            for (let i = 0; i < startWeekday; i++) {
-                cellsHtml += `<div class="text-center text-[11px] text-slate-700 py-1.5">${daysInPrevMonth - startWeekday + i + 1}</div>`;
-            }
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${inst.year}-${String(inst.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const isToday = dateStr === today;
-                const isSelected = dateStr === inst.value;
-                const hasRecord = recordDates.has(dateStr);
-
-                let cls = "relative text-center text-[11px] py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition ";
-                if (isSelected) cls += "bg-violet-600 text-white font-bold ";
-                else if (isToday) cls += "border border-violet-500 text-violet-400 font-bold ";
-                else cls += "text-slate-300 ";
-
-                cellsHtml += `
-                    <div class="${cls}" onclick="selectCalendarDateG_('${key}', '${dateStr}')">
-                        ${day}
-                        ${hasRecord ? `<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-sky-400'}"></span>` : ''}
-                    </div>`;
-            }
-            const remaining = (7 - ((startWeekday + daysInMonth) % 7)) % 7;
-            for (let i = 1; i <= remaining; i++) {
-                cellsHtml += `<div class="text-center text-[11px] text-slate-700 py-1.5">${i}</div>`;
-            }
-
-            popup.innerHTML = `
-                <div class="flex items-center justify-between mb-2">
-                    <button onclick="changeCalendarMonthG_('${key}', -1, event)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-up"></i></button>
-                    <span class="text-xs font-bold text-slate-200">${inst.year}년 ${inst.month + 1}월</span>
-                    <button onclick="changeCalendarMonthG_('${key}', 1, event)" class="text-slate-400 hover:text-slate-200 px-2 py-0.5"><i class="fa-solid fa-chevron-down"></i></button>
-                </div>
-                <div class="grid grid-cols-7 gap-0.5 mb-0.5">
-                    ${dowLabels.map(l => `<div class="text-center text-[10px] text-slate-500 font-semibold pb-1">${l}</div>`).join('')}
-                </div>
-                <div class="grid grid-cols-7 gap-0.5">${cellsHtml}</div>
-                <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-800">
-                    <span class="text-[9px] text-slate-600"><span class="inline-block w-1 h-1 rounded-full bg-sky-400 mr-1"></span>기록 있음</span>
-                    <button onclick="resetCalendarFilterG_('${key}', event)" ${inst.value || calendarFilterBeforeAll_[key] ? '' : 'disabled'} class="text-[10px] ${inst.value || calendarFilterBeforeAll_[key] ? 'text-rose-400 hover:text-rose-300' : 'text-slate-700 cursor-not-allowed'} font-semibold">${inst.value ? '전체보기' : calendarFilterBeforeAll_[key] ? '이전 날짜 복원' : '전체보기'}</button>
-                </div>
-            `;
-        }
-
         function updateCalendarLabelG_(key, dateStr) {
-            const label = document.getElementById(`calLabel_${key}`);
-            const button = document.getElementById(`calBtn_${key}`);
-            if (button) {
-                button.title = dateStr
-                    ? '클릭하여 전체 보기, 다시 클릭하여 이전 날짜 복원'
-                    : calendarFilterBeforeAll_[key]
-                        ? '클릭하여 이전 날짜 복원, 다시 클릭하여 전체 보기'
-                        : '날짜 필터 선택';
-            }
-            if (!label) return;
-            if (dateStr) {
-                label.innerText = dateStr;
-                label.classList.remove('text-slate-500');
-                label.classList.add('text-violet-300');
-            } else {
-                label.innerText = '전체';
-                label.classList.add('text-slate-500');
-                label.classList.remove('text-violet-300');
-            }
+            const input = document.getElementById(`calBtn_${key}`);
+            if (!input) return;
+            input.value = dateStr || '';
+            input.title = dateStr ? `시작일: ${dateStr}` : '날짜 필터 선택';
         }
 
         function selectCalendarDateG_(key, dateStr) {
-            calendarInstances[key].value = dateStr;
+            const instance = initCalendarInstance_(key);
+            if (!dateStr) {
+                resetCalendarFilterG_(key);
+                return;
+            }
+            instance.value = dateStr;
             delete calendarFilterBeforeAll_[key];
             localStorage.removeItem(`chartStartDateBeforeAll_${key}`);
             localStorage.setItem(`chartStartDate_${key}`, dateStr);
             updateCalendarLabelG_(key, dateStr);
-            document.getElementById(`calPopup_${key}`).classList.add('hidden');
             if (CALENDAR_APPLY_CALLBACKS[key]) CALENDAR_APPLY_CALLBACKS[key]();
         }
 
@@ -3268,19 +2960,9 @@
             } else {
                 return;
             }
-            renderCalendarG_(key);
+            updateCalendarLabelG_(key, instance.value);
             if (CALENDAR_APPLY_CALLBACKS[key]) CALENDAR_APPLY_CALLBACKS[key]();
         }
-
-        document.addEventListener('click', (e) => {
-            Object.keys(calendarInstances).forEach(key => {
-                const popup = document.getElementById(`calPopup_${key}`);
-                const btn = document.getElementById(`calBtn_${key}`);
-                if (popup && btn && !popup.classList.contains('hidden') && !popup.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-                    popup.classList.add('hidden');
-                }
-            });
-        });
 
         function restoreCalendarFiltersFromStorage_() {
             // 기존 prompt() 방식의 '일평균 계산 기준일' 로컬 저장값을 새 캘린더 팝업 키로 1회 이전
