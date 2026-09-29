@@ -975,8 +975,15 @@
                 </div>
                 <button type="button" onclick="closeBuyMgmtRecordModal_()" aria-label="닫기" class="text-slate-500 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <label for="buyMgmtModalDate" class="mb-1 block text-[11px] text-slate-400">날짜</label>
-            <input type="date" id="buyMgmtModalDate" class="mb-3 w-full rounded-lg border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100">
+            <label class="mb-1 block text-[11px] text-slate-400">날짜</label>
+            <div class="relative mb-3">
+                <input type="hidden" id="buyMgmtModalDate">
+                <button type="button" id="buyMgmtModalDateButton" onclick="toggleBuyMgmtRecordCalendar_()" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between rounded-lg border border-slate-700 bg-slate-950 p-2 text-left text-xs text-slate-100 hover:border-amber-500 focus:outline-none focus:border-amber-500">
+                    <span id="buyMgmtModalDateLabel">날짜 선택</span>
+                    <i class="fa-solid fa-calendar-days text-slate-500"></i>
+                </button>
+                <div id="buyMgmtRecordCalendarPopup" class="hidden absolute left-0 right-0 z-50 mt-1 rounded-xl border border-slate-700 bg-slate-900 p-3 shadow-2xl"></div>
+            </div>
             <div class="mb-3 grid grid-cols-2 gap-3">
                 <div>
                     <label for="buyMgmtModalTicker" class="mb-1 block text-[11px] text-slate-400">종목</label>
@@ -2429,11 +2436,93 @@
             catch (_) { return {}; }
         })();
 
+        let buyMgmtCalendarYear_ = null;
+        let buyMgmtCalendarMonth_ = null;
+
+        function setBuyMgmtModalDate_(dateStr) {
+            document.getElementById('buyMgmtModalDate').value = dateStr;
+            document.getElementById('buyMgmtModalDateLabel').innerText = dateStr;
+            document.getElementById('buyMgmtRecordCalendarPopup').classList.add('hidden');
+            document.getElementById('buyMgmtModalDateButton').setAttribute('aria-expanded', 'false');
+        }
+
+        function toggleBuyMgmtRecordCalendar_() {
+            const popup = document.getElementById('buyMgmtRecordCalendarPopup');
+            const button = document.getElementById('buyMgmtModalDateButton');
+            if (popup.classList.contains('hidden')) {
+                const selected = document.getElementById('buyMgmtModalDate').value || todayStr_();
+                const date = new Date(`${selected}T00:00:00`);
+                buyMgmtCalendarYear_ = date.getFullYear();
+                buyMgmtCalendarMonth_ = date.getMonth();
+                renderBuyMgmtRecordCalendar_();
+                popup.classList.remove('hidden');
+                button.setAttribute('aria-expanded', 'true');
+            } else {
+                popup.classList.add('hidden');
+                button.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        function changeBuyMgmtCalendarMonth_(delta) {
+            const date = new Date(buyMgmtCalendarYear_, buyMgmtCalendarMonth_ + delta, 1);
+            buyMgmtCalendarYear_ = date.getFullYear();
+            buyMgmtCalendarMonth_ = date.getMonth();
+            renderBuyMgmtRecordCalendar_();
+        }
+
+        function selectBuyMgmtRecordDate_(dateStr) {
+            setBuyMgmtModalDate_(dateStr);
+            document.getElementById('buyMgmtRecordCalendarPopup').classList.add('hidden');
+            document.getElementById('buyMgmtModalDateButton').setAttribute('aria-expanded', 'false');
+        }
+
+        function renderBuyMgmtRecordCalendar_() {
+            const popup = document.getElementById('buyMgmtRecordCalendarPopup');
+            const selected = document.getElementById('buyMgmtModalDate').value;
+            const today = todayStr_();
+            const firstWeekday = new Date(buyMgmtCalendarYear_, buyMgmtCalendarMonth_, 1).getDay();
+            const daysInMonth = new Date(buyMgmtCalendarYear_, buyMgmtCalendarMonth_ + 1, 0).getDate();
+            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+            let cells = '';
+            for (let i = 0; i < firstWeekday; i++) cells += '<div></div>';
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${buyMgmtCalendarYear_}-${String(buyMgmtCalendarMonth_ + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isSelected = dateStr === selected;
+                const isToday = dateStr === today;
+                const style = isSelected
+                    ? 'bg-amber-500 text-slate-950 font-bold'
+                    : isToday
+                        ? 'border border-amber-500 text-amber-300 font-semibold'
+                        : 'text-slate-300 hover:bg-slate-800';
+                cells += `<button type="button" onclick="selectBuyMgmtRecordDate_('${dateStr}')" aria-pressed="${isSelected}" class="h-8 rounded-lg text-[11px] ${style}">${day}</button>`;
+            }
+            popup.innerHTML = `
+                <div class="mb-2 flex items-center justify-between">
+                    <button type="button" onclick="changeBuyMgmtCalendarMonth_(-1)" aria-label="이전 달" class="px-2 py-1 text-slate-400 hover:text-slate-200"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span class="text-xs font-bold text-slate-200">${buyMgmtCalendarYear_}년 ${buyMgmtCalendarMonth_ + 1}월</span>
+                    <button type="button" onclick="changeBuyMgmtCalendarMonth_(1)" aria-label="다음 달" class="px-2 py-1 text-slate-400 hover:text-slate-200"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="mb-1 grid grid-cols-7 gap-1">${weekdays.map(day => `<span class="py-1 text-center text-[10px] font-semibold text-slate-500">${day}</span>`).join('')}</div>
+                <div class="grid grid-cols-7 gap-1">${cells}</div>
+                <div class="mt-2 flex justify-end border-t border-slate-800 pt-2">
+                    <button type="button" onclick="selectBuyMgmtRecordDate_('${today}')" class="text-[10px] font-semibold text-amber-300 hover:text-amber-200">오늘</button>
+                </div>`;
+        }
+
+        document.addEventListener('click', event => {
+            const popup = document.getElementById('buyMgmtRecordCalendarPopup');
+            const button = document.getElementById('buyMgmtModalDateButton');
+            if (popup && button && !popup.classList.contains('hidden') && !popup.contains(event.target) && !button.contains(event.target)) {
+                popup.classList.add('hidden');
+                button.setAttribute('aria-expanded', 'false');
+            }
+        });
+
         function openBuyMgmtRecordModal_(account, ticker) {
             activeBuyMgmtRecord_ = { mode: 'add', account, ticker };
             document.getElementById('buyMgmtModalTitle').innerText = '실현 수익금 기록 추가';
             document.getElementById('buyMgmtModalContext').innerText = `${account} · ${ticker}`;
-            document.getElementById('buyMgmtModalDate').value = todayStr_();
+            setBuyMgmtModalDate_(todayStr_());
             document.getElementById('buyMgmtModalTicker').value = ticker;
             document.getElementById('buyMgmtModalAccount').value = account;
             document.getElementById('buyMgmtModalMemo').value = '';
@@ -2447,7 +2536,7 @@
             activeBuyMgmtRecord_ = { mode: 'add' };
             document.getElementById('buyMgmtModalTitle').innerText = '확정 수익금 기록 추가';
             document.getElementById('buyMgmtModalContext').innerText = '날짜와 종목별 수익 기록을 입력하세요.';
-            document.getElementById('buyMgmtModalDate').value = todayStr_();
+            setBuyMgmtModalDate_(todayStr_());
             document.getElementById('buyMgmtModalTicker').value = '';
             document.getElementById('buyMgmtModalAccount').value = '';
             document.getElementById('buyMgmtModalMemo').value = '';
@@ -2721,14 +2810,14 @@
             activeBuyMgmtRecord_ = { mode: 'edit', id };
             document.getElementById('buyMgmtModalTitle').innerText = '확정 수익금 기록 수정';
             document.getElementById('buyMgmtModalContext').innerText = `${rec.date} · ${rec.account} · ${rec.ticker}`;
-            document.getElementById('buyMgmtModalDate').value = rec.date || '';
+            setBuyMgmtModalDate_(rec.date || '');
             document.getElementById('buyMgmtModalTicker').value = rec.ticker || '';
             document.getElementById('buyMgmtModalAccount').value = rec.account || '';
             document.getElementById('buyMgmtModalMemo').value = rec.memo || '';
             document.getElementById('buyMgmtModalProfit').value = Number(rec.profit) || 0;
             document.getElementById('buyMgmtModalSaveButton').innerHTML = '<i class="fa-solid fa-check mr-1"></i>변경 저장';
             document.getElementById('buyMgmtRecordModal').classList.remove('hidden');
-            document.getElementById('buyMgmtModalDate').focus();
+            document.getElementById('buyMgmtModalDateButton').focus();
         }
 
         async function deleteBuyMgmtRecordConfirm_(id) {
