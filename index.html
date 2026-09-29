@@ -156,8 +156,8 @@
                 <span id="syncStatusBadge" class="text-xs bg-slate-800 px-3 py-1.5 rounded-full text-slate-400 border border-slate-700/50">
                     <i id="syncStatusIcon" class="fa-solid fa-circle-notch animate-spin mr-1.5 text-slate-500"></i> <span id="syncStatusText">연동 대기 중</span>
                 </span>
-                <button type="button" onclick="manualRefreshAllRemoteData_()" title="모든 시트 데이터 새로고침" aria-label="모든 시트 데이터 새로고침" class="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-slate-400 hover:border-sky-500 hover:text-sky-300">
-                    <i class="fa-solid fa-rotate"></i>
+                <button type="button" onclick="manualRefreshAllRemoteData_()" title="저장 대기 변경을 저장한 뒤 모든 기능을 동기화합니다" aria-label="전체 저장 및 동기화" class="flex items-center gap-2 rounded-lg border border-sky-500/40 bg-sky-500/10 px-3 py-2 text-xs font-semibold text-sky-300 hover:bg-sky-500/20">
+                    <i class="fa-solid fa-rotate"></i><span class="hidden sm:inline">전체 저장 및 동기화</span>
                 </button>
             </div>
         </div>
@@ -243,13 +243,14 @@
 
             <!-- 일일 기록 입력 카드 -->
             <div id="dailyEntryCard" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative">
-                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                <div class="flex items-center justify-between gap-2 mb-3 border-b border-slate-800 pb-3">
                     <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
                         <i class="fa-solid fa-pen-to-square text-emerald-400"></i> 일일 기록 입력
                     </h2>
-                    <span id="dailyEntrySyncStatus" class="text-[10px] text-slate-500">
-                        <i class="fa-solid fa-circle-notch mr-1"></i>미설정
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span id="dailyEntrySyncStatus" class="text-[10px] text-slate-500"><i class="fa-solid fa-circle-notch mr-1"></i>미설정</span>
+                        <button type="button" onclick="syncFeature_('main')" class="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 hover:border-sky-500 hover:text-sky-300" title="메인 시트 데이터를 동기화"><i class="fa-solid fa-rotate mr-1"></i>동기화</button>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 mb-3">
@@ -496,9 +497,12 @@
                         </span>
                     </div>
 
-                    <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs self-start sm:self-auto">
-                        <button id="btnYieldRecent" onclick="toggleYieldMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 3일</button>
-                        <button id="btnYieldAll" onclick="toggleYieldMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                    <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                            <button id="btnYieldRecent" onclick="toggleYieldMode_('recent')" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-600 text-white shadow-sm">최근 3일</button>
+                            <button id="btnYieldAll" onclick="toggleYieldMode_('all')" class="px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-slate-200">전체 보기</button>
+                        </div>
+                        <button type="button" onclick="syncFeature_('yieldData')" class="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 hover:border-sky-500 hover:text-sky-300"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>저장 및 동기화</button>
                     </div>
                 </div>
 
@@ -516,10 +520,11 @@
                         <tbody id="yieldTableBody" class="text-slate-300 divide-y divide-slate-800/50"></tbody>
                     </table>
                 </div>
-                <p class="text-[10px] text-slate-600 mt-2">대시보드를 새로고침할 때마다 그 시점의 지표 값이 오늘 날짜로 자동 기록됩니다.</p>
+                <p class="text-[10px] text-slate-600 mt-2">계산된 지표 기록은 저장 및 동기화 버튼을 눌렀을 때 시트에 반영됩니다.</p>
             </div>
 
             <!-- 메모장 (단일 덮어쓰기 메모장) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg overflow-hidden">
                 <div class="flex items-center justify-between gap-4 mb-3">
                     <div class="flex items-center gap-3">
@@ -530,14 +535,15 @@
                             <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
                         </span>
                     </div>
+                    <button type="button" onclick="syncFeature_('notepad')" class="shrink-0 rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 hover:border-sky-500 hover:text-sky-300"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>저장 및 동기화</button>
                 </div>
 
                 <div class="w-full">
-                    <textarea id="notepadSingleInput" rows="6" placeholder="자유롭게 메모를 입력하세요 (자동 덮어쓰기 저장)"
+                    <textarea id="notepadSingleInput" rows="6" placeholder="자유롭게 메모를 입력하세요"
                         oninput="onNotepadSingleInput_(this.value)"
                         class="w-full bg-slate-950 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-yellow-500 resize-y"></textarea>
                 </div>
-                <p class="text-[10px] text-slate-600 mt-2">입력한 메모는 항상 최신 상태로 덮어씌워져 구글 시트에 자동으로 저장됩니다.</p>
+                <p class="text-[10px] text-slate-600 mt-2">수정 내용은 저장 및 동기화 버튼을 눌렀을 때 반영됩니다.</p>
             </div>
 
             <!-- 메모장1 (단일 덮어쓰기 메모장, 메모장과 동일 기능/별도 저장소) -->
@@ -551,14 +557,16 @@
                             <i class="fa-solid fa-circle-notch mr-1"></i>대기 중
                         </span>
                     </div>
+                    <button type="button" onclick="syncFeature_('notepad1')" class="shrink-0 rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 hover:border-sky-500 hover:text-sky-300"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>저장 및 동기화</button>
                 </div>
 
                 <div class="w-full">
-                    <textarea id="notepad1SingleInput" rows="6" placeholder="자유롭게 메모를 입력하세요 (자동 덮어쓰기 저장)"
+                    <textarea id="notepad1SingleInput" rows="6" placeholder="자유롭게 메모를 입력하세요"
                         oninput="onNotepad1SingleInput_(this.value)"
                         class="w-full bg-slate-950 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-yellow-500 resize-y"></textarea>
                 </div>
-                <p class="text-[10px] text-slate-600 mt-2">입력한 메모는 항상 최신 상태로 덮어씌워져 구글 시트에 자동으로 저장됩니다.</p>
+                <p class="text-[10px] text-slate-600 mt-2">수정 내용은 저장 및 동기화 버튼을 눌렀을 때 반영됩니다.</p>
+            </div>
             </div>
 
         </section>
@@ -771,9 +779,12 @@
                         </span>
                         <span id="buyManagementTickerList" class="text-[10px] text-cyan-300 font-normal"></span>
                     </h2>
-                    <button onclick="addNewTickerPrompt()" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-plus"></i> 종목 추가
-                    </button>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="syncFeature_('splitBuy')" class="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 hover:border-sky-500 hover:text-sky-300"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>저장 및 동기화</button>
+                        <button onclick="addNewTickerPrompt()" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> 종목 추가
+                        </button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse" id="buyManagementTable"></table>
@@ -792,6 +803,7 @@
                             </h3>
                             <span id="buyMgmtRecordsSyncStatus" class="text-[10px] text-slate-500">대기 중</span>
                             <span class="text-xs text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80" id="buyMgmtRecordsCount">총 0건</span>
+                            <button type="button" onclick="syncFeature_('confirmedRecords')" class="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 hover:border-sky-500 hover:text-sky-300"><i class="fa-solid fa-rotate mr-1"></i>동기화</button>
                         </div>
                     </div>
                     <p class="text-[10px] text-slate-500 mb-3">
@@ -884,7 +896,8 @@
                         </span>
                         <span id="stepLogTickerList" class="text-[10px] text-violet-300 font-normal"></span>
                     </h2>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="syncFeature_('stepLog')" class="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 hover:border-sky-500 hover:text-sky-300"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>저장 및 동기화</button>
                         <button onclick="addTickerPromptForGrid_('stepLog')" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
                             <i class="fa-solid fa-plus"></i> 종목 추가
                         </button>
@@ -933,7 +946,7 @@
                             placeholder="Code.gs에 설정한 비밀 토큰">
                         <button onclick="saveSplitBuyApiUrl()"
                             class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-xl text-xs font-bold border border-slate-700 transition"
-                            title="저장 및 동기화">
+                            title="동기화 연결 설정 저장">
                             <i class="fa-solid fa-floppy-disk"></i>
                         </button>
                     </div>
@@ -943,8 +956,8 @@
                     </label>
                     <p class="text-[10px] text-slate-600 mt-1">선택하면 이 브라우저에 저장됩니다. 공용 기기에서는 선택하지 마세요.</p>
                     <p class="text-[10px] text-slate-500 leading-relaxed mt-2">
-                        일일 기록 입력 / 매수 목록 / 차수 기록 / 메모장 / 메모장1 / 자산 현황 그래프가 모두 이 주소+토큰으로
-                        동기화됩니다. Apps Script 프로젝트 설정의
+                        연결 설정을 저장한 뒤, 각 기능의 저장 및 동기화 버튼 또는 상단의 전체 저장 및 동기화 버튼을 눌러
+                        시트에 반영할 수 있습니다. Apps Script 프로젝트 설정의
                         스크립트 속성에 같은 API_TOKEN을 등록하고 새 버전을 배포해야 조회/저장이 동작합니다.
                     </p>
                 </div>
@@ -967,8 +980,8 @@
             <div class="mb-3 grid grid-cols-2 gap-3">
                 <div>
                     <label for="buyMgmtModalTicker" class="mb-1 block text-[11px] text-slate-400">종목</label>
-                    <input type="text" id="buyMgmtModalTicker" list="buyMgmtTickerOptions" placeholder="예: SOXL" class="w-full rounded-lg border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100">
-                    <datalist id="buyMgmtTickerOptions"></datalist>
+                    <input type="text" id="buyMgmtModalTicker" placeholder="종목 직접 입력 (예: SOXL)" autocomplete="off" class="w-full rounded-lg border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100">
+                    <p class="mt-1 text-[9px] text-slate-500">종목별 매수 관리에 등록되지 않은 종목도 입력할 수 있습니다.</p>
                 </div>
                 <div>
                     <label for="buyMgmtModalAccount" class="mb-1 block text-[11px] text-slate-400">계좌</label>
@@ -1010,12 +1023,12 @@
         let activeYearlyChartFilter = 'ALL';
         
         let cachedParsedData = [];
+        let mainDataIsRemote_ = false;
         let cachedChartData = [];
         let parsedHeaders = [];
 
         let availableTickers = ["DIVO", "MTUM", "PTNQ", "SCHD", "SOXL", "SPMO", "TQQQ", "VYM", "XLP"];
         let splitBuyRemoteData = { tickers: [], data: {} };
-        const splitBuySaveTimers = {};
 
         let splitBuyApiUrl = localStorage.getItem('splitBuyApiUrl') || '';
         const SPLIT_BUY_API_TOKEN_STORAGE_KEY = 'splitBuyApiToken';
@@ -1075,15 +1088,6 @@
             throw lastErr;
         }
 
-        // 여러 fetch 작업을 "동시에" 쏘지 않고 하나씩 순서대로 실행하는 헬퍼.
-        // Apps Script 웹앱은 같은 URL로 여러 요청이 한꺼번에 몰리면(특히 모바일 네트워크에서)
-        // 그중 일부가 무작위로 실패하기 쉬우므로, 요청을 직렬화해 안정성을 높인다.
-        async function runSequentially_(tasks) {
-            for (const task of tasks) {
-                try { await task(); } catch (e) { /* 개별 작업 내부에서 이미 에러 처리함 */ }
-            }
-        }
-
         // 수정: 8번째 컬럼명을 구글 시트 규격(종목합산평가금액)에 맞추어 수정
         const sampleRawData = `날짜\t수익금\t수익금 총합\t전체계좌\t최고점 대비 하락률\t일별 수익률\t특이사항\t종목합산평가금액\tdivo\tmtum\tptnq\tschd\tsoxl\tspmo\ttqqq\tvym\txlp
 2026-01-30\t31.66\t31.66\t41,543.20\t0.00%\t0.00%\t첫 거래 및 계좌 개설\t9,889.84\t1069\t3913\t5706.56\t670\t100\t6041.7\t201.31\t1447.56\t1023
@@ -1109,6 +1113,7 @@
             const badgeText = document.getElementById('syncStatusText');
             if (!badge || !badgeIcon || !badgeText) return;
             const styles = {
+                idle:    { badge: "text-xs bg-slate-800 px-3 py-1.5 rounded-full text-slate-400 border border-slate-700/50", icon: "fa-solid fa-circle text-slate-500 mr-1.5 text-[8px]" },
                 loading: { badge: "text-xs bg-slate-800 px-3 py-1.5 rounded-full text-slate-400 border border-slate-700/50", icon: "fa-solid fa-circle-notch animate-spin mr-1.5 text-slate-500" },
                 ok:      { badge: "text-xs bg-emerald-500/10 px-3 py-1.5 rounded-full text-emerald-400 border border-emerald-500/20", icon: "fa-solid fa-circle text-emerald-400 mr-1.5 text-[8px]" },
                 error:   { badge: "text-xs bg-rose-500/10 px-3 py-1.5 rounded-full text-rose-400 border border-rose-500/20", icon: "fa-solid fa-triangle-exclamation mr-1.5 text-rose-400" }
@@ -1140,6 +1145,7 @@
                 const cached = JSON.parse(raw);
                 if (!cached || !Array.isArray(cached.matrix) || cached.matrix.length < 2) return false;
 
+                mainDataIsRemote_ = false;
                 parseAndRenderData(cached.matrix, "캐시된 데이터(오프라인 폴백)");
                 const minutesAgo = Math.max(0, Math.round((Date.now() - cached.savedAt) / 60000));
                 setMainSyncBadge_('error', `동기화 실패 - ${minutesAgo}분 전 데이터 표시 중`);
@@ -1155,7 +1161,7 @@
         async function fetchMainDataViaApi_({ silent = false } = {}) {
             if (!splitBuyApiUrl || !splitBuyApiToken) {
                 loadDemoData_();
-                return;
+                return false;
             }
 
             if (!silent) setMainSyncBadge_('loading', '연동 중...');
@@ -1169,12 +1175,15 @@
                     throw new Error('가용 데이터 행이 비어있습니다.');
                 }
 
+                mainDataIsRemote_ = true;
                 parseAndRenderData(json.matrix, "Apps Script API 연동");
                 cacheMainDataSnapshot_(json.matrix);
 
                 setMainSyncBadge_('ok', `구글 시트 연동 완료 · ${syncTimeLabel_()}`);
                 if (!silent) showNotification("실시간 구글 스프레드시트 정보를 연동했습니다!", "success", "동기화 성공");
+                return true;
             } catch (err) {
+                mainDataIsRemote_ = false;
                 console.error('메인 데이터 동기화 실패:', err);
                 const usedCache = tryRenderCachedMainData_();
                 if (!usedCache) setMainSyncBadge_('error', '연동 실패');
@@ -1186,6 +1195,7 @@
                         "error", "동기화 실패"
                     );
                 }
+                return false;
             }
         }
 
@@ -1202,46 +1212,64 @@
             if (rememberTokenEl) rememberTokenEl.checked = !!splitBuyApiToken;
 
             if (splitBuyApiUrl && splitBuyApiToken) {
-                // 분할매수 데이터 동기화가 끝난 뒤에 그리드 5종을 순서대로 불러오도록 직렬화
-                initSplitBuySync().finally(() => initAllGrids_());
-                fetchMainDataViaApi_();
+                setMainSyncBadge_('idle', '동기화 대기 중');
+                setSplitBuySyncStatus('idle', '동기화 버튼을 눌러주세요');
             } else {
-                initAllGrids_();
                 loadDemoData_();
             }
-
-            startAutoRefresh_();
         };
 
-        // 실시간성 확보: 탭을 계속 열어두면 주기적으로, 그리고 다시 탭을 보게 되거나
-        // 창에 포커스가 돌아올 때마다 최신 데이터를 자동으로 다시 불러온다.
-        // (기존에는 최초 로드/수동 새로고침/본인이 직접 저장했을 때만 갱신되어,
-        //  다른 기기나 자동매매 스크립트가 시트를 갱신해도 화면엔 반영되지 않았음)
-        const AUTO_REFRESH_INTERVAL_MS = 90 * 1000;
-        let autoRefreshTimer_ = null;
-
-        function refreshAllRemoteData_({ silent = true } = {}) {
-            if (!splitBuyApiUrl || !splitBuyApiToken) return;
-            fetchMainDataViaApi_({ silent });
-            initSplitBuySync().finally(() => initAllGrids_());
-        }
-
-        function manualRefreshAllRemoteData_() {
+        async function manualRefreshAllRemoteData_() {
             if (!splitBuyApiUrl || !splitBuyApiToken) {
                 showNotification('Apps Script URL과 세션 인증 토큰을 설정해주세요.', 'error', '동기화 설정 필요');
                 return;
             }
-            refreshAllRemoteData_({ silent: false });
+            setMainSyncBadge_('loading', '전체 저장 및 동기화 중...');
+            for (const key of Object.keys(GRID_CONFIGS)) {
+                if (!await flushGridChanges_(key, { notify: false })) {
+                    setMainSyncBadge_('error', '저장 실패 - 변경 내용 보존 중');
+                    showNotification('저장 실패한 변경이 있어 전체 동기화를 중단했습니다. 해당 기능의 상태를 확인해주세요.', 'error', '전체 동기화 중단');
+                    return;
+                }
+            }
+            if (!await flushSplitBuyChanges_({ notify: false })) {
+                setMainSyncBadge_('error', '저장 실패 - 변경 내용 보존 중');
+                showNotification('매수 관리 변경 저장에 실패해 전체 동기화를 중단했습니다.', 'error', '전체 동기화 중단');
+                return;
+            }
+            let syncOk = await fetchMainDataViaApi_({ silent: true });
+            syncOk = await initSplitBuySync() && syncOk;
+            for (const task of [
+                () => fetchGrid_('buyList'), () => fetchGrid_('stepLog'),
+                () => fetchBuyMgmtRecords_(), () => fetchGrid_('notepad'),
+                () => fetchGrid_('notepad1'), () => fetchGrid_('yieldData')
+            ]) syncOk = await task() && syncOk;
+            if (cachedParsedData.length) {
+                lastYieldSnapshotSig = '';
+                updateKpiCards(cachedParsedData);
+            }
+            const yieldSaved = await flushGridChanges_('yieldData', { notify: false });
+            syncOk = yieldSaved && syncOk;
+            setMainSyncBadge_(syncOk ? 'ok' : 'error', syncOk ? `전체 동기화 완료 · ${syncTimeLabel_()}` : '일부 기능 동기화 실패');
+            showNotification(syncOk ? '저장 대기 중인 변경을 반영하고 모든 기능을 동기화했습니다.' : '일부 기능의 동기화에 실패했습니다. 각 기능의 상태를 확인해주세요.', syncOk ? 'success' : 'error', syncOk ? '전체 동기화 완료' : '동기화 확인 필요');
         }
 
-        function startAutoRefresh_() {
-            if (autoRefreshTimer_) clearInterval(autoRefreshTimer_);
-            autoRefreshTimer_ = setInterval(() => refreshAllRemoteData_({ silent: true }), AUTO_REFRESH_INTERVAL_MS);
-
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') refreshAllRemoteData_({ silent: true });
-            });
-            window.addEventListener('focus', () => refreshAllRemoteData_({ silent: true }));
+        async function syncFeature_(key) {
+            if (!splitBuyApiUrl || !splitBuyApiToken) {
+                showNotification('Apps Script URL과 인증 토큰을 먼저 설정해주세요.', 'error', '동기화 설정 필요');
+                return;
+            }
+            if (key === 'main') {
+                await fetchMainDataViaApi_({ silent: false });
+            } else if (key === 'splitBuy') {
+                if (!await flushSplitBuyChanges_() || !await flushGridChanges_('buyList')) return;
+                if (!await initSplitBuySync()) return;
+                await fetchGrid_('buyList');
+            } else if (key === 'confirmedRecords') {
+                await fetchBuyMgmtRecords_();
+            } else if (await flushGridChanges_(key)) {
+                await fetchGrid_(key);
+            }
         }
 
         function setSplitBuySyncStatus(state, text) {
@@ -1275,12 +1303,11 @@
             } else {
                 localStorage.removeItem(SPLIT_BUY_API_TOKEN_STORAGE_KEY);
             }
-            initSplitBuySync().finally(() => initAllGrids_());
-            fetchMainDataViaApi_();
+            setSplitBuySyncStatus('idle', '저장 설정 완료 · 동기화 대기');
         }
 
         async function initSplitBuySync() {
-            if (!splitBuyApiUrl || !splitBuyApiToken) return;
+            if (!splitBuyApiUrl || !splitBuyApiToken) return false;
             setSplitBuySyncStatus('loading', '동기화 중...');
 
             try {
@@ -1298,23 +1325,22 @@
 
                 renderBuyManagement_();
                 setSplitBuySyncStatus('ok', `구글시트 동기화 완료 · ${syncTimeLabel_()}`);
+                return true;
             } catch (err) {
                 setSplitBuySyncStatus('error', '동기화 실패 (URL 확인)');
                 console.error('분할매수 동기화 실패:', err);
+                return false;
             }
         }
 
         function scheduleSplitBuyRemoteSave(ticker, step, alloc, bought) {
-            if (!splitBuyApiUrl || !splitBuyApiToken) return;
             const key = `${ticker}__${step}`;
-            clearTimeout(splitBuySaveTimers[key]);
-            setSplitBuySyncStatus('loading', '저장 중...');
-            splitBuySaveTimers[key] = setTimeout(() => {
-                saveSplitBuyStepRemote(ticker, step, alloc, bought);
-            }, 500);
+            dirtySplitBuySteps_[key] = { ticker, step, alloc, bought };
+            setSplitBuySyncStatus('idle', '변경 있음 · 저장 대기');
         }
 
         async function saveSplitBuyStepRemote(ticker, step, alloc, bought) {
+            if (!splitBuyApiUrl || !splitBuyApiToken) return false;
             try {
                 const res = await fetchWithRetry_(splitBuyApiUrl, {
                     method: 'POST',
@@ -1326,10 +1352,32 @@
                 if (!splitBuyRemoteData.data[ticker]) splitBuyRemoteData.data[ticker] = {};
                 splitBuyRemoteData.data[ticker][step] = { alloc, bought };
                 setSplitBuySyncStatus('ok', '구글시트 저장 완료');
+                return true;
             } catch (err) {
                 setSplitBuySyncStatus('error', '저장 실패 (연결 확인)');
                 console.error('분할매수 저장 실패:', err);
+                return false;
             }
+        }
+
+        async function flushSplitBuyChanges_({ notify = true } = {}) {
+            if (!Object.keys(dirtySplitBuySteps_).length) return true;
+            if (!splitBuyApiUrl || !splitBuyApiToken) {
+                if (notify) showNotification('매수 관리 변경 내용을 저장하려면 Apps Script 동기화 설정이 필요합니다.', 'error', '동기화 설정 필요');
+                return false;
+            }
+            setSplitBuySyncStatus('loading', '변경 내용 저장 중...');
+            while (Object.keys(dirtySplitBuySteps_).length) {
+                const entries = Object.entries(dirtySplitBuySteps_);
+                for (const [key, change] of entries) {
+                    if (!await saveSplitBuyStepRemote(change.ticker, change.step, change.alloc, change.bought)) {
+                        if (notify) showNotification('매수 관리 저장에 실패했습니다. 변경 내용은 저장 대기 상태로 유지됩니다.', 'error', '저장 실패');
+                        return false;
+                    }
+                    if (dirtySplitBuySteps_[key] === change) delete dirtySplitBuySteps_[key];
+                }
+            }
+            return true;
         }
 
         async function addTickerRemote(ticker) {
@@ -1413,7 +1461,8 @@
             notepad1: { rowLabels: [], tickers: [], data: {}, memos: {} },
             yieldData: { rowLabels: [], tickers: [], data: {}, memos: {} }
         };
-        const gridSaveTimers = {};
+        const dirtyGridRows_ = {};
+        const dirtySplitBuySteps_ = {};
 
         // '종목별 매수 관리'에서 💰 토글로 확정한 (계좌×종목) 수익금 기록. 원본 할당/매수 칸과 무관하게 영구히 남는다.
         let buyMgmtRecordsCache = [];
@@ -1453,7 +1502,7 @@
         }
 
         async function fetchGrid_(key) {
-            if (!splitBuyApiUrl || !splitBuyApiToken) { setGridSyncStatus_(key, 'error', '동기화 주소/토큰 미설정'); renderGrid_(key); return; }
+            if (!splitBuyApiUrl || !splitBuyApiToken) { setGridSyncStatus_(key, 'error', '동기화 주소/토큰 미설정'); renderGrid_(key); return false; }
             const cfg = GRID_CONFIGS[key];
             setGridSyncStatus_(key, 'loading', '불러오는 중...');
             try {
@@ -1462,12 +1511,15 @@
                 if (!json.success) throw new Error(json.error || '조회 실패');
                 applyGridResponse_(key, json);
                 setGridSyncStatus_(key, 'ok', `동기화됨 · ${syncTimeLabel_()}`);
-                if (key === 'stepLog') ensureStepLogSpecialColumns_();
+                if (key === 'stepLog') await ensureStepLogSpecialColumns_();
             } catch (err) {
                 setGridSyncStatus_(key, 'error', '조회 실패');
                 console.error(`${key} 그리드 조회 실패:`, err);
+                renderGrid_(key);
+                return false;
             }
             renderGrid_(key);
+            return true;
         }
 
         async function ensureStepLogSpecialColumns_() {
@@ -1499,38 +1551,15 @@
             }
         }
 
-        async function saveGridCellRemote_(key, rowLabel, ticker, value) {
-            if (!splitBuyApiUrl || !splitBuyApiToken) return;
-            const cfg = GRID_CONFIGS[key];
-            setGridSyncStatus_(key, 'loading', '저장 중...');
-            try {
-                const res = await fetchWithRetry_(splitBuyApiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(withToken_({ action: 'saveGridCell', sheetName: cfg.sheetName, rowLabel, ticker, value }))
-                });
-                const json = await res.json();
-                if (!json.success) throw new Error(json.error || '저장 실패');
-                if (value !== '') applyGridResponse_(key, json);
-                setGridSyncStatus_(key, 'ok', '저장 완료');
-            } catch (err) {
-                setGridSyncStatus_(key, 'error', '저장 실패');
-                showNotification(`저장에 실패했습니다: ${err.message}`, 'error', '저장 실패');
-                console.error(`${key} 저장 실패:`, err);
-            }
-        }
-
         function scheduleGridCellSave_(key, rowLabel, ticker, value) {
-            const timerKey = `${key}__${rowLabel}__${ticker}`;
-            clearTimeout(gridSaveTimers[timerKey]);
-            gridSaveTimers[timerKey] = setTimeout(() => saveGridCellRemote_(key, rowLabel, ticker, value), 500);
+            markGridChange_(key, rowLabel, ticker, value);
         }
 
         // 한 행의 여러 칸(예: 일평균수익금/월평균수익금/월평균수익률/연환산수익률)을
         // 요청 1건으로 한 번에 저장한다. (개별 셀마다 따로 요청을 보내면 동시에 여러 건이
         // 몰려 무작위로 실패하는 문제가 있었음 - saveGridRow 액션으로 통합)
-        async function saveGridRowRemote_(key, rowLabel, valuesMap) {
-            if (!splitBuyApiUrl || !splitBuyApiToken) return;
+        async function saveGridRowRemote_(key, rowLabel, valuesMap, { notify = true } = {}) {
+            if (!splitBuyApiUrl || !splitBuyApiToken) return false;
             const cfg = GRID_CONFIGS[key];
             setGridSyncStatus_(key, 'loading', '저장 중...');
             try {
@@ -1543,17 +1572,48 @@
                 if (!json.success) throw new Error(json.error || '저장 실패');
                 applyGridResponse_(key, json);
                 setGridSyncStatus_(key, 'ok', '저장 완료');
+                return true;
             } catch (err) {
                 setGridSyncStatus_(key, 'error', '저장 실패');
-                showNotification(`저장에 실패했습니다: ${err.message}`, 'error', '저장 실패');
+                if (notify) showNotification(`저장에 실패했습니다: ${err.message}`, 'error', '저장 실패');
                 console.error(`${key} 행 저장 실패:`, err);
+                return false;
             }
         }
 
         function scheduleGridRowSave_(key, rowLabel, valuesMap) {
-            const timerKey = `${key}__row__${rowLabel}`;
-            clearTimeout(gridSaveTimers[timerKey]);
-            gridSaveTimers[timerKey] = setTimeout(() => saveGridRowRemote_(key, rowLabel, valuesMap), 500);
+            Object.entries(valuesMap || {}).forEach(([ticker, value]) => markGridChange_(key, rowLabel, ticker, value));
+        }
+
+        function markGridChange_(key, rowLabel, ticker, value) {
+            if (!dirtyGridRows_[key]) dirtyGridRows_[key] = {};
+            if (!dirtyGridRows_[key][rowLabel]) dirtyGridRows_[key][rowLabel] = {};
+            dirtyGridRows_[key][rowLabel][ticker] = value;
+            setGridSyncStatus_(key, 'idle', '변경 있음 · 저장 대기');
+        }
+
+        async function flushGridChanges_(key, { notify = true } = {}) {
+            const rows = dirtyGridRows_[key] || {};
+            if (!Object.keys(rows).length) return true;
+            if (!splitBuyApiUrl || !splitBuyApiToken) {
+                if (notify) showNotification('변경 내용을 저장하려면 Apps Script 동기화 설정이 필요합니다.', 'error', '동기화 설정 필요');
+                return false;
+            }
+            while (Object.keys(rows).length) {
+                const entries = Object.entries(rows);
+                for (const [rowLabel, values] of entries) {
+                    const snapshot = { ...values };
+                    if (!await saveGridRowRemote_(key, rowLabel, snapshot, { notify })) {
+                        if (notify) showNotification('저장에 실패했습니다. 변경 내용은 저장 대기 상태로 유지됩니다.', 'error', '저장 실패');
+                        return false;
+                    }
+                    for (const [ticker, value] of Object.entries(snapshot)) {
+                        if (rows[rowLabel]?.[ticker] === value) delete rows[rowLabel][ticker];
+                    }
+                    if (rows[rowLabel] && Object.keys(rows[rowLabel]).length === 0) delete rows[rowLabel];
+                }
+            }
+            return true;
         }
 
         async function addTickerPromptForGrid_(key) {
@@ -1828,19 +1888,6 @@
             gridCache.notepad1.data[NOTEPAD_SINGLE_ROW][NOTEPAD_CONTENT_KEY] = value;
             if (!gridCache.notepad1.rowLabels.includes(NOTEPAD_SINGLE_ROW)) gridCache.notepad1.rowLabels.push(NOTEPAD_SINGLE_ROW);
             scheduleGridCellSave_('notepad1', NOTEPAD_SINGLE_ROW, NOTEPAD_CONTENT_KEY, value);
-        }
-
-        function initAllGrids_() {
-            // 5개 메뉴를 동시에 요청하면 그중 일부가 불규칙하게 실패하기 쉬우므로
-            // 하나씩 순서대로 불러오도록 변경 (각 요청은 fetchWithRetry_로 자동 재시도됨)
-            runSequentially_([
-                () => fetchGrid_('buyList'),
-                () => fetchGrid_('stepLog'),
-                () => fetchBuyMgmtRecords_(),
-                () => fetchGrid_('notepad'),
-                () => fetchGrid_('notepad1'),
-                () => fetchGrid_('yieldData')
-            ]);
         }
 
         function getMergedTickerList_() {
@@ -2225,6 +2272,7 @@
                 if (!json.success) throw new Error(json.error || '삭제 실패');
 
                 if (Array.isArray(json.matrix) && json.matrix.length >= 1) {
+                    mainDataIsRemote_ = true;
                     parseAndRenderData(json.matrix, "Apps Script API 연동");
                     cacheMainDataSnapshot_(json.matrix);
                 }
@@ -2355,14 +2403,6 @@
             if (!splitBuyRemoteData.data[ticker]) splitBuyRemoteData.data[ticker] = {};
             splitBuyRemoteData.data[ticker][step] = { alloc: allocVal, bought: boughtVal };
 
-            // 구글시트 연동이 안 된 경우에만 로컬스토리지에 저장(오프라인 폴백).
-            // 연동돼 있으면 splitBuyRemoteData + 시트가 항상 최신값이라 이중 저장은 불필요.
-            if (!splitBuyApiUrl || !splitBuyApiToken) {
-                const splitData = JSON.parse(localStorage.getItem(`splitBuyData_${ticker}`)) || {};
-                splitData[step] = { alloc: allocVal, bought: boughtVal };
-                localStorage.setItem(`splitBuyData_${ticker}`, JSON.stringify(splitData));
-            }
-
             renderPortfolioDonutChart(buildPortfolioFromBuyManagement_());
 
             const allocNum = parseFloat(allocVal) || 0;
@@ -2399,7 +2439,6 @@
             document.getElementById('buyMgmtModalMemo').value = '';
             document.getElementById('buyMgmtModalProfit').value = '';
             document.getElementById('buyMgmtModalSaveButton').innerHTML = '<i class="fa-solid fa-check mr-1"></i>기록 추가';
-            renderBuyMgmtTickerOptions_();
             document.getElementById('buyMgmtRecordModal').classList.remove('hidden');
             document.getElementById('buyMgmtModalProfit').focus();
         }
@@ -2414,16 +2453,8 @@
             document.getElementById('buyMgmtModalMemo').value = '';
             document.getElementById('buyMgmtModalProfit').value = '';
             document.getElementById('buyMgmtModalSaveButton').innerHTML = '<i class="fa-solid fa-check mr-1"></i>기록 추가';
-            renderBuyMgmtTickerOptions_();
             document.getElementById('buyMgmtRecordModal').classList.remove('hidden');
             document.getElementById('buyMgmtModalTicker').focus();
-        }
-
-        function renderBuyMgmtTickerOptions_() {
-            const options = document.getElementById('buyMgmtTickerOptions');
-            if (!options) return;
-            const tickers = [...new Set([...availableTickers, ...buyMgmtRecordsCache.map(record => String(record.ticker || '').trim())].filter(Boolean))].sort();
-            options.replaceChildren(...tickers.map(ticker => new Option('', ticker)));
         }
 
         function closeBuyMgmtRecordModal_() {
@@ -2432,15 +2463,17 @@
         }
 
         async function fetchBuyMgmtRecords_() {
-            if (!splitBuyApiUrl || !splitBuyApiToken) return;
+            if (!splitBuyApiUrl || !splitBuyApiToken) return false;
             const status = document.getElementById('buyMgmtRecordsSyncStatus');
             if (status) status.innerText = '불러오는 중';
+            let loaded = false;
             try {
                 const res = await apiRequest_({ action: 'getBuyMgmtRecords' });
                 const json = await res.json();
                 if (!json.success) throw new Error(json.error || '조회 실패');
                 buyMgmtRecordsCache = json.records || [];
                 if (status) status.innerText = `동기화됨 · ${syncTimeLabel_()}`;
+                loaded = true;
             } catch (err) {
                 if (status) status.innerText = '동기화 실패';
                 console.error('종목별 매수 관리 확정 내역 조회 실패:', err);
@@ -2448,6 +2481,7 @@
             renderBuyMgmtRecordsTable_();
             updateDailyEntryConfirmedSum_();
             renderConfirmedProfitHistoryCharts_();
+            return loaded;
         }
 
         function getConfirmedProfitChartRecords_(calendarKey) {
@@ -2693,7 +2727,6 @@
             document.getElementById('buyMgmtModalMemo').value = rec.memo || '';
             document.getElementById('buyMgmtModalProfit').value = Number(rec.profit) || 0;
             document.getElementById('buyMgmtModalSaveButton').innerHTML = '<i class="fa-solid fa-check mr-1"></i>변경 저장';
-            renderBuyMgmtTickerOptions_();
             document.getElementById('buyMgmtRecordModal').classList.remove('hidden');
             document.getElementById('buyMgmtModalDate').focus();
         }
@@ -2775,6 +2808,7 @@
         }
 
         function loadDemoData_() {
+            mainDataIsRemote_ = false;
             const rows = sampleRawData.trim().split('\n');
             const dataToParse = rows.map(row => row.split('\t')).filter(cols => cols.length >= 2);
             parseAndRenderData(dataToParse, "샘플 데이터");
@@ -3293,6 +3327,7 @@
         }
 
         function maybeSaveYieldSnapshot_(dateLabel, metrics) {
+            if (!mainDataIsRemote_) { renderYieldTable_(); return; }
             const sig = `${dateLabel}|${metrics.avgRevenue.toFixed(2)}|${metrics.avgMonthlyRevenue.toFixed(2)}|${metrics.avgMonthlyReturn.toFixed(4)}|${metrics.annualizedReturn.toFixed(4)}`;
             if (sig === lastYieldSnapshotSig) { renderYieldTable_(); return; }
             lastYieldSnapshotSig = sig;
@@ -3306,8 +3341,6 @@
 
             renderYieldTable_();
 
-            if (!splitBuyApiUrl || !splitBuyApiToken) return;
-            setGridSyncStatus_('yieldData', 'loading', '저장 중...');
             const rowValues = {};
             YIELD_FIELDS.forEach(field => { rowValues[field] = gridCache.yieldData.data[dateLabel][field]; });
             scheduleGridRowSave_('yieldData', dateLabel, rowValues);
