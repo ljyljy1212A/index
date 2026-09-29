@@ -182,11 +182,13 @@
             </div>
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg relative">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
-                    <input type="date" id="calBtn_avgRevenue" onchange="selectCalendarDateG_('avgRevenue', this.value)" title="일평균 계산 기준일 설정"
-                        class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-sky-500">
-                    <button type="button" onclick="resetCalendarFilterG_('avgRevenue', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-sky-300"><i class="fa-solid fa-rotate-left"></i></button>
+                <div class="flex flex-col items-start gap-1">
+                    <span class="whitespace-nowrap text-[10px] text-slate-400 font-semibold leading-tight">일평균 수익금</span>
+                    <div class="flex items-center gap-1">
+                        <input type="date" id="calBtn_avgRevenue" onchange="selectCalendarDateG_('avgRevenue', this.value)" title="일평균 계산 기준일 설정"
+                            class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-sky-500">
+                        <button type="button" onclick="resetCalendarFilterG_('avgRevenue', event)" title="전체 보기 / 이전 날짜 복원" class="shrink-0 text-slate-500 hover:text-sky-300"><i class="fa-solid fa-rotate-left"></i></button>
+                    </div>
                 </div>
                 <div class="mt-1 flex items-baseline gap-1">
                     <span id="kpiAvgRevenue" class="text-base lg:text-lg font-extrabold text-sky-400">$0.00</span>
@@ -567,11 +569,11 @@
             <!-- 차트 영역 1단 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                    <div class="flex flex-col items-stretch gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                        <h3 class="whitespace-nowrap text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-chart-column text-emerald-400"></i> 월별 수익 합계 & 일평균
                         </h3>
-                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <div class="flex flex-wrap items-center gap-2">
                             <input type="date" id="calBtn_combo" onchange="selectCalendarDateG_('combo', this.value)" title="시작일 필터"
                                 class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
                             <button type="button" onclick="resetCalendarFilterG_('combo', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
@@ -612,11 +614,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
                     <div>
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                            <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                        <div class="flex flex-col items-stretch gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                            <h3 class="whitespace-nowrap text-sm font-bold text-slate-300 flex items-center gap-2">
                                 <i class="fa-solid fa-chart-line text-sky-400"></i> 계좌 평가액 추이
                             </h3>
-                            <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <input type="date" id="calBtn_acc" onchange="selectCalendarDateG_('acc', this.value)" title="시작일 필터"
                                     class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
                                 <button type="button" onclick="resetCalendarFilterG_('acc', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
@@ -636,11 +638,11 @@
 
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
                     <div>
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                            <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                        <div class="flex flex-col items-stretch gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                            <h3 class="whitespace-nowrap text-sm font-bold text-slate-300 flex items-center gap-2">
                                 <i class="fa-solid fa-chart-area text-rose-500"></i> 최고점 대비 하락률 (MDD)
                             </h3>
-                            <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <input type="date" id="calBtn_mdd" onchange="selectCalendarDateG_('mdd', this.value)" title="시작일 필터"
                                     class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
                                 <button type="button" onclick="resetCalendarFilterG_('mdd', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
@@ -691,11 +693,11 @@
             <!-- 차트 영역 3단 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                    <div class="flex flex-col items-stretch gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                        <h3 class="whitespace-nowrap text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-calendar-check text-amber-500"></i> 연도별 수익금 합계
                         </h3>
-                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <div class="flex flex-wrap items-center gap-2">
                             <input type="date" id="calBtn_yearly" onchange="selectCalendarDateG_('yearly', this.value)" title="시작일 필터"
                                 class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
                             <button type="button" onclick="resetCalendarFilterG_('yearly', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
@@ -712,11 +714,11 @@
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800/60 pb-3">
-                        <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                    <div class="flex flex-col items-stretch gap-3 mb-4 border-b border-slate-800/60 pb-3">
+                        <h3 class="whitespace-nowrap text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="fa-solid fa-chart-line text-emerald-400"></i> 월별 수익률 추이
                         </h3>
-                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <div class="flex flex-wrap items-center gap-2">
                             <input type="date" id="calBtn_monthlyReturn" onchange="selectCalendarDateG_('monthlyReturn', this.value)" title="시작일 필터"
                                 class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
                             <button type="button" onclick="resetCalendarFilterG_('monthlyReturn', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
@@ -792,9 +794,9 @@
                         </div>
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                             <div class="min-w-0">
-                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                                    <h5 class="text-[11px] font-semibold text-slate-400">월별 수익 합계 & 일평균</h5>
-                                    <div class="flex items-center gap-1.5">
+                                <div class="flex flex-col items-start gap-2 mb-2">
+                                    <h5 class="whitespace-nowrap text-[11px] font-semibold text-slate-400">월별 수익 합계 & 일평균</h5>
+                                    <div class="flex flex-wrap items-center gap-1.5">
                                         <input type="date" id="calBtn_confirmedMonthly" onchange="selectCalendarDateG_('confirmedMonthly', this.value)" title="시작일 필터" class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
                                         <button type="button" onclick="resetCalendarFilterG_('confirmedMonthly', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
                                         <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
@@ -808,9 +810,9 @@
                                 <div class="relative h-56 w-full"><canvas id="confirmedProfitMonthlyChart"></canvas></div>
                             </div>
                             <div class="min-w-0">
-                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                                    <h5 class="text-[11px] font-semibold text-slate-400">연도별 수익금 합계</h5>
-                                    <div class="flex items-center gap-1.5">
+                                <div class="flex flex-col items-start gap-2 mb-2">
+                                    <h5 class="whitespace-nowrap text-[11px] font-semibold text-slate-400">연도별 수익금 합계</h5>
+                                    <div class="flex flex-wrap items-center gap-1.5">
                                         <input type="date" id="calBtn_confirmedYearly" onchange="selectCalendarDateG_('confirmedYearly', this.value)" title="시작일 필터" class="w-32 bg-slate-950 text-slate-200 text-[10px] p-1 rounded border border-slate-800 focus:outline-none focus:border-violet-500">
                                         <button type="button" onclick="resetCalendarFilterG_('confirmedYearly', event)" title="전체 보기 / 이전 날짜 복원" class="text-slate-500 hover:text-violet-300"><i class="fa-solid fa-rotate-left"></i></button>
                                         <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] shadow-inner">
